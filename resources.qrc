@@ -1,5 +1,5 @@
- <RCC>
-    <qresource prefix="/plugins/aglgis-qgis-plugin" >
+<RCC>
+    <qresource prefix="/plugins/aglgis" >
         <file>icon.png</file>
     </qresource>
 </RCC>
