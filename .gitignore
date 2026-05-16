@@ -7,3 +7,6 @@ resources_rc.py
 CLAUDE.md
 .claude
 .codex
+.vscode/
+dev/*.tif
+dev/*.tiff

@@ -244,7 +244,7 @@ class AGLgisDialog(QDialog):
         self.browser.setStyleSheet(STYLE_BTN_HELP)
         self.browser.clicked.connect(
             lambda: QDesktopServices.openUrl(
-                QUrl("https://caioarantes.github.io/AGLgis/")
+                QUrl("https://farmanalytica.github.io/AGLgis/")
             )
         )
         lay.addWidget(self.browser)
