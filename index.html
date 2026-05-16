@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AGLgis Plugin Documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+                body { font-family: Arial, sans-serif; margin: 2em; background: #f9f9f9; color: #222; }
+                h1, h2, h3 { color: #2a5d84; }
+                table { border-collapse: collapse; width: 100%; margin-top: 1em; background: #fff; }
+                th, td { border: 1px solid #ccc; padding: 0.5em 1em; text-align: left; }
+                th { background: #e6f2fa; }
+                a { color: #1a73e8; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+                .container { max-width: 900px; margin: auto; background: #fff; padding: 2em; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+                .lang-btns { text-align: center; margin-bottom: 2em; }
+                .lang-btns button { margin: 0 8px; padding: 8px 18px; font-size: 1em; border-radius: 6px; border: 1px solid #2a5d84; background: #e6f2fa; color: #2a5d84; cursor: pointer; }
+                .lang-btns button.active { background: #2a5d84; color: #fff; }
+                .hidden { display: none; }
+        </style>
+        <script>
+            function showLang(lang) {
+                document.getElementById('pt').classList.add('hidden');
+                document.getElementById('en').classList.add('hidden');
+                document.getElementById(lang).classList.remove('hidden');
+                document.getElementById('btn-pt').classList.remove('active');
+                document.getElementById('btn-en').classList.remove('active');
+                document.getElementById('btn-' + lang).classList.add('active');
+            }
+            window.onload = function() {
+                var lang = 'pt';
+                var navLang = navigator.language || navigator.userLanguage;
+                if (navLang) {
+                    if (navLang.startsWith('en')) lang = 'en';
+                    else if (navLang.startsWith('pt')) lang = 'pt';
+                }
+                showLang(lang);
+            };
+        </script>
+</head>
+<body>
+        <div style="text-align:center;margin-bottom:1em;">
+            <img src="icon.png" alt="AGLgis logo" style="height:64px;vertical-align:middle;margin-right:12px;">
+        </div>
+        <div class="lang-btns">
+            <button id="btn-pt" onclick="showLang('pt')">Português</button>
+            <button id="btn-en" onclick="showLang('en')">English</button>
+        </div>
+        <div id="pt" class="container">
+            <h1>AGLgis</h1>
+            <p>
+                O AGLgis é uma interface gráfica para facilitar do <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> no QGIS.
+            </p>
+            <p>
+                Este plugin permite configurar e executar o processamento de dados SAR Sentinel-1 sem necessidade de programação.
+            </p>
+            <h2>Principais funcionalidades</h2>
+            <ul>
+                <li>Interface gráfica para seleção de área, datas e parâmetros de processamento.</li>
+                <li>Integração direta com o pacote <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a>, tornando o fluxo de trabalho mais acessível.</li>
+                <li>Suporte à correção de ruído de borda, nivelamento de terreno e filtragem de speckle.</li>
+                <li>Exportação dos resultados prontos para análise e visualização.</li>
+            </ul>
+            <h2>Parâmetros suportados</h2>
+            <img src="medias/view.png" alt="Parâmetros suportados do AGLgis" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
+            <h2>Exemplo de Série Temporal e Imagem Selecionada</h2>
+            <img src="medias/demo.png" alt="Demonstração da série temporal e imagem da data selecionada" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
+            <p>
+                Acima, uma demonstração da série temporal gerada pelo plugin e uma imagem SAR da data selecionada.
+            <h2>Configuração do Projeto Google Cloud</h2>
+            <img src="medias/image01.png" alt="Exemplo de ID do Projeto Google Cloud" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
+            <p>
+                A imagem acima mostra onde encontrar o ID do seu Projeto Google Cloud, necessário para autenticar e executar o pacote <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> no Google Earth Engine.
+                Certifique-se de ter um projeto válido no <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> e utilize o ID ao configurar o plugin.
+            </p>
+            
+            <h2>Citação</h2>
+            <div style="background: #f0f8ff; border-left: 4px solid #2a5d84; padding: 1em; margin: 1em 0;">
+                <p>Qualquer trabalho publicado que utilize este plugin deve citar a seguinte referência como fonte do framework de processamento:</p>
+                <p style="font-family: monospace; font-size: 0.9em; background: #fff; padding: 0.5em; border: 1px solid #ccc; margin: 0.5em 0;">
+                    Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
+                </p>
+            </div>
+        </div>
+        <div id="en" class="container hidden">
+            <h1>AGLgis
+                
+            </h1>
+            <p>
+                AGLgis is a graphical interface designed to simplify the use of the <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> in QGIS.
+            </p>
+            <p>
+                This plugin allows users to configure and run Sentinel-1 SAR data processing without the need to write code.
+            </p>
+            <h2>Main features</h2>
+            <ul>
+                <li>Graphical interface for selecting area, dates, and processing parameters.</li>
+                <li>Direct integration with the <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> package, making the workflow more accessible.</li>
+                <li>Support for border noise correction, terrain flattening, and speckle filtering.</li>
+                <li>Export of results ready for analysis and visualization.</li>
+            </ul>
+            <h2>Supported Parameters</h2>
+            <img src="medias/view.png" alt="AGLgis Supported Parameters" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
+            <h2>Time Series Example and Selected Image</h2>
+            <img src="medias/demo.png" alt="Time series demonstration and selected date image" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
+            <p>
+                Above, a demonstration of the time series generated by the plugin and a SAR image from the selected date.
+            <h2>Google Cloud Project Setup</h2>
+            <img src="medias/image01.png" alt="Google Cloud Project ID Example" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
+            <p>
+                The image above shows where to find your Google Cloud Project ID, which is required for authenticating and running the <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> package in Google Earth Engine.
+                Make sure you have a valid project set up in the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> and use the Project ID when configuring the plugin.
+            </p>
+            
+            <h2>Citation</h2>
+            <div style="background: #f0f8ff; border-left: 4px solid #2a5d84; padding: 1em; margin: 1em 0;">
+                <p>Any published work that uses this plugin must cite the following reference as the source for the processing framework:</p>
+                <p style="font-family: monospace; font-size: 0.9em; background: #fff; padding: 0.5em; border: 1px solid #ccc; margin: 0.5em 0;">
+                    Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
+                </p>
+            </div>
+        </div>
+</body>
+</html>

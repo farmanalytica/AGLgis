@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git reset *)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "PowerShell(Get-Command lrelease -ErrorAction SilentlyContinue)",
+      "PowerShell([System.IO.Directory]::GetFiles\\(\"C:\\\\OSGeo4W\\\\bin\"\\) | Select-Object -First 20)",
+      "PowerShell([System.IO.Directory]::GetFiles\\(\"C:\\\\OSGeo4W\\\\bin\"\\) | Where-Object {$_ -match \"pyqt|python|lrelease|lupdate\"})",
+      "PowerShell(& \"C:\\\\OSGeo4W\\\\bin\\\\python.exe\" -c \"import PyQt5; print\\(PyQt5.__file__\\)\" 2>&1)",
+      "PowerShell(& \"C:\\\\OSGeo4W\\\\bin\\\\python.exe\" -m PyQt5.pyrcc5 --version 2>&1)",
+      "PowerShell($env:OSGEO4W_ROOT = \"C:\\\\OSGeo4W\"; $env:PYTHONHOME = \"C:\\\\OSGeo4W\\\\apps\\\\Python312\"; & \"C:\\\\OSGeo4W\\\\bin\\\\python.exe\" -c \"print\\('ok'\\)\" 2>&1)",
+      "PowerShell($env:OSGEO4W_ROOT = \"C:\\\\OSGeo4W\"; $env:PYTHONHOME = \"C:\\\\OSGeo4W\\\\apps\\\\Python312\"; & \"C:\\\\OSGeo4W\\\\bin\\\\python.exe\" -c \"import PyQt5.Qt; from PyQt5.Qt import QLibraryInfo; print\\(QLibraryInfo.location\\(QLibraryInfo.TranslationsPath\\)\\)\" 2>&1)"
+    ]
+  }
+}
