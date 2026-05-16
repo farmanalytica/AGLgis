@@ -2,7 +2,7 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="pt_BR">
 <context>
-    <name>EasyDem</name>
+    <name>AGLgis</name>
     <message>
         <source>GEE Configuration</source>
         <translation>Configuração GEE</translation>
@@ -20,8 +20,8 @@
         <translation>Autenticação GEE</translation>
     </message>
     <message>
-        <source>EasyDEM uses &lt;b&gt;Google Earth Engine&lt;/b&gt; for processing. To continue, you will need authorized access.</source>
-        <translation>EasyDEM usa o &lt;b&gt;Google Earth Engine&lt;/b&gt; para processamento. Para continuar, você precisa de acesso autorizado.</translation>
+        <source>AGLgis uses &lt;b&gt;Google Earth Engine&lt;/b&gt; for processing. To continue, you will need authorized access.</source>
+        <translation>AGLgis usa o &lt;b&gt;Google Earth Engine&lt;/b&gt; para processamento. Para continuar, você precisa de acesso autorizado.</translation>
     </message>
     <message>
         <source>Requires an active GEE account and a Google Cloud Console project with the API enabled.</source>

@@ -45,7 +45,7 @@ class DEMService:
             )
 
         safe_name = dataset_name.replace(" ", "_").replace("/", "-")
-        filename = f"EasyDEM_{safe_name}.tif"
+        filename = f"AGLgis_{safe_name}.tif"
 
         base_dir = output_folder if (output_folder and os.path.isdir(output_folder)) else tempfile.gettempdir()
         output_path = DEMService._resolve_path(base_dir, filename)
@@ -66,7 +66,7 @@ class DEMService:
 
         Args:
             folder: Destination directory.
-            filename: Desired filename (e.g. ``EasyDEM_SRTM.tif``).
+            filename: Desired filename (e.g. ``AGLgis_SRTM.tif``).
 
         Returns:
             Absolute path to a file that does not yet exist.

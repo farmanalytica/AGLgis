@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/easy" >
+    <qresource prefix="/plugins/aglgis" >
         <file>icon.png</file>
     </qresource>
 </RCC>

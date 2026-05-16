@@ -12,7 +12,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings
 
 
 def _tr(text):
-    return QCoreApplication.translate("EasyDem", text)
+    return QCoreApplication.translate("AGLgis", text)
 
 
 class GEEService:

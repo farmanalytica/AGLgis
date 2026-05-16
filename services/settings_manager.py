@@ -11,7 +11,7 @@ from qgis.core import QgsSettings
 class SettingsManager:
     """Manages plugin settings and user preferences in QGIS."""
 
-    SETTINGS_PREFIX = "qgis-EasyDEM/"
+    SETTINGS_PREFIX = "qgis-AGLgis/"
     DOWNLOAD_FOLDER_KEY = SETTINGS_PREFIX + "dem_download_folder"
 
     @staticmethod

@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-"""View modules for the EasyDEM dialog UI."""
+"""View modules for the AGLgis dialog UI."""

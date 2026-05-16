@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AOI and DEM download page for the EasyDEM dialog.
+AOI and DEM download page for the AGLgis dialog.
 
 Builds the second workflow page: polygon AOI selection, DEM dataset selection,
 dataset metadata display, AOI buffer control, download folder picker, and
-action buttons.  Signal connections are wired externally by ``easy.py`` and
+action buttons.  Signal connections are wired externally by ``aglgis.py`` and
 ``dem_handler.py``.
 """
 
@@ -31,7 +31,7 @@ from .styles import STYLE_AOI_PAGE, STYLE_BTN_PRIMARY, STYLE_BTN_SECONDARY
 
 
 def _tr(text):
-    return QCoreApplication.translate("EasyDem", text)
+    return QCoreApplication.translate("AGLgis", text)
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +97,7 @@ def setup_download_dem_page(dialog, page):
     - **Fixed footer** (always visible): download folder picker and action
       buttons.
 
-    All interactive widgets are exposed on ``dialog`` so ``easy.py`` and
+    All interactive widgets are exposed on ``dialog`` so ``aglgis.py`` and
     ``dem_handler.py`` can wire signal connections without importing this
     module directly.
     """

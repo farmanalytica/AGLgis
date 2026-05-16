@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Permanent navigation sidebar for the EasyDEM dialog.
+Permanent navigation sidebar for the AGLgis dialog.
 
 The sidebar owns only presentation and navigation signals. Page switching stays
-in ``easy_dialog.py`` so the dialog can keep header and active state in sync.
+in ``aglgis_dialog.py`` so the dialog can keep header and active state in sync.
 """
 
 import os
@@ -23,7 +23,7 @@ from qgis.PyQt.QtWidgets import (
 
 
 def _tr(text):
-    return QCoreApplication.translate("EasyDem", text)
+    return QCoreApplication.translate("AGLgis", text)
 
 
 # Visual tokens kept local because this component is self-contained.
@@ -172,7 +172,7 @@ class Sidebar(QFrame):
             """)
         brand_lay.addWidget(self.brand_icon)
 
-        self.brand_text = QLabel("EasyDEM")
+        self.brand_text = QLabel("AGLgis")
         self.brand_text.setObjectName("sidebarBrandText")
         self.brand_text.setStyleSheet("""
             QLabel#sidebarBrandText {

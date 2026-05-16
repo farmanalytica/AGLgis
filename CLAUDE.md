@@ -18,7 +18,7 @@ Vendored dependencies live in `extlibs/` and are added to `sys.path` by `__init_
 
 ### Strict layer separation
 
-`easy.py` is the **only** file that imports both UI and services. It instantiates `EasyDemDialog`, `GEEService`, and `DEMHandler`, then wires all signals in one place. Maintain this boundary:
+`aglgis.py` is the **only** file that imports both UI and services. It instantiates `AGLgisDialog`, `GEEService`, and `DEMHandler`, then wires all signals in one place. Maintain this boundary:
 
 - `view/` — Qt widgets only; no `ee` SDK, no business logic, no service imports.
 - `services/` — pure logic; no Qt widgets, no dialog references.
@@ -26,12 +26,12 @@ Vendored dependencies live in `extlibs/` and are added to `sys.path` by `__init_
 
 ### How widgets are exposed
 
-`view/auth.py` and `view/download_dem.py` attach widgets directly onto the `dialog` object (e.g. `dialog.btn_authenticate`, `dialog.layer_combo`). `easy.py` and `dem_handler.py` then access them via those attributes. Do not return widget references from the setup functions.
+`view/auth.py` and `view/download_dem.py` attach widgets directly onto the `dialog` object (e.g. `dialog.btn_authenticate`, `dialog.layer_combo`). `aglgis.py` and `dem_handler.py` then access them via those attributes. Do not return widget references from the setup functions.
 
 ### Signal flow
 
 ```
-UI event → easy.py handler or DEMHandler method → service call → dialog.pop_message() / messageBar()
+UI event → aglgis.py handler or DEMHandler method → service call → dialog.pop_message() / messageBar()
 ```
 
 ### DEM catalog
@@ -48,9 +48,9 @@ Fixed size 800×404 px. Root `QVBoxLayout`: white header (38 px) → body `QHBox
 
 ### Translations
 
-User-visible strings are wrapped with `_tr()` (`QCoreApplication.translate("EasyDem", text)`) in every module. Translation context name is `"EasyDem"` everywhere — never `"easydem"` or anything else.
+User-visible strings are wrapped with `_tr()` (`QCoreApplication.translate("AGLgis", text)`) in every module. Translation context name is `"AGLgis"` everywhere — never `"aglgis"`, `"AGLGIS"`, or anything else.
 
-Source files are `i18n/easydem_<locale>.ts` (Qt TS XML). Compiled binaries are `i18n/easydem_<locale>.qm`. `easy.py` loads the `.qm` matching the active QGIS locale on plugin init and removes it on unload.
+Source files are `i18n/aglgis_<locale>.ts` (Qt TS XML). Compiled binaries are `i18n/aglgis_<locale>.qm`. `aglgis.py` loads the `.qm` matching the active QGIS locale on plugin init and removes it on unload.
 
 **OSGeo4W does not ship `lrelease`.** Compile with the included script instead:
 

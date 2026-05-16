@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Authentication page for the EasyDEM dialog.
+Authentication page for the AGLgis dialog.
 
 Builds the first workflow page: Google Earth Engine project configuration
 and authentication controls. Signal connections are wired externally by
-``easy.py``.
+``aglgis.py``.
 """
 
 import os
@@ -26,7 +26,7 @@ from .styles import STYLE_BTN_PRIMARY
 
 
 def _tr(text):
-    return QCoreApplication.translate("EasyDem", text)
+    return QCoreApplication.translate("AGLgis", text)
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ def setup_auth_page(dialog, page):
     - **Right card** (260 px fixed, white rounded card): a ``project_id_input``
       field for the Google Cloud project ID, a ``btn_authenticate`` primary
       action button, and a ``btn_reset_auth`` discrete reset link.
-    All interactive widgets are exposed on ``dialog`` so ``easy.py`` can wire
+    All interactive widgets are exposed on ``dialog`` so ``aglgis.py`` can wire
     signal connections without importing this module's internals.
     """
     page.setStyleSheet("background-color: #f5f5f5;")
@@ -76,7 +76,7 @@ def setup_auth_page(dialog, page):
     # Short explanation of why authentication is required.
     desc_lbl = QLabel(
         _tr(
-            "EasyDEM uses <b>Google Earth Engine</b> for processing. "
+            "AGLgis uses <b>Google Earth Engine</b> for processing. "
             "To continue, you will need authorized access."
         )
     )

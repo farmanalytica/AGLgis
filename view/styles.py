@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Shared UI styles for EasyDEM dialog views.
+Shared UI styles for AGLgis dialog views.
 
 Stylesheet constants are defined here so individual page modules can reuse
 the same visual language without duplicating long Qt stylesheet strings.

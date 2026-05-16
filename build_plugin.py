@@ -16,7 +16,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-PLUGIN_NAME = "qgis-EasyDEM-plugin"
+PLUGIN_NAME = "AGLgis"
 ROOT = Path(__file__).parent.resolve()
 DIST_DIR = ROOT / "dist"
 ZIP_PATH = DIST_DIR / f"{PLUGIN_NAME}.zip"
@@ -25,11 +25,10 @@ INCLUDE_FILES = [
     "metadata.txt",
     "setup.cfg",
     "__init__.py",
-    "easy.py",
-    "easy_dialog.py",
+    "aglgis.py",
+    "aglgis_dialog.py",
     "dem_handler.py",
     "extlibs_manager.py",
-    "resources.py",
     "icon.png",
     "LICENSE",
 ]

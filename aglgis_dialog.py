@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-UI layer for the EasyDEM QGIS plugin.
+UI layer for the AGLgis QGIS plugin.
 
-Defines ``EasyDemDialog``, a two-page modal dialog that guides the user
+Defines ``AGLgisDialog``, a two-page modal dialog that guides the user
 through the full plugin workflow:
 
 1. **Authentication page** (``auth_page``) — user supplies a Google Cloud
@@ -14,7 +14,7 @@ through the full plugin workflow:
 
 This module owns the dialog shell only.  Page widget construction lives in
 ``view/auth.py`` and ``view/download_dem.py``, while signal connections are
-made externally by ``easy.py`` to keep this module free of business logic
+made externally by ``aglgis.py`` to keep this module free of business logic
 and the ``ee`` SDK.
 """
 
@@ -44,12 +44,12 @@ from .view.styles import STYLE_DIALOG, STYLE_BTN_HELP
 
 
 def _tr(text):
-    return QCoreApplication.translate("EasyDem", text)
+    return QCoreApplication.translate("AGLgis", text)
 
 
-class EasyDemDialog(QDialog):
+class AGLgisDialog(QDialog):
     """
-    Main dialog window for the EasyDEM plugin.
+    Main dialog window for the AGLgis plugin.
 
     Presents a two-page ``QStackedWidget`` flow:
 
@@ -61,7 +61,7 @@ class EasyDemDialog(QDialog):
       download folder, and trigger the download.
 
     Public widget attributes created by the page modules (consumed by
-    ``easy.py`` and ``dem_handler.py``):
+    ``aglgis.py`` and ``dem_handler.py``):
 
     Auth page:
         project_id_input: GCP project ID field.
@@ -80,7 +80,7 @@ class EasyDemDialog(QDialog):
         btn_hybrid_layer: Adds a Google Hybrid basemap layer.
         btn_download_dem: Downloads and loads the DEM into QGIS.
 
-    Signal connections are wired externally by ``easy.py``.
+    Signal connections are wired externally by ``aglgis.py``.
     """
 
     def __init__(self, parent=None):
@@ -90,7 +90,7 @@ class EasyDemDialog(QDialog):
 
     def _setup_ui(self):
         """Build the root layout: fixed header, central stack, fixed footer."""
-        self.setWindowTitle("EasyDEM")
+        self.setWindowTitle("AGLgis")
         self.setWindowFlags(
             Qt.WindowType.Window
             | Qt.WindowType.WindowSystemMenuHint
@@ -167,7 +167,7 @@ class EasyDemDialog(QDialog):
         lay.setSpacing(12)
         lay.addStretch()
 
-        title = QLabel(_tr("Setting up EasyDEM…"))
+        title = QLabel(_tr("Setting up AGLgis…"))
         title.setStyleSheet(
             "color: #1b6b39; font-size: 14px; font-weight: bold;"
         )
@@ -202,7 +202,7 @@ class EasyDemDialog(QDialog):
         Build and return the dialog header widget.
 
         The header is a fixed-height (38 px) white bar containing:
-        - The "EasyDEM" brand label (green).
+        - The "AGLgis" brand label (green).
         - A vertical separator.
         - A dynamic page-title label (``_header_title``) updated by the
           controller when the active page changes.
@@ -217,7 +217,7 @@ class EasyDemDialog(QDialog):
         lay.setSpacing(0)
 
         # Brand name — always green, always visible.
-        brand = QLabel("EasyDEM")
+        brand = QLabel("AGLgis")
         brand.setStyleSheet(
             "color: #1b6b39; font-size: 13px; font-weight: bold; letter-spacing: 0.5px;"
         )
@@ -244,7 +244,7 @@ class EasyDemDialog(QDialog):
         self.browser.setStyleSheet(STYLE_BTN_HELP)
         self.browser.clicked.connect(
             lambda: QDesktopServices.openUrl(
-                QUrl("https://easydem.org")
+                QUrl("https://caioarantes.github.io/AGLgis/")
             )
         )
         lay.addWidget(self.browser)

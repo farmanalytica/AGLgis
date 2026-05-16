@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DEM handler orchestration module for EasyDEM QGIS plugin.
+DEM handler orchestration module for AGLgis QGIS plugin.
 
 Orchestrates DEM operations, AOI management, and coordinates between
 services for dataset loading and layer rendering.
@@ -34,7 +34,7 @@ from .services.dem_registry import DEMRegistry
 
 
 def _tr(text):
-    return QCoreApplication.translate("EasyDem", text)
+    return QCoreApplication.translate("AGLgis", text)
 
 
 class DEMHandler:
@@ -120,7 +120,7 @@ class DEMHandler:
             )
             DEMRenderer.load_dem_to_qgis(dem_path, dataset_name)
             interface.messageBar().pushMessage(
-                "EasyDEM", _tr("DEM '%s' loaded successfully.") % dataset_name
+                "AGLgis", _tr("DEM '%s' loaded successfully.") % dataset_name
             )
         except Exception as e:
             self.dlg.pop_message(str(e), "warning")
@@ -233,7 +233,7 @@ class DEMHandler:
         """Load the Google hybrid basemap layer."""
         hybrid_function()
         self.interface.messageBar().pushMessage(
-            "EasyDEM", _tr("Google Hybrid Layer loaded successfully")
+            "AGLgis", _tr("Google Hybrid Layer loaded successfully")
         )
 
     def _apply_buffer(self, aoi, buffer_distance: int):
