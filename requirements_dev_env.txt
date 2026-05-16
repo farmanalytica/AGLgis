@@ -1,0 +1,6 @@
+ee-s1-ard>=1.0.5
+earthengine-api
+geopandas
+pandas
+plotly
+requests

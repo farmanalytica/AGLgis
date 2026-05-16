@@ -6,7 +6,7 @@ import urllib.request
 
 from qgis.PyQt.QtCore import QThread, pyqtSignal
 
-EXTLIBS_URL = "https://github.com/farmanalytica/qgis-EasyDEM/raw/main/extlibs.zip"
+EXTLIBS_URL = "https://github.com/farmanalytica/AGLgis/raw/main/extlibs.zip"
 _PLUGIN_DIR = os.path.dirname(__file__)
 EXTLIBS_PATH = os.path.join(_PLUGIN_DIR, "extlibs")
 _SENTINEL = os.path.join(EXTLIBS_PATH, ".ready")

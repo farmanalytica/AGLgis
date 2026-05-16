@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 extlibs/
+extlibs.zip
 dist/
 .venv
 resources_rc.py
