@@ -10,7 +10,9 @@ service layer is in place.
 from qgis.core import QgsMapLayerProxyModel
 from qgis.gui import QgsMapLayerComboBox
 from qgis.PyQt.QtCore import Qt, QCoreApplication
+from qgis.PyQt.QtWebKitWidgets import QWebView
 from qgis.PyQt.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -107,37 +109,43 @@ def _build_inputs_tab(dialog, parent):
 
     lay.addLayout(date_row)
 
-    # Sensor + Polarization row
-    sensor_row = QHBoxLayout()
-    sensor_row.setSpacing(12)
-    sensor_row.setContentsMargins(0, 0, 0, 0)
-
-    sensor_col = QVBoxLayout()
-    sensor_col.setSpacing(4)
-    sensor_col.addWidget(_field_label(_tr("SENSOR")))
-    dialog.sar_sensor_combo = QComboBox()
-    dialog.sar_sensor_combo.addItems(["Sentinel-1 (GRD)", "Sentinel-1 (SLC)"])
-    dialog.sar_sensor_combo.setFixedHeight(28)
-    sensor_col.addWidget(dialog.sar_sensor_combo)
-    sensor_row.addLayout(sensor_col)
+    # Polarization + Output format row
+    pol_fmt_row = QHBoxLayout()
+    pol_fmt_row.setSpacing(12)
+    pol_fmt_row.setContentsMargins(0, 0, 0, 0)
 
     pol_col = QVBoxLayout()
     pol_col.setSpacing(4)
     pol_col.addWidget(_field_label(_tr("POLARIZATION")))
     dialog.sar_pol_combo = QComboBox()
-    dialog.sar_pol_combo.addItems(["VV", "VH", "VV + VH"])
+    dialog.sar_pol_combo.addItems(["VV", "VH", "VVVH"])
+    dialog.sar_pol_combo.setCurrentText("VVVH")
     dialog.sar_pol_combo.setFixedHeight(28)
     pol_col.addWidget(dialog.sar_pol_combo)
-    sensor_row.addLayout(pol_col)
+    pol_fmt_row.addLayout(pol_col)
 
-    lay.addLayout(sensor_row)
-
-    # Output format
-    lay.addWidget(_field_label(_tr("OUTPUT FORMAT")))
+    fmt_col = QVBoxLayout()
+    fmt_col.setSpacing(4)
+    fmt_col.addWidget(_field_label(_tr("OUTPUT FORMAT")))
     dialog.sar_format_combo = QComboBox()
-    dialog.sar_format_combo.addItems(["GeoTIFF", "COG (Cloud-Optimized GeoTIFF)"])
+    dialog.sar_format_combo.addItems(["DB", "LINEAR"])
     dialog.sar_format_combo.setFixedHeight(28)
-    lay.addWidget(dialog.sar_format_combo)
+    fmt_col.addWidget(dialog.sar_format_combo)
+    pol_fmt_row.addLayout(fmt_col)
+
+    lay.addLayout(pol_fmt_row)
+
+    # Processing options
+    lay.addWidget(_field_label(_tr("PROCESSING OPTIONS")))
+    dialog.sar_chk_border_noise = QCheckBox(_tr("Border noise correction"))
+    dialog.sar_chk_border_noise.setChecked(True)
+    dialog.sar_chk_terrain = QCheckBox(_tr("Terrain flattening"))
+    dialog.sar_chk_terrain.setChecked(True)
+    dialog.sar_chk_speckle = QCheckBox(_tr("Speckle filtering"))
+    dialog.sar_chk_speckle.setChecked(True)
+    for chk in (dialog.sar_chk_border_noise, dialog.sar_chk_terrain, dialog.sar_chk_speckle):
+        chk.setStyleSheet("color: #212121; font-size: 12px; background: transparent;")
+        lay.addWidget(chk)
 
     lay.addStretch(1)
 
@@ -145,37 +153,57 @@ def _build_inputs_tab(dialog, parent):
 def _build_results_tab(dialog, parent):
     lay = QVBoxLayout(parent)
     lay.setContentsMargins(20, 14, 20, 10)
-    lay.setSpacing(10)
+    lay.setSpacing(8)
 
-    placeholder = QFrame()
-    placeholder.setObjectName("sarResultsPlaceholder")
-    placeholder.setStyleSheet("""
-        QFrame#sarResultsPlaceholder {
-            background-color: #f8f9fa;
-            border: 1px dashed #d0d0d0;
-            border-radius: 8px;
-        }
-        QLabel { background: transparent; border: none; }
-    """)
-    ph_lay = QVBoxLayout(placeholder)
-    ph_lay.setContentsMargins(24, 20, 24, 20)
-    ph_lay.setSpacing(8)
-
-    icon_lbl = QLabel("[ SAR ]")
-    icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    icon_lbl.setStyleSheet(
-        "color: #bdbdbd; font-size: 20px; font-weight: bold;"
-        " letter-spacing: 4px; background: transparent; border: none;"
+    # Plot
+    dialog.sar_web_view = QWebView()
+    dialog.sar_web_view.setStyleSheet(
+        "border: 1px solid #e0e0e0; border-radius: 6px; background: #f8f9fa;"
     )
-    ph_lay.addWidget(icon_lbl)
+    lay.addWidget(dialog.sar_web_view, 1)
 
-    msg_lbl = QLabel(_tr("Results will appear here after running the SAR query."))
-    msg_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    msg_lbl.setWordWrap(True)
-    msg_lbl.setStyleSheet("color: #9e9e9e; font-size: 12px; background: transparent; border: none;")
-    ph_lay.addWidget(msg_lbl)
+    # Plot action buttons
+    plot_row = QHBoxLayout()
+    plot_row.setSpacing(8)
+    plot_row.setContentsMargins(0, 0, 0, 0)
+    dialog.sar_btn_open_browser = QPushButton(_tr("Open in Browser"))
+    dialog.sar_btn_open_browser.setFixedHeight(28)
+    dialog.sar_btn_open_browser.setStyleSheet(STYLE_BTN_SECONDARY)
+    dialog.sar_btn_download_csv = QPushButton(_tr("Download as CSV"))
+    dialog.sar_btn_download_csv.setFixedHeight(28)
+    dialog.sar_btn_download_csv.setStyleSheet(STYLE_BTN_SECONDARY)
+    plot_row.addWidget(dialog.sar_btn_open_browser)
+    plot_row.addWidget(dialog.sar_btn_download_csv)
+    plot_row.addStretch(1)
+    lay.addLayout(plot_row)
 
-    lay.addWidget(placeholder, 1)
+    # Date selection row
+    date_row = QHBoxLayout()
+    date_row.setSpacing(8)
+    date_row.setContentsMargins(0, 0, 0, 0)
+    date_lbl = QLabel(_tr("Date"))
+    date_lbl.setStyleSheet("color: #616161; font-size: 12px; background: transparent; border: none;")
+    date_row.addWidget(date_lbl)
+    dialog.sar_result_date_combo = QComboBox()
+    dialog.sar_result_date_combo.setFixedHeight(28)
+    dialog.sar_result_date_combo.setMinimumWidth(130)
+    date_row.addWidget(dialog.sar_result_date_combo)
+    date_row.addStretch(1)
+    dialog.sar_btn_preview = QPushButton(_tr("Preview"))
+    dialog.sar_btn_preview.setFixedHeight(28)
+    dialog.sar_btn_preview.setStyleSheet(STYLE_BTN_PRIMARY)
+    dialog.sar_btn_download_preview = QPushButton(_tr("Download & Preview"))
+    dialog.sar_btn_download_preview.setFixedHeight(28)
+    dialog.sar_btn_download_preview.setStyleSheet(STYLE_BTN_SECONDARY)
+    date_row.addWidget(dialog.sar_btn_preview)
+    date_row.addWidget(dialog.sar_btn_download_preview)
+    lay.addLayout(date_row)
+
+    # Batch download
+    dialog.sar_btn_batch_download = QPushButton(_tr("Batch Download (All Dates)"))
+    dialog.sar_btn_batch_download.setFixedHeight(28)
+    dialog.sar_btn_batch_download.setStyleSheet(STYLE_BTN_SECONDARY)
+    lay.addWidget(dialog.sar_btn_batch_download)
 
 
 def setup_radar_page(dialog, page):
@@ -184,7 +212,11 @@ def setup_radar_page(dialog, page):
 
     Exposes on dialog:
       sar_layer_combo, sar_date_start, sar_date_end,
-      sar_sensor_combo, sar_pol_combo, sar_format_combo,
+      sar_pol_combo, sar_format_combo,
+      sar_chk_border_noise, sar_chk_terrain, sar_chk_speckle,
+      sar_web_view, sar_btn_open_browser, sar_btn_download_csv,
+      sar_result_date_combo, sar_btn_preview, sar_btn_download_preview,
+      sar_btn_batch_download,
       sar_stack, sar_btn_back, sar_btn_next, sar_step_lbl
     """
     page.setStyleSheet("background-color: #f5f5f5;")
@@ -311,7 +343,7 @@ def setup_radar_page(dialog, page):
 
     nav_lay.addStretch(1)
 
-    btn_next = QPushButton(_tr("Next"))
+    btn_next = QPushButton(_tr("Run"))
     btn_next.setFixedSize(80, 30)
     btn_next.setStyleSheet(STYLE_BTN_PRIMARY)
 
@@ -329,12 +361,7 @@ def setup_radar_page(dialog, page):
         stack.setCurrentIndex(index)
         btn_back.setEnabled(index > 0)
         step_lbl.setText(f"Step {index + 1} of 2")
-        if index == stack.count() - 1:
-            btn_next.setText(_tr("Run"))
-            btn_next.setEnabled(False)  # placeholder: no service yet
-        else:
-            btn_next.setText(_tr("Next"))
-            btn_next.setEnabled(True)
+        btn_next.setVisible(index == 0)
         btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
         btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
 
