@@ -174,6 +174,10 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_download_csv.setStyleSheet(STYLE_BTN_SECONDARY)
     plot_row.addWidget(dialog.sar_btn_open_browser)
     plot_row.addWidget(dialog.sar_btn_download_csv)
+    dialog.sar_btn_filter_dates = QPushButton(_tr("Filter dates"))
+    dialog.sar_btn_filter_dates.setFixedHeight(28)
+    dialog.sar_btn_filter_dates.setStyleSheet(STYLE_BTN_SECONDARY)
+    plot_row.addWidget(dialog.sar_btn_filter_dates)
     plot_row.addStretch(1)
     lay.addLayout(plot_row)
 
@@ -214,7 +218,7 @@ def setup_radar_page(dialog, page):
       sar_layer_combo, sar_date_start, sar_date_end,
       sar_pol_combo, sar_format_combo,
       sar_chk_border_noise, sar_chk_terrain, sar_chk_speckle,
-      sar_web_view, sar_btn_open_browser, sar_btn_download_csv,
+      sar_web_view, sar_btn_open_browser, sar_btn_download_csv, sar_btn_filter_dates,
       sar_result_date_combo, sar_btn_preview, sar_btn_download_preview,
       sar_btn_batch_download,
       sar_stack, sar_btn_back, sar_btn_next, sar_step_lbl
