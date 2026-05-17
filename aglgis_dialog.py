@@ -39,6 +39,7 @@ from qgis.PyQt.QtWidgets import (
 
 from .view.auth import setup_auth_page
 from .view.download_dem import setup_download_dem_page
+from .view.radar import setup_radar_page
 from .view.sidebar import Sidebar
 from .view.styles import STYLE_DIALOG, STYLE_BTN_HELP
 
@@ -118,6 +119,7 @@ class AGLgisDialog(QDialog):
 
         self.sidebar = Sidebar()
         self.sidebar.auth_requested.connect(self._nav_to_auth)
+        self.sidebar.radar_requested.connect(self._nav_to_radar)
         self.sidebar.download_requested.connect(self._nav_to_download)
         body_lay.addWidget(self.sidebar)
 
@@ -141,13 +143,16 @@ class AGLgisDialog(QDialog):
 
         self.loading_page = self._build_loading_page()
         self.auth_page = QWidget()
+        self.radar_page = QWidget()
         self.aoi_page = QWidget()
 
         setup_auth_page(self, self.auth_page)
+        setup_radar_page(self, self.radar_page)
         setup_download_dem_page(self, self.aoi_page)
 
         self.stack.addWidget(self.loading_page)
         self.stack.addWidget(self.auth_page)
+        self.stack.addWidget(self.radar_page)
         self.stack.addWidget(self.aoi_page)
         self.stack.currentChanged.connect(self._sync_page_state)
 
@@ -266,7 +271,7 @@ class AGLgisDialog(QDialog):
         plain-text label.
         """
         footer = QWidget()
-        footer.setFixedHeight(36)
+        footer.setMinimumHeight(36)
         footer.setStyleSheet(
             "background-color: transparent;"
             "QLabel { border: none; background: transparent; }"
@@ -305,7 +310,7 @@ class AGLgisDialog(QDialog):
         farm_text = QLabel()
         farm_text.setTextFormat(Qt.TextFormat.RichText)
         farm_text.setOpenExternalLinks(True)
-        farm_text.setWordWrap(False)
+        farm_text.setWordWrap(True)
         farm_text.setText(
             _tr("This is a free and open project, supported by ")
             + '<a href="https://farmanalytica.com.br" style="color:#1b6b39;'
@@ -336,9 +341,17 @@ class AGLgisDialog(QDialog):
         """Switch the stacked widget to the authentication page."""
         self.stack.setCurrentWidget(self.auth_page)
 
+    def show_radar_page(self):
+        """Switch the stacked widget to the Radar (SAR) page."""
+        self.stack.setCurrentWidget(self.radar_page)
+
     def _nav_to_auth(self):
         """Sidebar auth button — always navigates to the auth page."""
         self.show_auth_page()
+
+    def _nav_to_radar(self):
+        """Sidebar radar button — always navigates to the radar page."""
+        self.show_radar_page()
 
     def _nav_to_download(self):
         """Sidebar download button follows the existing dataset-loading path."""
@@ -361,6 +374,12 @@ class AGLgisDialog(QDialog):
             self._header_title.setText(_tr("GEE Configuration"))
             self.sidebar.set_active_page("auth")
             self.footer.setVisible(True)
+            return
+
+        if current is self.radar_page:
+            self._header_title.setText(_tr("Radar (SAR) Data"))
+            self.sidebar.set_active_page("radar")
+            self.footer.setVisible(False)
             return
 
         if current is self.aoi_page:

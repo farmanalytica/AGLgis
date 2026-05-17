@@ -52,6 +52,7 @@ AGLgis/
 │   ├── __init__.py          # View package marker
 │   ├── auth.py              # Authentication page widget construction (setup_auth_page)
 │   ├── download_dem.py      # AOI/DEM page widget construction (setup_download_dem_page)
+│   ├── radar.py             # Radar (SAR) page widget construction (setup_radar_page)
 │   ├── sidebar.py           # Permanent collapsible navigation sidebar (Sidebar, SidebarNavButton)
 │   └── styles.py            # Shared Qt stylesheet constants (STYLE_DIALOG, STYLE_BTN_PRIMARY, …)
 └── services/
@@ -82,10 +83,10 @@ Internal conventions:
 - `_setup_ui()` — builds header, body row (sidebar + stack), and footer; calls `setup_auth_page` and `setup_download_dem_page`
 - `_build_header()` — white bar with brand label, dynamic page-title label (`_header_title`), and help button
 - `_build_footer()` — FARM Analytica logo and attribution text
-- `show_loading_page()` / `show_auth_page()` / `show_aoi_page()` — switch the active stack page
+- `show_loading_page()` / `show_auth_page()` / `show_radar_page()` / `show_aoi_page()` — switch the active stack page
 - `_sync_page_state(index)` — connected to `stack.currentChanged`; updates `_header_title` and calls `sidebar.set_active_page()` to keep navigation state in sync regardless of what triggers the page switch
-- Three pages managed by a `QStackedWidget`: `loading_page` (first-run dependency download), `auth_page` (shown once extlibs are ready), `aoi_page` (shown after authentication or via the skip shortcut)
-- Permanent `Sidebar` instance lives in the body row; its `auth_requested` and `download_requested` signals are connected to `_nav_to_auth` and `_nav_to_download`
+- Four pages managed by a `QStackedWidget`: `loading_page` (first-run dependency download), `auth_page` (shown once extlibs are ready), `radar_page` (SAR data workflow), `aoi_page` (shown after authentication or via the skip shortcut)
+- Permanent `Sidebar` instance lives in the body row; its `auth_requested`, `radar_requested`, and `download_requested` signals are connected to `_nav_to_auth`, `_nav_to_radar`, and `_nav_to_download`
 
 ### `view/` — Page Modules
 
@@ -116,14 +117,31 @@ Builds the AOI and DEM download page (`setup_download_dem_page`). Layout: scroll
 | `QPushButton` | `btn_hybrid_layer` | Adds a Google Hybrid basemap layer to QGIS |
 | `QPushButton` | `btn_download_dem` | Downloads and loads the selected DEM into QGIS |
 
+#### `view/radar.py`
+Builds the Radar (SAR) data page (`setup_radar_page`). Layout: a full-width card with a two-tab interface (Inputs / Results) and a bottom navigation bar. The Inputs tab holds the SAR query parameters; the Results tab is a placeholder until the service layer lands. Tab switching is self-contained — no service dependencies.
+
+| Widget | Attribute | Purpose |
+|---|---|---|
+| `QgsMapLayerComboBox` | `sar_layer_combo` | Vector layer selector for the SAR AOI |
+| `QLineEdit` | `sar_date_start` | Start date input (`YYYY-MM-DD`) |
+| `QLineEdit` | `sar_date_end` | End date input (`YYYY-MM-DD`) |
+| `QComboBox` | `sar_sensor_combo` | Sentinel-1 product type (GRD / SLC) |
+| `QComboBox` | `sar_pol_combo` | Polarization band (VV / VH / VV+VH) |
+| `QComboBox` | `sar_format_combo` | Output format (GeoTIFF / COG) |
+| `QStackedWidget` | `sar_stack` | Holds Inputs (index 0) and Results (index 1) pages |
+| `QPushButton` | `sar_btn_back` | Goes to previous tab; disabled on the Inputs tab |
+| `QPushButton` | `sar_btn_next` | Advances to Results tab ("Next") or triggers the query ("Run"); "Run" is disabled until the service layer is wired |
+| `QLabel` | `sar_step_lbl` | Step indicator ("Step 1 of 2" / "Step 2 of 2") |
+
 #### `view/sidebar.py`
 Defines `Sidebar(QFrame)` and `SidebarNavButton(QPushButton)`. The sidebar is a permanent collapsible navigation rail shown on all pages. It collapses to 64 px (icon only) and expands to 184 px on hover via `QVariantAnimation`.
 
 | Widget / method | Purpose |
 |---|---|
 | `btn_auth` | Navigates to the authentication page; emits `auth_requested` |
+| `btn_radar` | Navigates to the SAR data page; emits `radar_requested` |
 | `btn_download` | Navigates to the AOI/download page; emits `download_requested` |
-| `set_active_page(page)` | Highlights the button matching `'auth'` or `'download'`; called by `_sync_page_state` in the dialog |
+| `set_active_page(page)` | Highlights the button matching `'auth'`, `'radar'`, or `'download'`; called by `_sync_page_state` in the dialog |
 
 #### `view/styles.py`
 Shared Qt stylesheet string constants imported by both page modules and `aglgis_dialog.py`.
@@ -264,6 +282,7 @@ If you are an AI assistant working on this codebase, read this before making cha
 
 **Where things live:**
 - New widgets on the auth page → `view/auth.py` (`setup_auth_page`)
+- New widgets on the SAR/radar page → `view/radar.py` (`setup_radar_page`)
 - New widgets on the AOI/download page → `view/download_dem.py` (`setup_download_dem_page`)
 - Sidebar navigation changes (buttons, icons, expand/collapse behaviour) → `view/sidebar.py`
 - New shared stylesheet constants → `view/styles.py`

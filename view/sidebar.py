@@ -9,6 +9,7 @@ in ``aglgis_dialog.py`` so the dialog can keep header and active state in sync.
 import os
 
 from qgis.PyQt.QtCore import QCoreApplication, QEasingCurve, QRectF, Qt, QSize, QVariantAnimation, pyqtSignal
+from qgis.PyQt.QtCore import QPointF
 from qgis.PyQt.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap
 from qgis.PyQt.QtWidgets import (
     QButtonGroup,
@@ -67,10 +68,12 @@ class Sidebar(QFrame):
 
     Signals:
         auth_requested: emitted when the user clicks Auth.
+        radar_requested: emitted when the user clicks Radar (SAR) data.
         download_requested: emitted when the user clicks Download DEM.
     """
 
     auth_requested = pyqtSignal()
+    radar_requested = pyqtSignal()
     download_requested = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -123,6 +126,10 @@ class Sidebar(QFrame):
         self.btn_auth.clicked.connect(self.auth_requested.emit)
         lay.addWidget(self.btn_auth)
 
+        self.btn_radar = self._make_button(_tr("Radar (SAR) data"), "radar")
+        self.btn_radar.clicked.connect(self.radar_requested.emit)
+        lay.addWidget(self.btn_radar)
+
         self.btn_download = self._make_button(_tr("Download DEM"), "download")
         self.btn_download.clicked.connect(self.download_requested.emit)
         lay.addWidget(self.btn_download)
@@ -130,6 +137,7 @@ class Sidebar(QFrame):
         self._group = QButtonGroup(self)
         self._group.setExclusive(True)
         self._group.addButton(self.btn_auth)
+        self._group.addButton(self.btn_radar)
         self._group.addButton(self.btn_download)
 
         lay.addStretch()
@@ -201,9 +209,10 @@ class Sidebar(QFrame):
         return btn
 
     def set_active_page(self, page: str) -> None:
-        """Highlight the button matching ``page`` (``'auth'`` or ``'download'``)."""
+        """Highlight the button matching ``page`` (``'auth'``, ``'radar'`` or ``'download'``)."""
         self._active_page = page
         self.btn_auth.setChecked(page == "auth")
+        self.btn_radar.setChecked(page == "radar")
         self.btn_download.setChecked(page == "download")
         self._sync_brand_visibility()
 
@@ -222,7 +231,7 @@ class Sidebar(QFrame):
         side_margin = 14 if expanded else 11
         self._layout.setContentsMargins(side_margin, 18, side_margin, 18)
 
-        for btn in (self.btn_auth, self.btn_download):
+        for btn in (self.btn_auth, self.btn_radar, self.btn_download):
             btn.setText(btn.property("navText") if expanded else "")
             btn.setToolTip("" if expanded else btn.property("navText"))
             btn.setFixedWidth(156 if expanded else 42)
@@ -359,6 +368,16 @@ class Sidebar(QFrame):
 
         if kind == "auth":
             painter.setPen(Qt.PenStyle.NoPen)
+        elif kind == "radar":
+            painter.setPen(pen)
+            # Concentric arcs sweeping up-right from the origin (lower-left).
+            painter.drawArc(QRectF(2, 2, 14, 14), 0 * 16, 90 * 16)
+            painter.drawArc(QRectF(4, 4, 10, 10), 0 * 16, 90 * 16)
+            painter.drawArc(QRectF(6, 6, 6, 6), 0 * 16, 90 * 16)
+            # Origin dot.
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(color))
+            painter.drawEllipse(QPointF(9, 9), 1.4, 1.4)
         else:
             painter.setPen(pen)
             painter.drawLine(10, 3, 10, 12)
