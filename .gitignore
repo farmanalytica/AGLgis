@@ -5,7 +5,7 @@ dist/
 .venv
 resources_rc.py
 CLAUDE.md
-ISSUS.md
+ISSUES.md
 .claude
 .codex
 .vscode/
