@@ -5,7 +5,7 @@ AOI and DEM download page for the AGLgis dialog.
 Builds the second workflow page: polygon AOI selection, DEM dataset selection,
 dataset metadata display, AOI buffer control, download folder picker, and
 action buttons.  Signal connections are wired externally by ``aglgis.py`` and
-``dem_handler.py``.
+``dem_ctrl.py``.
 """
 
 from qgis.PyQt.QtCore import Qt, QTimer, QCoreApplication
@@ -37,6 +37,7 @@ def _tr(text):
 # ---------------------------------------------------------------------------
 # Custom widget
 # ---------------------------------------------------------------------------
+
 
 class LimitedPopupComboBox(QComboBox):
     """ComboBox with a bounded popup height for long catalogs."""
@@ -86,6 +87,7 @@ class LimitedPopupComboBox(QComboBox):
 # STEP 2 — AOI and DEM inputs
 # ---------------------------------------------------------------------------
 
+
 def setup_download_dem_page(dialog, page):
     """
     Populate the AOI and DEM download page.
@@ -98,7 +100,7 @@ def setup_download_dem_page(dialog, page):
       buttons.
 
     All interactive widgets are exposed on ``dialog`` so ``aglgis.py`` and
-    ``dem_handler.py`` can wire signal connections without importing this
+    ``dem_ctrl.py`` can wire signal connections without importing this
     module directly.
     """
     page.setObjectName("aoiPage")
@@ -218,7 +220,9 @@ def setup_download_dem_page(dialog, page):
     scroll_lay.addWidget(buffer_lbl)
 
     buffer_desc = QLabel(
-        _tr("Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges.")
+        _tr(
+            "Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges."
+        )
     )
     buffer_desc.setWordWrap(True)
     buffer_desc.setStyleSheet("color: #757575; font-size: 9px;")
@@ -277,28 +281,6 @@ def setup_download_dem_page(dialog, page):
     footer_separator.setFrameShape(QFrame.Shape.HLine)
     footer_separator.setStyleSheet("color: #e8e8e8;")
     panel_lay.addWidget(footer_separator)
-
-    panel_lay.addSpacing(6)
-
-    # Download folder picker.
-    folder_layout = QHBoxLayout()
-    folder_layout.setContentsMargins(0, 0, 0, 0)
-    folder_layout.setSpacing(6)
-
-    folder_layout.addWidget(QLabel(_tr("Download to:")))
-
-    dialog.folder_input = QLineEdit()
-    dialog.folder_input.setPlaceholderText(_tr("Default Temporary Folder"))
-    dialog.folder_input.setReadOnly(True)
-    dialog.folder_input.setFixedHeight(26)
-    folder_layout.addWidget(dialog.folder_input)
-
-    dialog.btn_browse_folder = QPushButton(_tr("Browse..."))
-    dialog.btn_browse_folder.setFixedHeight(26)
-    dialog.btn_browse_folder.setStyleSheet(STYLE_BTN_SECONDARY)
-    folder_layout.addWidget(dialog.btn_browse_folder)
-
-    panel_lay.addLayout(folder_layout)
 
     panel_lay.addSpacing(6)
 

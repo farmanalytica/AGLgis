@@ -62,7 +62,7 @@ class AGLgisDialog(QDialog):
       download folder, and trigger the download.
 
     Public widget attributes created by the page modules (consumed by
-    ``aglgis.py`` and ``dem_handler.py``):
+    ``aglgis.py`` and ``dem_ctrl.py``):
 
     Auth page:
         project_id_input: GCP project ID field.

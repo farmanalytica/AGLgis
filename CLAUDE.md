@@ -18,20 +18,20 @@ Vendored dependencies live in `extlibs/` and are added to `sys.path` by `__init_
 
 ### Strict layer separation
 
-`aglgis.py` is the **only** file that imports both UI and services. It instantiates `AGLgisDialog`, `GEEService`, and `DEMHandler`, then wires all signals in one place. Maintain this boundary:
+`aglgis.py` is the **only** file that imports both UI and services. It instantiates `AGLgisDialog`, `GEEService`, and the controllers, then wires all signals in one place. Maintain this boundary:
 
 - `view/` — Qt widgets only; no `ee` SDK, no business logic, no service imports.
 - `services/` — pure logic; no Qt widgets, no dialog references.
-- `dem_handler.py` — orchestrator; receives the dialog and services as constructor arguments, never imports them globally.
+- `controllers/` — one controller per page (e.g. `auth_ctrl.py`, `dem_ctrl.py`); receives the dialog and services as constructor arguments, never imports them globally. Add `sar_ctrl.py` here for the SAR page.
 
 ### How widgets are exposed
 
-`view/auth.py` and `view/download_dem.py` attach widgets directly onto the `dialog` object (e.g. `dialog.btn_authenticate`, `dialog.layer_combo`). `aglgis.py` and `dem_handler.py` then access them via those attributes. Do not return widget references from the setup functions.
+`view/auth.py` and `view/download_dem.py` attach widgets directly onto the `dialog` object (e.g. `dialog.btn_authenticate`, `dialog.layer_combo`). `aglgis.py` and the controllers then access them via those attributes. Do not return widget references from the setup functions.
 
 ### Signal flow
 
 ```
-UI event → aglgis.py handler or DEMHandler method → service call → dialog.pop_message() / messageBar()
+UI event → aglgis.py handler or controller method → service call → dialog.pop_message() / messageBar()
 ```
 
 ### DEM catalog
