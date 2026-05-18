@@ -27,13 +27,12 @@ INCLUDE_FILES = [
     "__init__.py",
     "aglgis.py",
     "aglgis_dialog.py",
-    "dem_handler.py",
     "extlibs_manager.py",
     "icon.png",
     "LICENSE",
 ]
 
-INCLUDE_DIRS = ["view", "services", "assets"]
+INCLUDE_DIRS = ["view", "services", "controllers", "assets"]
 
 SKIP = {"__pycache__", ".git", ".github", "dist", ".mypy_cache", ".pytest_cache"}
 

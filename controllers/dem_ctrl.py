@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DEM handler orchestration module for AGLgis QGIS plugin.
+DEM controller for AGLgis QGIS plugin.
 
 Orchestrates DEM operations, AOI management, and coordinates between
 services for dataset loading and layer rendering.
@@ -24,20 +24,20 @@ except AttributeError:
 
     WAIT_CURSOR = Qt.WaitCursor
 
-from .services.map_utils import hybrid_function
-from .services.aoi_service import AOIService
-from .services.dem_service import DEMService
-from .services.dem_renderer import DEMRenderer
-from .services.dataset_manager import DatasetManager
-from .services.settings_manager import SettingsManager
-from .services.dem_registry import DEMRegistry
+from ..services.map_utils import hybrid_function
+from ..services.aoi_service import AOIService
+from ..services.dem_service import DEMService
+from ..services.dem_renderer import DEMRenderer
+from ..services.dataset_manager import DatasetManager
+from ..services.settings_manager import SettingsManager
+from ..services.dem_registry import DEMRegistry
 
 
 def _tr(text):
     return QCoreApplication.translate("AGLgis", text)
 
 
-class DEMHandler:
+class DEMCtrl:
     """
     Orchestrates DEM operations and coordinates between services.
 

@@ -35,7 +35,6 @@ AGLgis/
 ├── __init__.py              # QGIS entry point — registers the plugin via classFactory()
 ├── aglgis.py                # Plugin controller — owns the QGIS lifecycle (initGui, unload, run)
 ├── aglgis_dialog.py         # UI layer — dialog shell (header, stack, footer) and page navigation
-├── dem_handler.py           # DEM orchestration — coordinates AOI management and service calls
 ├── build_plugin.py          # Full build script — clean extlibs, install deps, compile translations, zip
 ├── compile_translations.py  # Compiles i18n/*.ts → *.qm without needing lrelease
 ├── extlibs_manager.py       # Background extlibs downloader (QThread); triggered by __init__.py on first run when extlibs/ is absent
@@ -48,6 +47,10 @@ AGLgis/
 │   ├── aglgis_es.ts/.qm     # Spanish
 │   ├── aglgis_hi.ts/.qm     # Hindi
 │   └── aglgis_zh_CN.ts/.qm  # Chinese (Simplified)
+├── controllers/
+│   ├── __init__.py          # Controllers package marker
+│   ├── auth_ctrl.py         # Auth page controller — handles authentication, reset, and folder selection
+│   └── dem_ctrl.py          # DEM page controller — orchestrates AOI management and service calls
 ├── view/
 │   ├── __init__.py          # View package marker
 │   ├── auth.py              # Authentication page widget construction (setup_auth_page)
@@ -71,10 +74,10 @@ AGLgis/
 
 ## Architecture
 
-The codebase follows a **UI / Service** separation:
+The codebase follows a **UI / Controller / Service** separation:
 
-### `aglgis.py` — Plugin Controller
-The QGIS plugin entry point. Handles toolbar/menu registration (`initGui`), teardown (`unload`), and launches the dialog (`run`). Service instantiation (`GEEService`, `DEMHandler`) and all signal wiring are deferred to `_finish_init()`, which is called only once extlibs are confirmed ready — either already extracted on disk, or after `ExtlibsDownloader` finishes and emits `download_done`. Until extlibs are ready, `run()` shows the loading page and waits for the downloader signal. This is the only place UI and services are wired together.
+### `aglgis.py` — Plugin Entry Point
+The QGIS plugin entry point. Handles toolbar/menu registration (`initGui`), teardown (`unload`), and launches the dialog (`run`). Service and controller instantiation (`GEEService`, `DEMCtrl`, `AuthCtrl`) and all signal wiring are deferred to `_finish_init()`, which is called only once extlibs are confirmed ready — either already extracted on disk, or after `ExtlibsDownloader` finishes and emits `download_done`. Until extlibs are ready, `run()` shows the loading page and waits for the downloader signal. This is the only place UI and services are wired together.
 
 ### `aglgis_dialog.py` — UI Layer
 Contains `AGLgisDialog(QDialog)`. Owns the dialog shell only: fixed header, central `QStackedWidget`, and fixed footer. Page widget construction is delegated to `view/auth.py` and `view/download_dem.py`. No knowledge of services or the `ee` SDK — all signal connections are made externally by the controller.
@@ -154,15 +157,27 @@ Shared Qt stylesheet string constants imported by both page modules and `aglgis_
 | `STYLE_BTN_HELP` | Circular "?" help button in the header |
 | `STYLE_AOI_PAGE` | AOI page panel card, field labels, combo boxes, metadata browser |
 
-### `dem_handler.py` — DEM Handler
-Contains `DEMHandler`. Orchestrates DEM operations and coordinates between services. Owns the current AOI state and QGIS map canvas interactions. Delegates rendering, dataset management, and settings persistence to specialized services.
+### `controllers/` — Page Controllers
+
+One controller per page. Each controller receives the dialog and services as constructor arguments and handles all user interactions for that page. Controllers sit between the UI (`view/`) and the business logic (`services/`) — they call service methods and update the dialog, but never import view modules directly.
+
+#### `controllers/auth_ctrl.py` — `AuthCtrl`
+Handles all user interactions on the authentication page.
+
+| Method | Signature | Purpose |
+|---|---|---|
+| `handle_authentication` | `()` | Validates the project ID, calls `GEEService.authenticate`, and navigates to the AOI page on success |
+| `handle_reset_authentication` | `()` | Delegates to `GEEService.reset_authentication` and reports the result |
+| `handle_folder_selection` | `()` | Opens a folder picker and delegates to `SettingsManager` to persist the choice |
+
+#### `controllers/dem_ctrl.py` — `DEMCtrl`
+Orchestrates DEM operations and coordinates between services. Owns the current AOI state and QGIS map canvas interactions.
 
 | Method | Signature | Purpose |
 |---|---|---|
 | `handle_layer_changed` | `(layer)` | Zooms the map canvas to the selected layer, then debounces 300 ms before loading the AOI and refreshing the dataset combobox |
 | `load_available_datasets` | `()` | Queries `DEMRegistry` directly; lists all datasets when unauthenticated, otherwise filters by AOI coverage |
 | `handle_dem_service` | `(interface)` | Downloads the selected DEM (with optional buffer) and delegates to `DEMRenderer` to load and style it in QGIS |
-| `handle_folder_selection` | `()` | Opens a folder picker and delegates to `SettingsManager` to persist the choice |
 | `on_dataset_changed` | `()` | Delegates to `DatasetManager` to update the dataset info panel |
 | `handle_hybrid_layer` | `()` | Loads the Google Hybrid basemap via `map_utils.hybrid_function()` and reports success via the message bar |
 
@@ -235,7 +250,7 @@ The translation system follows the Qt standard: `.ts` XML source files are compi
 
 ### How it works
 
-`aglgis.py` installs a `QTranslator` on plugin load and removes it on unload. Every user-visible string in `view/`, `aglgis_dialog.py`, `dem_handler.py`, and `services/gee_service.py` is wrapped with `_tr()` — a thin helper over `QCoreApplication.translate("AGLgis", text)`.
+`aglgis.py` installs a `QTranslator` on plugin load and removes it on unload. Every user-visible string in `view/`, `aglgis_dialog.py`, `controllers/`, and `services/gee_service.py` is wrapped with `_tr()` — a thin helper over `QCoreApplication.translate("AGLgis", text)`.
 
 ### Editing translations
 
@@ -262,10 +277,11 @@ This writes a `.qm` binary next to each `.ts` file. Reload the plugin in QGIS to
 
 ## Adding a New Feature
 
-1. **UI changes** — add widgets in the appropriate page module (`view/auth.py` or `view/download_dem.py`). Attach them to `dialog` so `aglgis.py` can reach them. Add shared styles to `view/styles.py`.
+1. **UI changes** — add widgets in the appropriate page module (`view/auth.py`, `view/download_dem.py`, etc.). Attach them to `dialog` so controllers and `aglgis.py` can reach them. Add shared styles to `view/styles.py`.
 2. **Business logic** — add a method to the relevant service (or create a new service file under `services/`).
-3. **Wire them up** — in `aglgis.py`, connect the new widget's signal to the service method.
-4. **Translations** — wrap every new user-visible string with `_tr()`. Add a matching `<message>` entry to each `i18n/aglgis_<locale>.ts` file, then run `compile_translations.py`.
+3. **Controller logic** — add the event handler to the relevant controller (`controllers/auth_ctrl.py`, `controllers/dem_ctrl.py`), or create a new one for a new page.
+4. **Wire them up** — in `aglgis.py`, connect the new widget's signal to the controller method.
+5. **Translations** — wrap every new user-visible string with `_tr()`. Add a matching `<message>` entry to each `i18n/aglgis_<locale>.ts` file, then run `compile_translations.py`.
 
 > Keep the dialog ignorant of the GEE SDK. Keep the service ignorant of Qt widgets.
 
@@ -278,7 +294,8 @@ If you are an AI assistant working on this codebase, read this before making cha
 **Layer boundaries — never cross these:**
 - The UI (`aglgis_dialog.py` and `view/`) must not import `ee` or any service directly.
 - Services (`services/`) must not import Qt widgets or reference QGIS APIs.
-- `aglgis.py` is the only file allowed to wire UI to services.
+- Controllers (`controllers/`) receive the dialog as a constructor argument but must not import `view/` modules directly.
+- `aglgis.py` is the only file allowed to wire UI signals to controller methods.
 
 **Where things live:**
 - New widgets on the auth page → `view/auth.py` (`setup_auth_page`)
@@ -287,7 +304,9 @@ If you are an AI assistant working on this codebase, read this before making cha
 - Sidebar navigation changes (buttons, icons, expand/collapse behaviour) → `view/sidebar.py`
 - New shared stylesheet constants → `view/styles.py`
 - New signal connections → `aglgis.py` (inside `_finish_init()`)
-- New DEM handler/orchestration logic → `dem_handler.py`
+- Auth page event handlers → `controllers/auth_ctrl.py`
+- DEM page event handlers and orchestration → `controllers/dem_ctrl.py`
+- SAR page event handlers → `controllers/sar_ctrl.py` (create when needed)
 - New rendering/styling logic → `services/dem_renderer.py`
 - New dataset management logic → `services/dataset_manager.py`
 - New settings persistence logic → `services/settings_manager.py`

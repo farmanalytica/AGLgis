@@ -22,7 +22,7 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.gui import QgsPasswordLineEdit
 
-from .styles import STYLE_BTN_PRIMARY
+from .styles import STYLE_BTN_PRIMARY, STYLE_BTN_SECONDARY
 
 
 def _tr(text):
@@ -32,6 +32,7 @@ def _tr(text):
 # ---------------------------------------------------------------------------
 # STEP 1 — Authentication
 # ---------------------------------------------------------------------------
+
 
 def setup_auth_page(dialog, page):
     """
@@ -200,4 +201,31 @@ def setup_auth_page(dialog, page):
     dialog.btn_go_to_aoi.hide()
     dialog.btn_go_to_aoi.clicked.connect(dialog.show_aoi_page)
 
-    outer.addStretch(3)
+    # ── Download folder picker ────────────────────────────────────────────
+    outer.addSpacing(8)
+
+    folder_row = QHBoxLayout()
+    folder_row.setContentsMargins(0, 0, 0, 0)
+    folder_row.setSpacing(8)
+    folder_row.addStretch(1)
+
+    folder_lbl = QLabel(_tr("Download folder"))
+    folder_lbl.setStyleSheet("color: #9e9e9e; font-size: 11px;")
+    folder_row.addWidget(folder_lbl)
+
+    dialog.folder_input = QLineEdit()
+    dialog.folder_input.setReadOnly(True)
+    dialog.folder_input.setPlaceholderText(_tr("System temp (default)"))
+    dialog.folder_input.setFixedHeight(26)
+    dialog.folder_input.setFixedWidth(180)
+    folder_row.addWidget(dialog.folder_input)
+
+    dialog.btn_browse_folder = QPushButton(_tr("Browse"))
+    dialog.btn_browse_folder.setFixedHeight(26)
+    dialog.btn_browse_folder.setStyleSheet(STYLE_BTN_SECONDARY)
+    folder_row.addWidget(dialog.btn_browse_folder)
+
+    folder_row.addStretch(1)
+    outer.addLayout(folder_row)
+
+    outer.addStretch(2)
