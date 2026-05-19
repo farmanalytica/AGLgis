@@ -155,6 +155,7 @@ def setup_download_dem_page(dialog, page):
     dialog.layer_combo = QgsMapLayerComboBox()
     dialog.layer_combo.setObjectName("layerCombo")
     dialog.layer_combo.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+    dialog.layer_combo.setAllowEmptyLayer(True)
     dialog.layer_combo.setFixedHeight(28)
     aoi_row_lay.addWidget(dialog.layer_combo, 1)
 
