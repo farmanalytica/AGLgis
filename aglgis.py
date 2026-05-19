@@ -174,7 +174,7 @@ class AGLgis:
             self.auth_ctrl.handle_folder_selection
         )
         self.dlg.btn_go_to_aoi.clicked.connect(self.dem_ctrl.load_available_datasets)
-        self.dlg.layer_combo.layerChanged.connect(self.dem_ctrl.handle_layer_changed)
+        self.dlg.layer_combo.activated.connect(self.dem_ctrl.handle_layer_activated)
         self.dlg.dem_combo.currentIndexChanged.connect(self.dem_ctrl.on_dataset_changed)
         self.dlg.btn_download_dem.clicked.connect(
             lambda: self.dem_ctrl.handle_dem_service(self.interface)

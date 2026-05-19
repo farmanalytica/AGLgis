@@ -56,6 +56,13 @@ class DEMCtrl:
         self._debounce_timer.setSingleShot(True)
         self._debounce_timer.timeout.connect(self._load_aoi_for_pending_layer)
 
+    def _is_passive_ee_init_error(self, error):
+        """Return True for EE initialization errors caused by passive UI refresh."""
+        return (
+            not self.gee_service.is_authenticated
+            and "Earth Engine client library not initialized" in str(error)
+        )
+
     def handle_get_aoi(self):
         """Load the AOI from the selected layer and store it for downstream use."""
         try:
@@ -65,6 +72,12 @@ class DEMCtrl:
                 self.dlg.pop_message(_tr("Select a layer."), "warning")
                 return
 
+            if not self.gee_service.is_authenticated:
+                self.current_aoi = None
+                self.current_aoi_bbox = None
+                self.load_available_datasets()
+                return
+
             self.current_aoi, self.current_aoi_bbox = AOIService.get_aoi_from_layer(
                 layer
             )
@@ -72,6 +85,8 @@ class DEMCtrl:
             self.load_available_datasets()
 
         except Exception as e:
+            if self._is_passive_ee_init_error(e):
+                return
             self.dlg.pop_message(str(e), "warning")
 
     def handle_dem_service(self, interface):
@@ -144,6 +159,12 @@ class DEMCtrl:
             self.dlg.dem_combo.clear()
             return
 
+        if not self.gee_service.is_authenticated:
+            self._debounce_timer.stop()
+            self.current_aoi = None
+            self.current_aoi_bbox = None
+            return
+
         canvas = self.interface.mapCanvas()
         transform = QgsCoordinateTransform(
             layer.crs(),
@@ -158,6 +179,10 @@ class DEMCtrl:
         self._pending_layer = layer
         self._debounce_timer.start(300)
 
+    def handle_layer_activated(self, *args):
+        """Handle AOI layer choices explicitly made from the plugin combo box."""
+        self.handle_layer_changed(self.dlg.layer_combo.currentLayer())
+
     def _load_aoi_for_pending_layer(self):
         """Load AOI and available datasets for the debounced pending layer."""
         layer = self._pending_layer
@@ -166,12 +191,18 @@ class DEMCtrl:
             self.current_aoi_bbox = None
             self.dlg.dem_combo.clear()
             return
+        if not self.gee_service.is_authenticated:
+            self.current_aoi = None
+            self.current_aoi_bbox = None
+            return
         try:
             self.current_aoi, self.current_aoi_bbox = AOIService.get_aoi_from_layer(
                 layer
             )
             self.load_available_datasets()
         except Exception as e:
+            if self._is_passive_ee_init_error(e):
+                return
             self.dlg.pop_message(str(e), "warning")
 
     def load_available_datasets(self):
