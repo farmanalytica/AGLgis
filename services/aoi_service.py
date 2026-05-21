@@ -73,7 +73,7 @@ class AOIService:
         return layer
 
     @staticmethod
-    def _get_geometry(layer):
+    def _get_geometry(layer, use_selected_features=True):
         """
         Get the dissolved geometry from a layer's selected or all features.
 
@@ -89,7 +89,11 @@ class AOIService:
             ValueError: If the layer contains no geometries.
         """
 
-        features = layer.selectedFeatures() or list(layer.getFeatures())
+        features = (
+            layer.selectedFeatures()
+            if use_selected_features and layer.selectedFeatureCount() > 0
+            else list(layer.getFeatures())
+        )
         geometries = [f.geometry() for f in features]
 
         if not geometries:
@@ -98,7 +102,7 @@ class AOIService:
         return QgsGeometry.unaryUnion(geometries)
 
     @staticmethod
-    def _to_ee_feature_collection(layer):
+    def _to_ee_feature_collection(layer, use_selected_features=True):
         """
         Convert a QGIS layer's geometry to an Earth Engine FeatureCollection.
         Ensures geometry is valid and compatible with Earth Engine requirements.
@@ -115,7 +119,7 @@ class AOIService:
         Raises:
             ValueError: If the geometry is empty or cannot be exported to GeoJSON.
         """
-        geometry = AOIService._get_geometry(layer)
+        geometry = AOIService._get_geometry(layer, use_selected_features)
 
         if geometry.isEmpty():
             raise ValueError("Empty geometry.")
@@ -148,7 +152,7 @@ class AOIService:
         return ee.FeatureCollection([ee.Feature(ee_geometry)]), bbox
 
     @staticmethod
-    def get_aoi_from_layer(layer):
+    def get_aoi_from_layer(layer, use_selected_features=True):
         """
         Get an Earth Engine FeatureCollection AOI from a QGIS layer object.
 
@@ -162,10 +166,10 @@ class AOIService:
             ValueError: If the layer or its geometry is invalid.
         """
         AOIService._validate_layer(layer)
-        return AOIService._to_ee_feature_collection(layer)
+        return AOIService._to_ee_feature_collection(layer, use_selected_features)
 
     @staticmethod
-    def get_aoi_from_layer_id(layer_id):
+    def get_aoi_from_layer_id(layer_id, use_selected_features=True):
         """
         Get an Earth Engine FeatureCollection AOI from a QGIS layer ID.
 
@@ -179,4 +183,4 @@ class AOIService:
             ValueError: If the layer does not exist or its geometry is invalid.
         """
         layer = AOIService._get_layer_by_id(layer_id)
-        return AOIService._to_ee_feature_collection(layer)
+        return AOIService._to_ee_feature_collection(layer, use_selected_features)
