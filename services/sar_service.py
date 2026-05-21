@@ -107,6 +107,7 @@ class SARService:
                 "region": aoi.geometry().bounds().getInfo(),
                 "dimensions": 900,
                 "format": "png",
+                "crs": "EPSG:4326",
                 "min": 0.3,
                 "max": 1.0,
                 "palette": SARService.PLOTLY_SEQUENTIAL_PALETTE,
