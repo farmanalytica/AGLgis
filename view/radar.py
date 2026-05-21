@@ -203,7 +203,10 @@ def _build_inputs_tab(dialog, parent):
     dialog.sar_date_end.setCalendarPopup(True)
     dialog.sar_date_end.setDate(QDate.currentDate())
     _prepare_field(dialog.sar_date_end)
-    for _cal in (dialog.sar_date_start.calendarWidget(), dialog.sar_date_end.calendarWidget()):
+    for _cal in (
+        dialog.sar_date_start.calendarWidget(),
+        dialog.sar_date_end.calendarWidget(),
+    ):
         if _cal is not None:
             _cal.setStyleSheet(_CALENDAR_STYLE)
 
@@ -246,7 +249,11 @@ def _build_inputs_tab(dialog, parent):
     dialog.sar_chk_terrain.setChecked(True)
     dialog.sar_chk_speckle = QCheckBox(_tr("Speckle filtering"))
     dialog.sar_chk_speckle.setChecked(True)
-    for chk in (dialog.sar_chk_border_noise, dialog.sar_chk_terrain, dialog.sar_chk_speckle):
+    for chk in (
+        dialog.sar_chk_border_noise,
+        dialog.sar_chk_terrain,
+        dialog.sar_chk_speckle,
+    ):
         chk.setStyleSheet("""
             QCheckBox {
                 color: #212121;
@@ -336,7 +343,9 @@ def _build_results_tab(dialog, parent):
     date_row.setSpacing(8)
     date_row.setContentsMargins(0, 0, 0, 0)
     date_lbl = QLabel(_tr("Date"))
-    date_lbl.setStyleSheet("color: #616161; font-size: 12px; background: transparent; border: none;")
+    date_lbl.setStyleSheet(
+        "color: #616161; font-size: 12px; background: transparent; border: none;"
+    )
     date_lbl.setFixedWidth(34)
     date_row.addWidget(date_lbl)
     dialog.sar_result_date_combo = QComboBox()
@@ -351,7 +360,9 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_preview = QPushButton(_tr("Preview"))
     dialog.sar_btn_preview.setFixedSize(100, 30)
     dialog.sar_btn_preview.setStyleSheet(STYLE_BTN_PRIMARY)
-    dialog.sar_btn_download_preview = QPushButton(_tr("Download & Preview").replace("&", "&&"))
+    dialog.sar_btn_download_preview = QPushButton(
+        _tr("Download & Preview").replace("&", "&&")
+    )
     dialog.sar_btn_download_preview.setFixedSize(140, 30)
     dialog.sar_btn_download_preview.setStyleSheet(STYLE_BTN_SECONDARY)
     date_row.addWidget(dialog.sar_btn_preview)
@@ -549,9 +560,15 @@ def setup_radar_page(dialog, page):
 
     btn_tab_inputs.clicked.connect(lambda: _set_tab(0))
     btn_tab_results.clicked.connect(lambda: _set_tab(1))
-    btn_next.clicked.connect(lambda: _set_tab(stack.currentIndex() + 1)
-                             if stack.currentIndex() < stack.count() - 1 else None)
-    btn_back.clicked.connect(lambda: _set_tab(stack.currentIndex() - 1)
-                             if stack.currentIndex() > 0 else None)
+    btn_next.clicked.connect(
+        lambda: (
+            _set_tab(stack.currentIndex() + 1)
+            if stack.currentIndex() < stack.count() - 1
+            else None
+        )
+    )
+    btn_back.clicked.connect(
+        lambda: _set_tab(stack.currentIndex() - 1) if stack.currentIndex() > 0 else None
+    )
 
     _set_tab(0)
