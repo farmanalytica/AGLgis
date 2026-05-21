@@ -112,6 +112,9 @@ class SARCtrl:
                 self.aoi,
                 selected_date,
             )
+            preview_url = SARService.get_ratio_preview_url(selected_image, self.aoi)
+            self._render_preview(selected_date, preview_url)
+
             output_folder = SettingsManager.load_download_folder()
             output_path = SARService.download_image(
                 selected_image,
