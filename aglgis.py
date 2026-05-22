@@ -38,6 +38,7 @@ from .services.settings_manager import SettingsManager
 from .services.gee_service import GEEService
 from .controllers.dem_ctrl import DEMCtrl
 from .controllers.auth_ctrl import AuthCtrl
+from .controllers.sar_ctrl import SARCtrl
 
 
 class AGLgis:
@@ -156,6 +157,7 @@ class AGLgis:
         self.gee_service = GEEService()
         self.dem_ctrl = DEMCtrl(self.dlg, self.gee_service, self.interface)
         self.auth_ctrl = AuthCtrl(self.dlg, self.gee_service, self.dem_ctrl)
+        self.sar_ctrl = SARCtrl(self.dlg, self.interface)
 
         saved_project_id = self.gee_service.get_saved_project_id()
         if saved_project_id:
@@ -180,6 +182,11 @@ class AGLgis:
             lambda: self.dem_ctrl.handle_dem_service(self.interface)
         )
         self.dlg.btn_hybrid_layer.clicked.connect(self.dem_ctrl.handle_hybrid_layer)
+        self.dlg.sar_btn_next.clicked.connect(self.sar_ctrl.handle_sar_run)
+        self.dlg.sar_btn_preview.clicked.connect(self.sar_ctrl.handle_preview_image)
+        self.dlg.sar_btn_download_preview.clicked.connect(
+            self.sar_ctrl.handle_download_preview
+        )
 
     def _on_extlibs_ready(self, success, error_msg):
         self._waiting_for_extlibs = False
