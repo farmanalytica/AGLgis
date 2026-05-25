@@ -2,11 +2,13 @@ from ..services.aoi_service import AOIService
 from ..services.sar_service import SARService
 from ..services.sar_renderer import SARRenderer
 from ..services.settings_manager import SettingsManager
+from ..view.sar_plot import render_plugin_html, render_browser_html
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QUrl
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import QApplication
+import tempfile
 import pandas as pd
-import plotly.express as px
 
 try:
     WAIT_CURSOR = Qt.CursorShape.WaitCursor
@@ -83,21 +85,28 @@ class SARCtrl:
 
         try:
             selected_date = self.dlg.sar_result_date_combo.currentText()
-
             selected_image = SARService.get_image_for_date(
                 self.collection,
                 self.aoi,
                 selected_date,
             )
-            preview_url = SARService.get_ratio_preview_url(selected_image, self.aoi)
-            self._render_preview(selected_date, preview_url)
+            output_path = SARService.download_image(
+                selected_image,
+                self.aoi,
+                selected_date,
+                output_folder=tempfile.gettempdir(),
+            )
+            SARRenderer.load_sar_to_qgis(output_path, f"Preview_{selected_date}")
+            if self.interface:
+                self.interface.messageBar().pushMessage(
+                    "AGLgis", f"SAR preview '{selected_date}' loaded into QGIS."
+                )
         except Exception as e:
             self.dlg.pop_message(str(e), "warning")
         finally:
             QApplication.restoreOverrideCursor()
 
     def handle_download_preview(self):
-
         if self.collection is None or self.aoi is None:
             self.dlg.pop_message("Run SAR processing first.", "warning")
             return
@@ -112,9 +121,6 @@ class SARCtrl:
                 self.aoi,
                 selected_date,
             )
-            preview_url = SARService.get_ratio_preview_url(selected_image, self.aoi)
-            self._render_preview(selected_date, preview_url)
-
             output_folder = SettingsManager.load_download_folder()
             output_path = SARService.download_image(
                 selected_image,
@@ -125,104 +131,25 @@ class SARCtrl:
             SARRenderer.load_sar_to_qgis(output_path, f"Sentinel1_{selected_date}")
             if self.interface:
                 self.interface.messageBar().pushMessage(
-                    "AGLgis", f"SAR image '{selected_date}' loaded successfully."
+                    "AGLgis", f"SAR image '{selected_date}' downloaded and loaded successfully."
                 )
         except Exception as e:
             self.dlg.pop_message(str(e), "warning")
         finally:
             QApplication.restoreOverrideCursor()
 
+    def handle_open_browser(self):
+        if self.dataframe is None:
+            self.dlg.pop_message("Run SAR processing first.", "warning")
+            return
+        html = render_browser_html(self.dataframe)
+        with tempfile.NamedTemporaryFile(
+            suffix=".html", delete=False, mode="w", encoding="utf-8"
+        ) as f:
+            f.write(html)
+            path = f.name
+        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
     def _render_timeseries(self):
-        fig = px.line(
-            self.dataframe,
-            x="dates",
-            y="AOI_average",
-            markers=True,
-            title="VV/VH Ratio Mean Time Series",
-        )
-        fig.update_layout(
-            xaxis_title="Date",
-            yaxis_title="VV/VH Ratio Mean",
-            yaxis=dict(
-                rangemode="tozero",
-                tickformat=".3f",
-            ),
-            margin=dict(l=80, r=20, t=40, b=40),
-        )
+        self.dlg.sar_web_view.setHtml(render_plugin_html(self.dataframe))
 
-        chart_html = fig.to_html(
-            include_plotlyjs=True,
-            full_html=False,
-            config={"displayModeBar": False, "responsive": True},
-        )
-        table_html = self.dataframe.to_html(index=False, classes="sar-table")
-        self.dlg.sar_web_view.setHtml(
-            f"""
-            <html>
-            <head>
-                <style>
-                    body {{
-                        margin: 0;
-                        padding: 12px;
-                        background: #ffffff;
-                        color: #212121;
-                        font-family: Arial, sans-serif;
-                    }}
-                    .sar-table {{
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 12px;
-                        font-size: 12px;
-                    }}
-                    .sar-table th, .sar-table td {{
-                        border: 1px solid #e0e0e0;
-                        padding: 6px 8px;
-                        text-align: left;
-                    }}
-                    .sar-table th {{
-                        background: #f3f7f4;
-                        color: #1b6b39;
-                    }}
-                </style>
-            </head>
-            <body>
-                {chart_html}
-                {table_html}
-            </body>
-            </html>
-            """
-        )
-
-    def _render_preview(self, selected_date, preview_url):
-        self.dlg.sar_web_view.setHtml(
-            f"""
-            <html>
-            <head>
-                <style>
-                    body {{
-                        margin: 0;
-                        padding: 14px;
-                        background: #ffffff;
-                        color: #212121;
-                        font-family: Arial, sans-serif;
-                    }}
-                    h3 {{
-                        margin: 0 0 10px 0;
-                        color: #1b6b39;
-                        font-size: 15px;
-                    }}
-                    img {{
-                        display: block;
-                        width: 100%;
-                        height: auto;
-                        border: 1px solid #dce6df;
-                    }}
-                </style>
-            </head>
-            <body>
-                <h3>VV/VH Ratio Preview - {selected_date}</h3>
-                <img src="{preview_url}" />
-            </body>
-            </html>
-            """
-        )
