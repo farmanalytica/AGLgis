@@ -4,7 +4,7 @@ from ..services.sar_renderer import SARRenderer
 from ..services.settings_manager import SettingsManager
 from ..view.sar_plot import render_plugin_html, render_browser_html
 
-from qgis.PyQt.QtCore import Qt, QUrl
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import QApplication
 import tempfile
@@ -16,15 +16,33 @@ except AttributeError:
     WAIT_CURSOR = Qt.WaitCursor
 
 
+def _tr(text):
+    return QCoreApplication.translate("AGLgis", text)
+
+
 class SARCtrl:
-    def __init__(self, dialog, interface=None):
+    def __init__(self, dialog, interface=None, gee_service=None):
         self.dlg = dialog
         self.interface = interface
+        self.gee_service = gee_service
         self.collection = None
         self.aoi = None
         self.dataframe = None
 
+    def _show_auth_required_message(self):
+        self.dlg.pop_message(
+            _tr(
+                "Authentication is required to download SAR data. "
+                "Please go to the Auth page and validate your Google Cloud project ID."
+            ),
+            "warning",
+        )
+
     def handle_sar_run(self):
+        if self.gee_service and not self.gee_service.is_authenticated:
+            self._show_auth_required_message()
+            return
+
         layer = self.dlg.sar_layer_combo.currentLayer()
         if not layer:
             self.dlg.pop_message("Select an AOI layer.", "warning")
@@ -131,7 +149,8 @@ class SARCtrl:
             SARRenderer.load_sar_to_qgis(output_path, f"Sentinel1_{selected_date}")
             if self.interface:
                 self.interface.messageBar().pushMessage(
-                    "AGLgis", f"SAR image '{selected_date}' downloaded and loaded successfully."
+                    "AGLgis",
+                    f"SAR image '{selected_date}' downloaded and loaded successfully.",
                 )
         except Exception as e:
             self.dlg.pop_message(str(e), "warning")
@@ -152,4 +171,3 @@ class SARCtrl:
 
     def _render_timeseries(self):
         self.dlg.sar_web_view.setHtml(render_plugin_html(self.dataframe))
-

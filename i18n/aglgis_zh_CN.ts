@@ -120,6 +120,10 @@
         <translation>下载 DEM 数据需要身份验证。请转到 Auth 页面并验证您的 Google Cloud 项目 ID。</translation>
     </message>
     <message>
+        <source>Authentication is required to download SAR data. Please go to the Auth page and validate your Google Cloud project ID.</source>
+        <translation>下载 SAR 数据需要身份验证。请转到 Auth 页面并验证您的 Google Cloud 项目 ID。</translation>
+    </message>
+    <message>
         <source>No AOI selected. Please select a layer first.</source>
         <translation>未选择 AOI。请先选择图层。</translation>
     </message>

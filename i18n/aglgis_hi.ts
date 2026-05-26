@@ -120,6 +120,10 @@
         <translation>DEM डेटा डाउनलोड के लिए प्रमाणीकरण आवश्यक है। Auth पेज पर जाएं और अपना Google Cloud प्रोजेक्ट ID सत्यापित करें।</translation>
     </message>
     <message>
+        <source>Authentication is required to download SAR data. Please go to the Auth page and validate your Google Cloud project ID.</source>
+        <translation>SAR डेटा डाउनलोड के लिए प्रमाणीकरण आवश्यक है। Auth पेज पर जाएं और अपना Google Cloud प्रोजेक्ट ID सत्यापित करें।</translation>
+    </message>
+    <message>
         <source>No AOI selected. Please select a layer first.</source>
         <translation>कोई AOI नहीं चुनी। पहले कोई लेयर चुनें।</translation>
     </message>
