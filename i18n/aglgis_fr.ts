@@ -120,6 +120,10 @@
         <translation>L&apos;authentification est requise pour télécharger des données MNT. Allez sur la page Auth et validez votre ID de projet Google Cloud.</translation>
     </message>
     <message>
+        <source>Authentication is required to download SAR data. Please go to the Auth page and validate your Google Cloud project ID.</source>
+        <translation>L&apos;authentification est requise pour télécharger des données SAR. Allez sur la page Auth et validez votre ID de projet Google Cloud.</translation>
+    </message>
+    <message>
         <source>No AOI selected. Please select a layer first.</source>
         <translation>Aucune AOI sélectionnée. Veuillez d&apos;abord sélectionner une couche.</translation>
     </message>
