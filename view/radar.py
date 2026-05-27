@@ -568,10 +568,15 @@ def setup_radar_page(dialog, page):
 
     nav_lay.addStretch(1)
 
+    # Forward control on the Intro tab — pure navigation to the Inputs step.
+    btn_intro_next = QPushButton(_tr("Next"))
+    btn_intro_next.setFixedSize(80, 30)
+    btn_intro_next.setStyleSheet(STYLE_BTN_PRIMARY)
+    nav_lay.addWidget(btn_intro_next)
+
     btn_next = QPushButton(_tr("Run"))
     btn_next.setFixedSize(80, 30)
     btn_next.setStyleSheet(STYLE_BTN_PRIMARY)
-
     nav_lay.addWidget(btn_next)
     outer.addWidget(nav_bar)
 
@@ -580,12 +585,12 @@ def setup_radar_page(dialog, page):
     dialog.sar_step_lbl = step_lbl
 
     # -- Tab switching logic (self-contained, no service dependencies)
-    # Tabs: 0 = Intro (docs), 1 = Inputs, 2 = Results.
+    # Three-step flow: 0 = Intro (docs), 1 = Inputs, 2 = Results.
     def _set_tab(index):
         stack.setCurrentIndex(index)
         btn_back.setEnabled(index > 0)
-        # The Inputs/Results wizard is a 2-step flow; Intro is not a step.
-        step_lbl.setText("" if index == 0 else f"Step {index} of 2")
+        step_lbl.setText(f"Step {index + 1} of 3")
+        btn_intro_next.setVisible(index == 0)  # "Next" advances Intro -> Inputs
         btn_next.setVisible(index == 1)  # "Run" lives on the Inputs tab only
         btn_tab_intro.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
         btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
@@ -597,6 +602,7 @@ def setup_radar_page(dialog, page):
     btn_tab_intro.clicked.connect(lambda: _set_tab(0))
     btn_tab_inputs.clicked.connect(lambda: _set_tab(1))
     btn_tab_results.clicked.connect(lambda: _set_tab(2))
+    btn_intro_next.clicked.connect(lambda: _set_tab(1))
     btn_back.clicked.connect(
         lambda: _set_tab(stack.currentIndex() - 1) if stack.currentIndex() > 0 else None
     )
