@@ -7,9 +7,11 @@ Signal connections will be wired externally by ``aglgis.py`` once the
 service layer is in place.
 """
 
+import os
+
 from qgis.core import QgsMapLayerProxyModel
 from qgis.gui import QgsMapLayerComboBox
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QDate
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QDate, QUrl
 from qgis.PyQt.QtWebKitWidgets import QWebView
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -151,6 +153,25 @@ def _section_panel():
         }
     """)
     return panel
+
+
+def _build_intro_tab(dialog, parent):
+    """Render assets/intro_sar.html directly from the plugin source."""
+    outer = QVBoxLayout(parent)
+    outer.setContentsMargins(0, 0, 0, 0)
+    outer.setSpacing(0)
+
+    view = QWebView()
+    view.setStyleSheet("background: #ffffff; border: none;")
+    intro_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "assets",
+        "intro_sar.html",
+    )
+    # load() reads the file in place, so relative asset paths resolve from assets/.
+    view.load(QUrl.fromLocalFile(intro_path))
+    dialog.sar_intro_view = view
+    outer.addWidget(view, 1)
 
 
 def _build_inputs_tab(dialog, parent):
@@ -482,6 +503,10 @@ def setup_radar_page(dialog, page):
     tab_bar_lay.setContentsMargins(6, 0, 6, 0)
     tab_bar_lay.setSpacing(8)
 
+    btn_tab_intro = QPushButton(_tr("Intro"))
+    btn_tab_intro.setFixedHeight(40)
+    btn_tab_intro.setCursor(Qt.CursorShape.PointingHandCursor)
+
     btn_tab_inputs = QPushButton(_tr("Inputs"))
     btn_tab_inputs.setFixedHeight(40)
     btn_tab_inputs.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -490,6 +515,7 @@ def setup_radar_page(dialog, page):
     btn_tab_results.setFixedHeight(40)
     btn_tab_results.setCursor(Qt.CursorShape.PointingHandCursor)
 
+    tab_bar_lay.addWidget(btn_tab_intro)
     tab_bar_lay.addWidget(btn_tab_inputs)
     tab_bar_lay.addWidget(btn_tab_results)
     tab_bar_lay.addStretch(1)
@@ -499,6 +525,10 @@ def setup_radar_page(dialog, page):
     # -- Stacked content
     stack = QStackedWidget()
     stack.setStyleSheet("QStackedWidget { background: transparent; border: none; }")
+
+    intro_page = QWidget()
+    _build_intro_tab(dialog, intro_page)
+    stack.addWidget(intro_page)
 
     inputs_page = QWidget()
     _build_inputs_tab(dialog, inputs_page)
@@ -550,19 +580,23 @@ def setup_radar_page(dialog, page):
     dialog.sar_step_lbl = step_lbl
 
     # -- Tab switching logic (self-contained, no service dependencies)
+    # Tabs: 0 = Intro (docs), 1 = Inputs, 2 = Results.
     def _set_tab(index):
         stack.setCurrentIndex(index)
         btn_back.setEnabled(index > 0)
-        step_lbl.setText(f"Step {index + 1} of 2")
-        btn_next.setVisible(index == 0)
-        btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
-        btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
+        # The Inputs/Results wizard is a 2-step flow; Intro is not a step.
+        step_lbl.setText("" if index == 0 else f"Step {index} of 2")
+        btn_next.setVisible(index == 1)  # "Run" lives on the Inputs tab only
+        btn_tab_intro.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
+        btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
+        btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 2 else _TAB_INACTIVE)
 
     # Exposed so the controller can advance to Results only on a successful run.
     dialog.sar_set_tab = _set_tab
 
-    btn_tab_inputs.clicked.connect(lambda: _set_tab(0))
-    btn_tab_results.clicked.connect(lambda: _set_tab(1))
+    btn_tab_intro.clicked.connect(lambda: _set_tab(0))
+    btn_tab_inputs.clicked.connect(lambda: _set_tab(1))
+    btn_tab_results.clicked.connect(lambda: _set_tab(2))
     btn_back.clicked.connect(
         lambda: _set_tab(stack.currentIndex() - 1) if stack.currentIndex() > 0 else None
     )

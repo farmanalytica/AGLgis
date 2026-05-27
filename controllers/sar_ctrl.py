@@ -88,7 +88,7 @@ class SARCtrl:
             self.dlg.sar_result_date_combo.clear()
             self.dlg.sar_result_date_combo.addItems(self.dataframe["dates"].tolist())
             self._render_timeseries()
-            self.dlg.sar_set_tab(1)
+            self.dlg.sar_set_tab(2)
         except Exception as e:
             self.dlg.pop_message(str(e), "warning")
         finally:
