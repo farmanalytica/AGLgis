@@ -86,7 +86,7 @@ class AGLgisDialog(QDialog):
 
     def __init__(self, parent=None):
         self._qgis_parent = parent
-        super().__init__(None)
+        super().__init__(parent)
         self._setup_ui()
 
     def _setup_ui(self):
@@ -98,7 +98,6 @@ class AGLgisDialog(QDialog):
             | Qt.WindowType.WindowTitleHint
             | Qt.WindowType.WindowMinimizeButtonHint
             | Qt.WindowType.WindowCloseButtonHint
-            | Qt.WindowType.WindowStaysOnTopHint
         )
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setFixedSize(800, 404)

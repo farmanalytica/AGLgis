@@ -225,6 +225,5 @@ class AGLgis:
                     downloader.download_done.connect(self._on_extlibs_ready)
 
         self.dlg.show()
-        result = self.dlg.exec() if hasattr(self.dlg, "exec") else self.dlg.exec_()
-        if result:
-            pass
+        self.dlg.raise_()
+        self.dlg.activateWindow()
