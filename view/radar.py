@@ -558,15 +558,11 @@ def setup_radar_page(dialog, page):
         btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
         btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
 
+    # Exposed so the controller can advance to Results only on a successful run.
+    dialog.sar_set_tab = _set_tab
+
     btn_tab_inputs.clicked.connect(lambda: _set_tab(0))
     btn_tab_results.clicked.connect(lambda: _set_tab(1))
-    btn_next.clicked.connect(
-        lambda: (
-            _set_tab(stack.currentIndex() + 1)
-            if stack.currentIndex() < stack.count() - 1
-            else None
-        )
-    )
     btn_back.clicked.connect(
         lambda: _set_tab(stack.currentIndex() - 1) if stack.currentIndex() > 0 else None
     )
