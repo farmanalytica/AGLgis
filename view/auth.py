@@ -195,6 +195,18 @@ def setup_auth_page(dialog, page):
     row.addStretch(1)
     outer.addLayout(row)
 
+    # Inline, non-blocking status line shown while authentication is running
+    # (and used to surface a "reopen sign-in page" link). Hidden when idle.
+    outer.addSpacing(6)
+    dialog.auth_status_lbl = QLabel("")
+    dialog.auth_status_lbl.setWordWrap(True)
+    dialog.auth_status_lbl.setTextFormat(Qt.TextFormat.RichText)
+    dialog.auth_status_lbl.setOpenExternalLinks(True)
+    dialog.auth_status_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+    dialog.auth_status_lbl.setStyleSheet("color: #616161; font-size: 11px;")
+    dialog.auth_status_lbl.hide()
+    outer.addWidget(dialog.auth_status_lbl)
+
     # Hidden navigation hook used by the sidebar and controller to load
     # datasets before showing the AOI page.
     dialog.btn_go_to_aoi = QPushButton(page)

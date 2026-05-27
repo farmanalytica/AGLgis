@@ -386,6 +386,40 @@ class AGLgisDialog(QDialog):
             self.sidebar.set_active_page("download")
             self.footer.setVisible(False)
 
+    # -----------------------------------------------------------------------
+    # AUTHENTICATION UI STATE
+    # -----------------------------------------------------------------------
+
+    def set_auth_busy(self, busy):
+        """
+        Toggle the auth page between idle and in-progress states.
+
+        While busy the project-ID field and the reset/browse buttons are
+        disabled, and the primary button becomes a Cancel control.
+        """
+        self.project_id_input.setEnabled(not busy)
+        self.btn_reset_auth.setEnabled(not busy)
+        self.btn_browse_folder.setEnabled(not busy)
+
+        if busy:
+            self.btn_authenticate.setText(_tr("Cancel"))
+            self.set_auth_status(_tr("Starting authentication…"))
+        else:
+            self.btn_authenticate.setText(_tr("🔑   Validate ID"))
+            self.auth_status_lbl.hide()
+            self.auth_status_lbl.clear()
+
+    def set_auth_status(self, text, url=""):
+        """Show a non-blocking status line; if ``url`` is given, append a
+        link that reopens the browser sign-in page."""
+        if url:
+            text += (
+                '<br><a href="%s" style="color:#1b6b39;">%s</a>'
+                % (url, _tr("Reopen the sign-in page"))
+            )
+        self.auth_status_lbl.setText(text)
+        self.auth_status_lbl.show()
+
     def pop_message(self, message, kind):
         """
         Display a modal message box to the user.
