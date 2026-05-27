@@ -87,3 +87,7 @@ class AuthCtrl:
         if folder:
             self.dlg.folder_input.setText(folder)
             SettingsManager.save_download_folder(folder)
+
+    def handle_clear_folder(self):
+        self.dlg.folder_input.clear()
+        SettingsManager.clear_download_folder()

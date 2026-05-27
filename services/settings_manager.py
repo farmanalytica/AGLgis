@@ -26,6 +26,12 @@ class SettingsManager:
         settings.setValue(SettingsManager.DOWNLOAD_FOLDER_KEY, folder_path)
 
     @staticmethod
+    def clear_download_folder() -> None:
+        """Remove the saved download folder, reverting to the default."""
+        settings = QgsSettings()
+        settings.remove(SettingsManager.DOWNLOAD_FOLDER_KEY)
+
+    @staticmethod
     def load_download_folder() -> str:
         """
         Return the previously saved download folder, or empty string if not set.
