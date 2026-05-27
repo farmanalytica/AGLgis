@@ -114,7 +114,7 @@ class AGLgisDialog(QDialog):
         body.setStyleSheet("background-color: #f5f5f5;")
         body_lay = QHBoxLayout(body)
         body_lay.setContentsMargins(0, 0, 0, 0)
-        body_lay.setSpacing(8)
+        body_lay.setSpacing(2)
 
         self.sidebar = Sidebar()
         self.sidebar.auth_requested.connect(self._nav_to_auth)

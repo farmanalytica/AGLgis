@@ -168,7 +168,7 @@ def _build_inputs_tab(dialog, parent):
     scroll_w = QWidget()
     scroll_w.setStyleSheet("background: transparent;")
     lay = QVBoxLayout(scroll_w)
-    lay.setContentsMargins(18, 16, 18, 14)
+    lay.setContentsMargins(6, 16, 6, 14)
     lay.setSpacing(12)
 
     inputs_panel = _section_panel()
@@ -196,7 +196,7 @@ def _build_inputs_tab(dialog, parent):
     dialog.sar_date_start = QDateEdit()
     dialog.sar_date_start.setDisplayFormat("yyyy-MM-dd")
     dialog.sar_date_start.setCalendarPopup(True)
-    dialog.sar_date_start.setDate(QDate.currentDate())
+    dialog.sar_date_start.setDate(QDate.currentDate().addYears(-1))
     _prepare_field(dialog.sar_date_start)
     dialog.sar_date_end = QDateEdit()
     dialog.sar_date_end.setDisplayFormat("yyyy-MM-dd")
@@ -299,7 +299,7 @@ def _build_results_tab(dialog, parent):
     scroll_w = QWidget()
     scroll_w.setStyleSheet("background: transparent;")
     lay = QVBoxLayout(scroll_w)
-    lay.setContentsMargins(18, 16, 18, 14)
+    lay.setContentsMargins(6, 16, 6, 14)
     lay.setSpacing(12)
 
     # Plot
@@ -479,7 +479,7 @@ def setup_radar_page(dialog, page):
         }
     """)
     tab_bar_lay = QHBoxLayout(tab_bar)
-    tab_bar_lay.setContentsMargins(18, 0, 18, 0)
+    tab_bar_lay.setContentsMargins(6, 0, 6, 0)
     tab_bar_lay.setSpacing(8)
 
     btn_tab_inputs = QPushButton(_tr("Inputs"))
@@ -522,7 +522,7 @@ def setup_radar_page(dialog, page):
         }
     """)
     nav_lay = QHBoxLayout(nav_bar)
-    nav_lay.setContentsMargins(18, 0, 18, 0)
+    nav_lay.setContentsMargins(6, 0, 6, 0)
     nav_lay.setSpacing(8)
 
     btn_back = QPushButton(_tr("Back"))
