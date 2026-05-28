@@ -1,6 +1,7 @@
 from qgis.core import (
     QgsRasterLayer,
     QgsMultiBandColorRenderer,
+    QgsContrastEnhancement,
 )
 
 from .raster_renderer_utils import RasterRendererUtils
@@ -33,8 +34,17 @@ class SARRenderer:
             green_idx,
             blue_idx,
         )
+
+        # Add contrast enhancement for better visualization
+        provider = layer.dataProvider()
+        for band_idx in [red_idx, green_idx, blue_idx]:
+            contrast = QgsContrastEnhancement(provider.dataType(band_idx))
+            contrast.setContrastEnhancementAlgorithm(
+                QgsContrastEnhancement.StretchToMinimumMaximum
+            )
+            renderer.setContrastEnhancement(contrast, band_idx)
+
         layer.setRenderer(renderer)
-        layer.renderer().setAlphaBand(0)
 
         RasterRendererUtils.add_layer_to_project(layer, at_top=True)
         layer.triggerRepaint()
