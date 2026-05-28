@@ -1,5 +1,6 @@
 from qgis.core import (
     QgsCoordinateReferenceSystem,
+    QgsMultiBandColorRenderer,
     QgsRasterLayer,
 )
 
@@ -25,6 +26,19 @@ class SARRenderer:
 
         layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         RasterRendererUtils.add_layer_to_project(layer, at_top=True)
+
+        # Set custom renderer after layer is added to project
+        red_idx = BAND_INDEX_MAP.get(band_names[0], 1)
+        green_idx = BAND_INDEX_MAP.get(band_names[1], 2)
+        blue_idx = BAND_INDEX_MAP.get(band_names[2], 3)
+
+        renderer = QgsMultiBandColorRenderer(
+            layer.dataProvider(),
+            red_idx,
+            green_idx,
+            blue_idx,
+        )
+        layer.setRenderer(renderer)
         layer.triggerRepaint()
 
         return layer
