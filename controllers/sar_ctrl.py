@@ -212,7 +212,7 @@ class SARCtrl:
             self.aoi,
             selected_date,
             tempfile.gettempdir(),
-            f"Preview_{selected_date}",
+            f"SAR_Preview_{selected_date} [VV|VH|Ratio]",
         )
         self._preview_worker.finished_ok.connect(self._on_preview_done)
         self._preview_worker.failed.connect(self._on_preview_failed)
@@ -234,7 +234,7 @@ class SARCtrl:
             self.aoi,
             selected_date,
             output_folder,
-            f"Sentinel1_{selected_date}",
+            f"SAR_{selected_date} [VV|VH|Ratio]",
         )
         self._preview_worker.finished_ok.connect(
             lambda path, label: self._on_download_preview_done(path, label)
@@ -319,7 +319,8 @@ class SARCtrl:
         for idx, path in enumerate(paths, start=1):
             try:
                 filename = path.split("/")[-1]
-                label = f"SAR_{filename}"
+                date_str = filename.replace("Sentinel1_", "").replace(".tiff", "")
+                label = f"SAR_{date_str} [VV|VH|Ratio]"
                 SARRenderer.load_sar_to_qgis(path, label)
             except Exception as e:
                 pass
