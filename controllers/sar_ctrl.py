@@ -42,6 +42,8 @@ class SARCtrl:
         self.dataframe = None
         self._worker = None
         self._preview_worker = None
+        self._active_dates = None
+        self._filter_dialog = None
 
     def _show_auth_required_message(self):
         self.dlg.pop_message(
@@ -140,6 +142,7 @@ class SARCtrl:
 
         self.collection = collection
         self.dataframe = pd.DataFrame(data)
+        self._active_dates = None
 
         self.dlg.sar_result_date_combo.clear()
         self.dlg.sar_result_date_combo.addItems(self.dataframe["dates"].tolist())
@@ -228,6 +231,35 @@ class SARCtrl:
         self._preview_worker.failed.connect(self._on_preview_failed)
         self._preview_worker.start()
 
+    def handle_filter_dates(self):
+        if self.dataframe is None:
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            return
+        from ..view.sar_date_filter_dialog import SARDateFilterDialog
+
+        if self._filter_dialog is not None:
+            self._filter_dialog.raise_()
+            self._filter_dialog.activateWindow()
+            return
+
+        dates = self.dataframe["dates"].tolist()
+        self._filter_dialog = SARDateFilterDialog(
+            dates, self._active_dates, parent=self.dlg
+        )
+        self._filter_dialog.filter_changed.connect(self._on_filter_changed)
+        self._filter_dialog.finished.connect(self._on_filter_dialog_closed)
+        self._filter_dialog.show()
+
+    def _on_filter_changed(self, selected_dates):
+        all_dates = self.dataframe["dates"].tolist()
+        self._active_dates = (
+            None if set(selected_dates) == set(all_dates) else selected_dates
+        )
+        self._render_timeseries()
+
+    def _on_filter_dialog_closed(self):
+        self._filter_dialog = None
+
     def handle_open_browser(self):
         if self.dataframe is None:
             self.dlg.pop_message("Run SAR processing first.", "warning")
@@ -241,7 +273,10 @@ class SARCtrl:
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     def _render_timeseries(self):
-        html = render_chart_html(self.dataframe)
+        df = self.dataframe
+        if self._active_dates is not None:
+            df = df[df["dates"].isin(self._active_dates)]
+        html = render_chart_html(df)
         # Write to a fresh temp file and load it: QtWebKit renders large embedded
         # Plotly content reliably from a file:// URL, unlike setContent/setHtml.
         fd, path = tempfile.mkstemp(suffix=".html", prefix="aglgis_sar_")

@@ -193,6 +193,9 @@ class AGLgis:
         self.dlg.sar_btn_open_browser.clicked.connect(
             self.sar_ctrl.handle_open_browser
         )
+        self.dlg.sar_btn_filter_dates.clicked.connect(
+            self.sar_ctrl.handle_filter_dates
+        )
 
     def _on_extlibs_ready(self, success, error_msg):
         self._waiting_for_extlibs = False
