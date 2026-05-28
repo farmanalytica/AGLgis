@@ -2,11 +2,12 @@ from ..services.aoi_service import AOIService
 from ..services.sar_service import SARService
 from ..services.sar_renderer import SARRenderer
 from ..services.settings_manager import SettingsManager
-from ..view.sar_plot import render_plugin_html, render_browser_html
+from ..view.sar_plot import render_chart_html
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import QApplication
+import os
 import tempfile
 import pandas as pd
 
@@ -162,7 +163,7 @@ class SARCtrl:
         if self.dataframe is None:
             self.dlg.pop_message("Run SAR processing first.", "warning")
             return
-        html = render_browser_html(self.dataframe)
+        html = render_chart_html(self.dataframe)
         with tempfile.NamedTemporaryFile(
             suffix=".html", delete=False, mode="w", encoding="utf-8"
         ) as f:
@@ -171,4 +172,19 @@ class SARCtrl:
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     def _render_timeseries(self):
-        self.dlg.sar_web_view.setHtml(render_plugin_html(self.dataframe))
+        html = render_chart_html(self.dataframe)
+        # Write to a fresh temp file and load it: QtWebKit renders large embedded
+        # Plotly content reliably from a file:// URL, unlike setContent/setHtml.
+        fd, path = tempfile.mkstemp(suffix=".html", prefix="aglgis_sar_")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(html)
+        self.dlg.sar_web_view.load(QUrl.fromLocalFile(path))
+
+        # Drop the previous render's file (the view has moved off it by now).
+        prev = getattr(self, "_plot_path", None)
+        if prev and os.path.exists(prev):
+            try:
+                os.remove(prev)
+            except OSError:
+                pass
+        self._plot_path = path
