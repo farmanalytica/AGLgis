@@ -85,9 +85,9 @@ class SARBatchDownloadWorker(QThread):
     """Downloads multiple SAR images sequentially with progress tracking."""
 
     progress = pyqtSignal(int, int, str)  # (current, total, current_date)
-    finished_ok = pyqtSignal(int, int)  # (successful, total)
+    finished_ok = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
     failed = pyqtSignal(str)
-    cancelled = pyqtSignal()
+    cancelled = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
 
     def __init__(self, collection, aoi, dates, output_folder):
         super().__init__()
@@ -106,12 +106,13 @@ class SARBatchDownloadWorker(QThread):
     def run(self):
         successful = 0
         total = len(self._dates)
+        downloaded_paths = []
 
         for idx, date in enumerate(self._dates, start=1):
             self._mutex.lock()
             if self._cancel_requested:
                 self._mutex.unlock()
-                self.cancelled.emit()
+                self.cancelled.emit(successful, total, downloaded_paths)
                 return
             self._mutex.unlock()
 
@@ -123,14 +124,15 @@ class SARBatchDownloadWorker(QThread):
                     self._aoi,
                     date,
                 )
-                SARService.download_image(
+                output_path = SARService.download_image(
                     selected_image,
                     self._aoi,
                     date,
                     output_folder=self._output_folder,
                 )
+                downloaded_paths.append(output_path)
                 successful += 1
             except Exception as e:
                 pass
 
-        self.finished_ok.emit(successful, total)
+        self.finished_ok.emit(successful, total, downloaded_paths)

@@ -274,7 +274,9 @@ class SARCtrl:
         self._batch_worker.progress.connect(self._on_batch_progress)
         self._batch_worker.finished_ok.connect(self._on_batch_done)
         self._batch_worker.failed.connect(self._on_batch_failed)
-        self._batch_worker.cancelled.connect(self._on_batch_cancelled)
+        self._batch_worker.cancelled.connect(
+            lambda success, total, paths: self._on_batch_cancelled(success, total, paths)
+        )
         self._batch_dialog.canceled.connect(self._batch_worker.request_cancel)
         self._batch_worker.start()
 
@@ -285,8 +287,10 @@ class SARCtrl:
             _tr(f"Downloading {current} of {total}: {date_str}")
         )
 
-    def _on_batch_done(self, successful, total):
+    def _on_batch_done(self, successful, total, downloaded_paths):
         self._batch_dialog.close()
+        self._load_downloaded_images(downloaded_paths)
+
         failed = total - successful
         msg = _tr(f"Batch download complete: {successful}/{total} successful")
         if failed > 0:
@@ -299,9 +303,26 @@ class SARCtrl:
             self._batch_dialog.close()
         self.dlg.pop_message(_tr(f"Batch download failed: {message}"), "warning")
 
-    def _on_batch_cancelled(self):
+    def _on_batch_cancelled(self, successful, total, downloaded_paths):
         self._batch_dialog.close()
-        self.dlg.pop_message(_tr("Batch download cancelled by user."), "info")
+        self._load_downloaded_images(downloaded_paths)
+
+        if successful > 0:
+            msg = _tr(
+                f"Batch download cancelled. {successful}/{total} images downloaded and loaded."
+            )
+            self.dlg.pop_message(msg, "info")
+        else:
+            self.dlg.pop_message(_tr("Batch download cancelled by user."), "info")
+
+    def _load_downloaded_images(self, paths):
+        for idx, path in enumerate(paths, start=1):
+            try:
+                filename = path.split("/")[-1]
+                label = f"SAR_{filename}"
+                SARRenderer.load_sar_to_qgis(path, label)
+            except Exception as e:
+                pass
 
     def handle_filter_dates(self):
         if self.dataframe is None:
