@@ -11,6 +11,7 @@ from qgis.PyQt.QtWidgets import QApplication, QFileDialog
 import os
 import tempfile
 import pandas as pd
+from datetime import datetime
 
 try:
     WAIT_CURSOR = Qt.CursorShape.WaitCursor
@@ -277,10 +278,13 @@ class SARCtrl:
             self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
             return
 
+        date_str = datetime.now().strftime("%Y%m%d")
+        default_filename = f"SAR_timeseries_{date_str}.csv"
+
         file_path, _ = QFileDialog.getSaveFileName(
             self.dlg,
             _tr("Export SAR Time Series as CSV"),
-            "",
+            default_filename,
             _tr("CSV Files (*.csv);;All Files (*)"),
         )
 
