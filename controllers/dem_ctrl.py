@@ -11,26 +11,16 @@ from qgis.core import (
     QgsCoordinateTransform,
 )
 
-from qgis.PyQt.QtWidgets import QApplication, QFileDialog
-from qgis.PyQt.QtCore import Qt, QTimer, QCoreApplication
-
-
-try:
-    from qgis.PyQt.QtCore import Qt
-
-    WAIT_CURSOR = Qt.CursorShape.WaitCursor
-except AttributeError:
-    from qgis.PyQt.QtCore import Qt
-
-    WAIT_CURSOR = Qt.WaitCursor
+from qgis.PyQt.QtWidgets import QFileDialog
+from qgis.PyQt.QtCore import QTimer, QCoreApplication
 
 from ..services.map_utils import hybrid_function
 from ..services.aoi_service import AOIService
-from ..services.dem_service import DEMService
 from ..services.dem_renderer import DEMRenderer
 from ..services.dataset_manager import DatasetManager
 from ..services.settings_manager import SettingsManager
 from ..services.dem_registry import DEMRegistry
+from ..services.dem_worker import DatasetAvailabilityWorker, DemDownloadWorker
 
 
 def _tr(text):
@@ -55,6 +45,20 @@ class DEMCtrl:
         self._debounce_timer = QTimer()
         self._debounce_timer.setSingleShot(True)
         self._debounce_timer.timeout.connect(self._load_aoi_for_pending_layer)
+        # Strong refs to running QThreads (so they aren't GC'd mid-run) and a
+        # generation token to ignore stale dataset-availability results.
+        self._workers = set()
+        self._ds_gen = 0
+        self._dem_running = False
+        self._dem_btn_text = None
+
+    def _track(self, worker):
+        self._workers.add(worker)
+        worker.finished.connect(lambda w=worker: self._untrack(w))
+
+    def _untrack(self, worker):
+        self._workers.discard(worker)
+        worker.deleteLater()
 
     def _is_passive_ee_init_error(self, error):
         """Return True for EE initialization errors caused by passive UI refresh."""
@@ -122,25 +126,42 @@ class DEMCtrl:
             self.dlg.pop_message(_tr("No dataset selected."), "warning")
             return
 
+        if self._dem_running:
+            return  # a download is already in flight
+
         output_folder = self.dlg.folder_input.text().strip() or None
         buffer_m = self.dlg.buffer_slider.value()
         aoi = self._apply_buffer(self.current_aoi, buffer_m)
 
-        QApplication.setOverrideCursor(WAIT_CURSOR)
-        QApplication.processEvents()
+        # Run the download off the UI thread; load into QGIS on completion.
+        self._set_dem_running(True)
+        worker = DemDownloadWorker(aoi, dataset_name, output_folder)
+        worker.finished_ok.connect(self._on_dem_downloaded)
+        worker.failed.connect(self._on_dem_failed)
+        self._track(worker)
+        worker.start()
 
+    def _set_dem_running(self, running):
+        self._dem_running = running
+        btn = self.dlg.btn_download_dem
+        if running and self._dem_btn_text is None:
+            self._dem_btn_text = btn.text()
+        btn.setEnabled(not running)
+        btn.setText(_tr("Downloading…") if running else (self._dem_btn_text or btn.text()))
+
+    def _on_dem_downloaded(self, dem_path, dataset_name):
+        self._set_dem_running(False)
         try:
-            dem_path = DEMService.download_dem(
-                aoi, dataset_name, output_folder=output_folder
-            )
             DEMRenderer.load_dem_to_qgis(dem_path, dataset_name)
-            interface.messageBar().pushMessage(
+            self.interface.messageBar().pushMessage(
                 "AGLgis", _tr("DEM '%s' loaded successfully.") % dataset_name
             )
         except Exception as e:
             self.dlg.pop_message(str(e), "warning")
-        finally:
-            QApplication.restoreOverrideCursor()
+
+    def _on_dem_failed(self, message):
+        self._set_dem_running(False)
+        self.dlg.pop_message(message, "warning")
 
     def handle_layer_changed(self, layer):
         """
@@ -212,35 +233,58 @@ class DEMCtrl:
         listed without any GEE availability check.  When authenticated, only
         datasets that intersect the current AOI are shown.
         """
-        registry = DEMRegistry()
-        self.dlg.dem_combo.clear()
+        combo = self.dlg.dem_combo
+        combo.clear()
 
         if not self.gee_service.is_authenticated:
-            for dataset in registry.list_datasets():
-                self.dlg.dem_combo.addItem(dataset.name, dataset.name)
+            for dataset in DEMRegistry().list_datasets():
+                combo.addItem(dataset.name, dataset.name)
             return
 
         if not self.current_aoi:
             return
 
-        try:
-            WAIT_CURSOR = Qt.CursorShape.WaitCursor
-        except AttributeError:
-            WAIT_CURSOR = Qt.WaitCursor
-        QApplication.setOverrideCursor(WAIT_CURSOR)
-        QApplication.processEvents()
+        # The availability check hits GEE per dataset; run it off the UI thread.
+        # A generation token discards results from superseded AOI selections.
+        self._ds_gen += 1
+        gen = self._ds_gen
 
-        try:
-            geometry = self.current_aoi.geometry()
+        combo.blockSignals(True)
+        combo.clear()
+        combo.addItem(_tr("Checking available datasets…"))
+        combo.setEnabled(False)
+        combo.blockSignals(False)
 
-            for dataset in registry.list_datasets():
-                QApplication.processEvents()
-                if registry.is_available(
-                    dataset.name, geometry, aoi_bbox=self.current_aoi_bbox
-                ):
-                    self.dlg.dem_combo.addItem(dataset.name, dataset.name)
-        finally:
-            QApplication.restoreOverrideCursor()
+        worker = DatasetAvailabilityWorker(self.current_aoi, self.current_aoi_bbox)
+        worker.finished_ok.connect(
+            lambda names, g=gen: self._on_datasets_ready(names, g)
+        )
+        worker.failed.connect(lambda msg, g=gen: self._on_datasets_failed(msg, g))
+        self._track(worker)
+        worker.start()
+
+    def _on_datasets_ready(self, names, gen):
+        if gen != self._ds_gen:
+            return  # a newer AOI selection superseded this request
+        combo = self.dlg.dem_combo
+        combo.blockSignals(True)
+        combo.clear()
+        for name in names:
+            combo.addItem(name, name)
+        combo.setEnabled(True)
+        combo.blockSignals(False)
+        self.on_dataset_changed()
+
+    def _on_datasets_failed(self, message, gen):
+        if gen != self._ds_gen:
+            return
+        combo = self.dlg.dem_combo
+        combo.blockSignals(True)
+        combo.clear()
+        combo.setEnabled(True)
+        combo.blockSignals(False)
+        if not self._is_passive_ee_init_error(message):
+            self.dlg.pop_message(message, "warning")
 
     def handle_folder_selection(self):
         """Open a folder picker, persist the choice, and update the UI."""
