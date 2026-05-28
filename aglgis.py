@@ -156,7 +156,7 @@ class AGLgis:
         self._services_ready = True
         self.gee_service = GEEService()
         self.dem_ctrl = DEMCtrl(self.dlg, self.gee_service, self.interface)
-        self.auth_ctrl = AuthCtrl(self.dlg, self.gee_service, self.dem_ctrl)
+        self.auth_ctrl = AuthCtrl(self.dlg, self.gee_service)
         self.sar_ctrl = SARCtrl(self.dlg, self.interface, self.gee_service)
 
         saved_project_id = self.gee_service.get_saved_project_id()

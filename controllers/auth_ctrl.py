@@ -15,10 +15,9 @@ def _tr(text):
 class AuthCtrl:
     """Handles all user interactions on the authentication page."""
 
-    def __init__(self, dialog, gee_service, dem_ctrl):
+    def __init__(self, dialog, gee_service):
         self.dlg = dialog
         self.gee_service = gee_service
-        self.dem_ctrl = dem_ctrl
         self._worker = None
 
     def handle_authentication(self):
@@ -58,12 +57,6 @@ class AuthCtrl:
         if success:
             self.dlg.show_radar_page()
             self.dlg.pop_message(_tr("Authentication successful!"), "info")
-
-            layer = self.dlg.layer_combo.currentLayer()
-            if layer:
-                self.dem_ctrl.handle_layer_changed(layer)
-            else:
-                self.dem_ctrl.load_available_datasets()
         elif message == CANCELLED:
             pass  # User aborted; UI is already back to its idle state.
         else:
