@@ -2,135 +2,178 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AGLgis Plugin Documentation</title>
+    <title>AGLgis SAR Module</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-                * { box-sizing: border-box; }
-                html, body { margin: 0; padding: 0; }
-                body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; font-size: 13px; line-height: 1.45; }
-                h1 { font-size: 1.5em; margin: 0.4em 0; }
-                h2 { font-size: 1.15em; margin: 1em 0 0.4em; }
-                h3 { font-size: 1em; }
-                h1, h2, h3 { color: #2a5d84; }
-                p, ul { margin: 0.5em 0; }
-                ul { padding-left: 1.2em; }
-                table { border-collapse: collapse; width: 100%; margin-top: 1em; background: #fff; }
-                th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; }
-                th { background: #e6f2fa; }
-                a { color: #1a73e8; text-decoration: none; word-break: break-word; }
-                a:hover { text-decoration: underline; }
-                img { max-width: 100%; height: auto; display: block; }
-                .container { max-width: 900px; margin: auto; background: #fff; padding: 0.8em 1em; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-                .logo { text-align: center; margin: 0.6em 0; }
-                .logo img { height: 48px; display: inline-block; }
-                .lang-btns { text-align: center; margin-bottom: 1em; }
-                .lang-btns button { margin: 0 6px; padding: 5px 14px; font-size: 0.9em; border-radius: 6px; border: 1px solid #2a5d84; background: #e6f2fa; color: #2a5d84; cursor: pointer; }
-                .lang-btns button.active { background: #2a5d84; color: #fff; }
-                .cite { background: #f0f8ff; border-left: 4px solid #2a5d84; padding: 0.7em; margin: 0.8em 0; }
-                .cite .ref { font-family: monospace; font-size: 0.85em; background: #fff; padding: 0.5em; border: 1px solid #ccc; margin: 0.5em 0; word-break: break-word; }
-                .hidden { display: none; }
-        </style>
-        <script>
-            function showLang(lang) {
-                document.getElementById('pt').classList.add('hidden');
-                document.getElementById('en').classList.add('hidden');
-                document.getElementById(lang).classList.remove('hidden');
-                document.getElementById('btn-pt').classList.remove('active');
-                document.getElementById('btn-en').classList.remove('active');
-                document.getElementById('btn-' + lang).classList.add('active');
-            }
-            window.onload = function() {
-                var lang = 'pt';
-                var navLang = navigator.language || navigator.userLanguage;
-                if (navLang) {
-                    if (navLang.startsWith('en')) lang = 'en';
-                    else if (navLang.startsWith('pt')) lang = 'pt';
-                }
-                showLang(lang);
-            };
-        </script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; font-size: 13px; line-height: 1.5; }
+        h1 { font-size: 1.4em; margin: 0.6em 0 0.3em; color: #1b6b39; }
+        h2 { font-size: 1.1em; margin: 1.2em 0 0.5em; color: #2a5d84; border-bottom: 2px solid #e6f2fa; padding-bottom: 0.3em; }
+        h3 { font-size: 0.95em; color: #2a5d84; margin: 0.8em 0 0.3em; }
+        p, ul, ol { margin: 0.6em 0; }
+        ul, ol { padding-left: 1.5em; }
+        li { margin: 0.4em 0; }
+        a { color: #1b6b39; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 1.5em; }
+        .section { margin: 1.5em 0; }
+        .feature-list li { list-style-type: none; padding-left: 1.8em; position: relative; }
+        .feature-list li:before { content: "✓"; position: absolute; left: 0; color: #1b6b39; font-weight: bold; }
+        .cite { background: #e8f5e9; border-left: 4px solid #1b6b39; padding: 1em; margin: 1.5em 0; border-radius: 4px; }
+        .cite p { margin: 0.5em 0; }
+        .cite .ref { font-family: monospace; font-size: 0.85em; background: #fff; padding: 0.8em; border: 1px solid #c8e6c9; margin: 0.8em 0; word-break: break-word; border-radius: 3px; }
+        .workflow { background: #f0f8ff; padding: 1em; border-radius: 4px; margin: 1em 0; }
+        .lang-btns { text-align: center; margin-bottom: 1.5em; }
+        .lang-btns button { margin: 0 6px; padding: 6px 16px; font-size: 0.9em; border-radius: 4px; border: 1px solid #1b6b39; background: #e8f5e9; color: #1b6b39; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .lang-btns button:hover { background: #c8e6c9; }
+        .lang-btns button.active { background: #1b6b39; color: #fff; }
+        .hidden { display: none; }
+        code { background: #f5f5f5; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+    </style>
+    <script>
+        function showLang(lang) {
+            document.getElementById('pt').classList.add('hidden');
+            document.getElementById('en').classList.add('hidden');
+            document.getElementById(lang).classList.remove('hidden');
+            document.getElementById('btn-pt').classList.remove('active');
+            document.getElementById('btn-en').classList.remove('active');
+            document.getElementById('btn-' + lang).classList.add('active');
+        }
+        window.onload = function() {
+            var lang = 'en';
+            var navLang = navigator.language || navigator.userLanguage;
+            if (navLang && navLang.startsWith('pt')) lang = 'pt';
+            showLang(lang);
+        };
+    </script>
 </head>
 <body>
-        <div class="logo">
-            <img src="medias/icon.png" alt="AGLgis logo">
+    <div class="lang-btns">
+        <button id="btn-pt" onclick="showLang('pt')">Português</button>
+        <button id="btn-en" onclick="showLang('en')">English</button>
+    </div>
+
+    <div id="pt" class="container hidden">
+        <h1>🛰️ Módulo SAR - AGLgis</h1>
+
+        <div class="section">
+            <p>
+                O módulo SAR do AGLgis fornece uma interface gráfica para processar dados Sentinel-1 usando o
+                <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data</a>
+                no Google Earth Engine, sem necessidade de programação.
+            </p>
         </div>
-        <div class="lang-btns">
-            <button id="btn-pt" onclick="showLang('pt')">Português</button>
-            <button id="btn-en" onclick="showLang('en')">English</button>
+
+        <h2>📋 Fluxo de Trabalho</h2>
+        <div class="workflow">
+            <ol>
+                <li><strong>Inputs:</strong> Selecione a área (AOI), datas e parâmetros de processamento</li>
+                <li><strong>Run:</strong> Execute o processamento para gerar a série temporal</li>
+                <li><strong>Results:</strong> Visualize gráficos, filtre datas, e exporte os resultados</li>
+            </ol>
         </div>
-        <div id="pt" class="container">
-            <h1>AGLgis</h1>
-            <p>
-                O AGLgis é uma interface gráfica para facilitar do <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> no QGIS.
+
+        <h2>✨ Principais Funcionalidades</h2>
+        <ul class="feature-list">
+            <li><strong>Seleção de Área e Datas:</strong> Interface intuitiva para definir AOI e período de análise</li>
+            <li><strong>Parâmetros de Processamento:</strong> Correção de ruído de borda, nivelamento de terreno, filtragem de speckle</li>
+            <li><strong>Série Temporal Interativa:</strong> Gráfico Plotly com zoom, pan e hover</li>
+            <li><strong>Filtro de Datas:</strong> Selecione datas específicas para refinar análise</li>
+            <li><strong>Visualização de Imagens:</strong> Pré-visualize ou baixe imagens SAR de cada data</li>
+            <li><strong>Download em Lote:</strong> Baixe múltiplas imagens com progresso e cancelamento</li>
+            <li><strong>Exportação CSV:</strong> Exporte dados da série temporal com filtro de datas</li>
+            <li><strong>Carregamento Automático:</strong> Imagens baixadas são carregadas no QGIS automaticamente</li>
+        </ul>
+
+        <h2>📊 Série Temporal</h2>
+        <p>
+            O plugin gera gráficos interativos mostrando a série temporal da razão VV/VH (VV/VH Ratio) para sua área de interesse.
+            Use o filtro de datas para focar em períodos específicos e exportar os dados para análise externa.
+        </p>
+
+        <h2>🖼️ Bandas Disponíveis</h2>
+        <p>Cada imagem SAR contém 3 bandas:</p>
+        <ul>
+            <li><strong>Band 1 - VV:</strong> Polarização vertical-vertical</li>
+            <li><strong>Band 2 - VH:</strong> Polarização vertical-horizontal</li>
+            <li><strong>Band 3 - VV/VH Ratio:</strong> Razão entre as polarizações</li>
+        </ul>
+
+        <h2>🔧 Configuração Inicial</h2>
+        <p>
+            Para usar este módulo, você precisa de autenticação no Google Earth Engine através de um
+            <strong>Google Cloud Project ID</strong>. Configure isso na guia "Auth" do plugin.
+        </p>
+
+        <h2>📖 Citação</h2>
+        <div class="cite">
+            <p>Qualquer trabalho publicado que utilize este plugin deve citar:</p>
+            <p class="ref">
+                Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
             </p>
-            <p>
-                Este plugin permite configurar e executar o processamento de dados SAR Sentinel-1 sem necessidade de programação.
-            </p>
-            <h2>Principais funcionalidades</h2>
-            <ul>
-                <li>Interface gráfica para seleção de área, datas e parâmetros de processamento.</li>
-                <li>Integração direta com o pacote <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a>, tornando o fluxo de trabalho mais acessível.</li>
-                <li>Suporte à correção de ruído de borda, nivelamento de terreno e filtragem de speckle.</li>
-                <li>Exportação dos resultados prontos para análise e visualização.</li>
-            </ul>
-            <h2>Parâmetros suportados</h2>
-            <img src="medias/view.png" alt="Parâmetros suportados do AGLgis">
-            <h2>Exemplo de Série Temporal e Imagem Selecionada</h2>
-            <img src="medias/demo.png" alt="Demonstração da série temporal e imagem da data selecionada">
-            <p>
-                Acima, uma demonstração da série temporal gerada pelo plugin e uma imagem SAR da data selecionada.
-            <h2>Configuração do Projeto Google Cloud</h2>
-            <img src="medias/image01.png" alt="Exemplo de ID do Projeto Google Cloud">
-            <p>
-                A imagem acima mostra onde encontrar o ID do seu Projeto Google Cloud, necessário para autenticar e executar o pacote <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> no Google Earth Engine.
-                Certifique-se de ter um projeto válido no <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> e utilize o ID ao configurar o plugin.
-            </p>
-            
-            <h2>Citação</h2>
-            <div class="cite">
-                <p>Qualquer trabalho publicado que utilize este plugin deve citar a seguinte referência como fonte do framework de processamento:</p>
-                <p class="ref">
-                    Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
-                </p>
-            </div>
         </div>
-        <div id="en" class="container hidden">
-            <h1>AGLgis
-                
-            </h1>
+    </div>
+
+    <div id="en" class="container">
+        <h1>🛰️ SAR Module - AGLgis</h1>
+
+        <div class="section">
             <p>
-                AGLgis is a graphical interface designed to simplify the use of the <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> in QGIS.
+                The AGLgis SAR module provides a graphical interface to process Sentinel-1 data using the
+                <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data</a>
+                in Google Earth Engine, without requiring any coding.
             </p>
-            <p>
-                This plugin allows users to configure and run Sentinel-1 SAR data processing without the need to write code.
-            </p>
-            <h2>Main features</h2>
-            <ul>
-                <li>Graphical interface for selecting area, dates, and processing parameters.</li>
-                <li>Direct integration with the <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> package, making the workflow more accessible.</li>
-                <li>Support for border noise correction, terrain flattening, and speckle filtering.</li>
-                <li>Export of results ready for analysis and visualization.</li>
-            </ul>
-            <h2>Supported Parameters</h2>
-            <img src="medias/view.png" alt="AGLgis Supported Parameters">
-            <h2>Time Series Example and Selected Image</h2>
-            <img src="medias/demo.png" alt="Time series demonstration and selected date image">
-            <p>
-                Above, a demonstration of the time series generated by the plugin and a SAR image from the selected date.
-            <h2>Google Cloud Project Setup</h2>
-            <img src="medias/image01.png" alt="Google Cloud Project ID Example">
-            <p>
-                The image above shows where to find your Google Cloud Project ID, which is required for authenticating and running the <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> package in Google Earth Engine.
-                Make sure you have a valid project set up in the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> and use the Project ID when configuring the plugin.
-            </p>
-            
-            <h2>Citation</h2>
-            <div class="cite">
-                <p>Any published work that uses this plugin must cite the following reference as the source for the processing framework:</p>
-                <p class="ref">
-                    Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
-                </p>
-            </div>
         </div>
+
+        <h2>📋 Workflow</h2>
+        <div class="workflow">
+            <ol>
+                <li><strong>Inputs:</strong> Select area (AOI), dates, and processing parameters</li>
+                <li><strong>Run:</strong> Execute processing to generate time series</li>
+                <li><strong>Results:</strong> View charts, filter dates, and export results</li>
+            </ol>
+        </div>
+
+        <h2>✨ Main Features</h2>
+        <ul class="feature-list">
+            <li><strong>Area & Date Selection:</strong> Intuitive interface for defining AOI and analysis period</li>
+            <li><strong>Processing Parameters:</strong> Border noise correction, terrain flattening, speckle filtering</li>
+            <li><strong>Interactive Time Series:</strong> Plotly chart with zoom, pan, and hover</li>
+            <li><strong>Date Filter:</strong> Select specific dates to refine analysis</li>
+            <li><strong>Image Preview:</strong> Preview or download SAR images for each date</li>
+            <li><strong>Batch Download:</strong> Download multiple images with progress and cancel option</li>
+            <li><strong>CSV Export:</strong> Export time series data with date filtering</li>
+            <li><strong>Auto-Load Images:</strong> Downloaded images automatically load in QGIS</li>
+        </ul>
+
+        <h2>📊 Time Series</h2>
+        <p>
+            The plugin generates interactive charts showing the VV/VH Ratio (VV/VH Ratio) time series for your area of interest.
+            Use the date filter to focus on specific periods and export data for external analysis.
+        </p>
+
+        <h2>🖼️ Available Bands</h2>
+        <p>Each SAR image contains 3 bands:</p>
+        <ul>
+            <li><strong>Band 1 - VV:</strong> Vertical-vertical polarization</li>
+            <li><strong>Band 2 - VH:</strong> Vertical-horizontal polarization</li>
+            <li><strong>Band 3 - VV/VH Ratio:</strong> Ratio between polarizations</li>
+        </ul>
+
+        <h2>🔧 Initial Setup</h2>
+        <p>
+            To use this module, you need authentication to Google Earth Engine via a
+            <strong>Google Cloud Project ID</strong>. Configure this in the "Auth" tab of the plugin.
+        </p>
+
+        <h2>📖 Citation</h2>
+        <div class="cite">
+            <p>Any published work using this plugin must cite:</p>
+            <p class="ref">
+                Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
+            </p>
+        </div>
+    </div>
 </body>
 </html>
