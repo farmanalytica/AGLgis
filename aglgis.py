@@ -202,6 +202,9 @@ class AGLgis:
         self.dlg.sar_btn_filter_dates.clicked.connect(
             self.sar_ctrl.handle_filter_dates
         )
+        self.dlg.sar_layer_combo.layerChanged.connect(
+            self.sar_ctrl.handle_layer_changed
+        )
 
     def _on_extlibs_ready(self, success, error_msg):
         self._waiting_for_extlibs = False

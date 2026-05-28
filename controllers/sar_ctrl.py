@@ -16,6 +16,7 @@ from qgis.PyQt.QtWidgets import (
     QFileDialog,
     QProgressDialog,
 )
+from qgis.core import QgsProject, QgsCoordinateTransform
 import os
 import tempfile
 import pandas as pd
@@ -55,6 +56,7 @@ class SARCtrl:
         self._filter_dialog = None
         self._batch_worker = None
         self._batch_dialog = None
+        self._zoom_enabled = True
 
     def _show_auth_required_message(self):
         self.dlg.pop_message(
@@ -64,6 +66,32 @@ class SARCtrl:
             ),
             "warning",
         )
+
+    def handle_layer_changed(self):
+        """Zoom to the selected AOI layer."""
+        if not self._zoom_enabled:
+            return
+
+        layer = self.dlg.sar_layer_combo.currentLayer()
+        if not layer or not layer.isValid():
+            return
+
+        if not self.interface:
+            return
+
+        try:
+            canvas = self.interface.mapCanvas()
+            transform = QgsCoordinateTransform(
+                layer.crs(),
+                canvas.mapSettings().destinationCrs(),
+                QgsProject.instance(),
+            )
+            extent = transform.transformBoundingBox(layer.extent())
+            extent.scale(1.5)
+            canvas.setExtent(extent)
+            canvas.refresh()
+        except Exception:
+            pass
 
     def handle_sar_run(self):
         if self._worker is not None and self._worker.isRunning():
