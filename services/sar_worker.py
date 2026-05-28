@@ -9,7 +9,7 @@ thread-safe) and passed in.
 """
 
 import tempfile
-from qgis.PyQt.QtCore import QThread, pyqtSignal
+from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
 
 from .sar_service import SARService
 from .sar_renderer import SARRenderer
@@ -79,3 +79,58 @@ class SARPreviewWorker(QThread):
             self.finished_ok.emit(output_path, self._label)
         except Exception as e:  # noqa: BLE001 - surface any failure to the UI
             self.failed.emit(str(e))
+
+
+class SARBatchDownloadWorker(QThread):
+    """Downloads multiple SAR images sequentially with progress tracking."""
+
+    progress = pyqtSignal(int, int, str)  # (current, total, current_date)
+    finished_ok = pyqtSignal(int, int)  # (successful, total)
+    failed = pyqtSignal(str)
+    cancelled = pyqtSignal()
+
+    def __init__(self, collection, aoi, dates, output_folder):
+        super().__init__()
+        self._collection = collection
+        self._aoi = aoi
+        self._dates = dates
+        self._output_folder = output_folder
+        self._cancel_requested = False
+        self._mutex = QMutex()
+
+    def request_cancel(self):
+        self._mutex.lock()
+        self._cancel_requested = True
+        self._mutex.unlock()
+
+    def run(self):
+        successful = 0
+        total = len(self._dates)
+
+        for idx, date in enumerate(self._dates, start=1):
+            self._mutex.lock()
+            if self._cancel_requested:
+                self._mutex.unlock()
+                self.cancelled.emit()
+                return
+            self._mutex.unlock()
+
+            self.progress.emit(idx, total, str(date))
+
+            try:
+                selected_image = SARService.get_image_for_date(
+                    self._collection,
+                    self._aoi,
+                    date,
+                )
+                SARService.download_image(
+                    selected_image,
+                    self._aoi,
+                    date,
+                    output_folder=self._output_folder,
+                )
+                successful += 1
+            except Exception as e:
+                pass
+
+        self.finished_ok.emit(successful, total)

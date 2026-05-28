@@ -1,13 +1,21 @@
 from ..services.aoi_service import AOIService
 from ..services.sar_service import SARService
 from ..services.sar_renderer import SARRenderer
-from ..services.sar_worker import SARWorker, SARPreviewWorker
+from ..services.sar_worker import (
+    SARWorker,
+    SARPreviewWorker,
+    SARBatchDownloadWorker,
+)
 from ..services.settings_manager import SettingsManager
 from ..view.sar_plot import render_chart_html
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import QApplication, QFileDialog
+from qgis.PyQt.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QProgressDialog,
+)
 import os
 import tempfile
 import pandas as pd
@@ -45,6 +53,8 @@ class SARCtrl:
         self._preview_worker = None
         self._active_dates = None
         self._filter_dialog = None
+        self._batch_worker = None
+        self._batch_dialog = None
 
     def _show_auth_required_message(self):
         self.dlg.pop_message(
@@ -231,6 +241,67 @@ class SARCtrl:
         )
         self._preview_worker.failed.connect(self._on_preview_failed)
         self._preview_worker.start()
+
+    def handle_batch_download(self):
+        if self.collection is None or self.aoi is None:
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            return
+
+        dates = self.dataframe["dates"].tolist()
+        if self._active_dates is not None:
+            dates = [d for d in dates if d in self._active_dates]
+
+        if not dates:
+            self.dlg.pop_message(_tr("No dates selected to download."), "warning")
+            return
+
+        output_folder = SettingsManager.load_download_folder()
+
+        self._batch_dialog = QProgressDialog(
+            _tr("Preparing batch download..."),
+            _tr("Cancel"),
+            0,
+            len(dates),
+            self.dlg,
+        )
+        self._batch_dialog.setWindowTitle(_tr("Batch Download Progress"))
+        self._batch_dialog.setModal(True)
+        self._batch_dialog.show()
+
+        self._batch_worker = SARBatchDownloadWorker(
+            self.collection, self.aoi, dates, output_folder
+        )
+        self._batch_worker.progress.connect(self._on_batch_progress)
+        self._batch_worker.finished_ok.connect(self._on_batch_done)
+        self._batch_worker.failed.connect(self._on_batch_failed)
+        self._batch_worker.cancelled.connect(self._on_batch_cancelled)
+        self._batch_dialog.canceled.connect(self._batch_worker.request_cancel)
+        self._batch_worker.start()
+
+    def _on_batch_progress(self, current, total, date_str):
+        self._batch_dialog.setMaximum(total)
+        self._batch_dialog.setValue(current)
+        self._batch_dialog.setLabelText(
+            _tr(f"Downloading {current} of {total}: {date_str}")
+        )
+
+    def _on_batch_done(self, successful, total):
+        self._batch_dialog.close()
+        failed = total - successful
+        msg = _tr(f"Batch download complete: {successful}/{total} successful")
+        if failed > 0:
+            msg += _tr(f" ({failed} failed)")
+        msg_type = "warning" if failed > 0 else "info"
+        self.dlg.pop_message(msg, msg_type)
+
+    def _on_batch_failed(self, message):
+        if self._batch_dialog:
+            self._batch_dialog.close()
+        self.dlg.pop_message(_tr(f"Batch download failed: {message}"), "warning")
+
+    def _on_batch_cancelled(self):
+        self._batch_dialog.close()
+        self.dlg.pop_message(_tr("Batch download cancelled by user."), "info")
 
     def handle_filter_dates(self):
         if self.dataframe is None:
