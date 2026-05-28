@@ -1,6 +1,7 @@
 from qgis.core import (
-    QgsRasterLayer,
+    QgsCoordinateReferenceSystem,
     QgsMultiBandColorRenderer,
+    QgsRasterLayer,
 )
 
 from .raster_renderer_utils import RasterRendererUtils
@@ -23,11 +24,12 @@ class SARRenderer:
         if not layer.isValid():
             raise RuntimeError("Failed to load SAR image into QGIS.")
 
+        layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
+
         red_idx = BAND_INDEX_MAP.get(band_names[0], 1)
         green_idx = BAND_INDEX_MAP.get(band_names[1], 2)
         blue_idx = BAND_INDEX_MAP.get(band_names[2], 3)
 
-        # Create multi-band color renderer with RGB bands
         renderer = QgsMultiBandColorRenderer(
             layer.dataProvider(),
             red_idx,
