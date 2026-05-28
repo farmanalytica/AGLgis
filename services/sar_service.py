@@ -6,6 +6,11 @@ import requests
 from ee_s1_ard import S1ARDImageCollection
 from datetime import datetime, timedelta
 
+try:
+    from osgeo import gdal
+except ImportError:
+    gdal = None
+
 
 class SARService:
     PLOTLY_SEQUENTIAL_PALETTE = [
@@ -142,7 +147,28 @@ class SARService:
         with open(output_path, "wb") as f:
             f.write(response.content)
 
+        SARService._set_band_names(output_path)
         return output_path
+
+    @staticmethod
+    def _set_band_names(file_path):
+        if gdal is None:
+            return
+
+        try:
+            dataset = gdal.Open(file_path, gdal.GA_Update)
+            if dataset is None:
+                return
+
+            band_names = ["VV", "VH", "VV/VH Ratio"]
+            for i in range(1, min(dataset.RasterCount + 1, len(band_names) + 1)):
+                band = dataset.GetRasterBand(i)
+                if band is not None:
+                    band.SetDescription(band_names[i - 1])
+
+            dataset = None
+        except Exception:
+            pass
 
     @staticmethod
     def _resolve_path(folder, filename):
