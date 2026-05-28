@@ -49,11 +49,16 @@ def _build_figure(dataframe):
     return fig
 
 
-def render_chart_html(dataframe):
+def render_chart_html(dataframe, hide_toolbar=True):
     """Return a self-contained page that renders the figure with the vendored
     plotly.js v1.58 (QtWebKit-compatible), fed the figure JSON via Plotly.newPlot.
 
-    Used for both the embedded view and the browser export so they are identical.
+    Args:
+        dataframe: The time-series data to plot.
+        hide_toolbar: If True, hide toolbar buttons (for in-plugin view).
+                     If False, show toolbar (for browser export).
+                     Defaults to True for in-plugin use.
+
     The default v6 template is dropped so the JSON stays within what the old
     engine understands. Intended to be written to a temp file and loaded from a
     ``file://`` URL.
@@ -71,6 +76,45 @@ def render_chart_html(dataframe):
         trace["x"] = x
         trace["y"] = y
     fig_json = json.dumps(fig_dict)
+
+    config = {
+        "displaylogo": False,
+        "responsive": True,
+    }
+
+    if hide_toolbar:
+        config["modeBarButtonsToRemove"] = [
+            "toImage",
+            "sendDataToCloud",
+            "zoom2d",
+            "pan2d",
+            "select2d",
+            "lasso2d",
+            "zoomIn2d",
+            "zoomOut2d",
+            "autoScale2d",
+            "resetScale2d",
+            "hoverClosestCartesian",
+            "hoverCompareCartesian",
+            "zoom3d",
+            "pan3d",
+            "orbitRotation",
+            "tableRotation",
+            "resetCameraLastSave",
+            "resetCameraDefault3d",
+            "hoverClosest3d",
+            "zoomInGeo",
+            "zoomOutGeo",
+            "resetGeo",
+            "hoverClosestGeo",
+            "hoverClosestGl2d",
+            "hoverClosestPie",
+            "toggleHover",
+            "toggleSpikelines",
+            "resetViews",
+        ]
+
+    config_json = json.dumps(config)
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <style>html,body{{height:100%;width:100%;margin:0;padding:0}}#chart{{width:100%;height:100%}}</style>
@@ -79,7 +123,8 @@ def render_chart_html(dataframe):
 <div id="chart"></div>
 <script>
 var fig = {fig_json};
-Plotly.newPlot('chart', fig.data, fig.layout, {{displaylogo:false, responsive:true}});
+var config = {config_json};
+Plotly.newPlot('chart', fig.data, fig.layout, config);
 window.addEventListener('resize', function(){{ Plotly.Plots.resize('chart'); }});
 </script>
 </body></html>"""

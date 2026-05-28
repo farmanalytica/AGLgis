@@ -358,7 +358,10 @@ class SARCtrl:
         if self.dataframe is None:
             self.dlg.pop_message("Run SAR processing first.", "warning")
             return
-        html = render_chart_html(self.dataframe)
+        df = self.dataframe
+        if self._active_dates is not None:
+            df = df[df["dates"].isin(self._active_dates)]
+        html = render_chart_html(df, hide_toolbar=False)
         with tempfile.NamedTemporaryFile(
             suffix=".html", delete=False, mode="w", encoding="utf-8"
         ) as f:
