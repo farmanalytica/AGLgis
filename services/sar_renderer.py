@@ -1,6 +1,5 @@
 from qgis.core import (
     QgsCoordinateReferenceSystem,
-    QgsMultiBandColorRenderer,
     QgsRasterLayer,
 )
 
@@ -20,24 +19,11 @@ class SARRenderer:
     @staticmethod
     def _create_rgb_composite(path, layer_name, band_names):
         """Create an RGB composite from three specified bands."""
-        layer = QgsRasterLayer(path, layer_name)
+        layer = QgsRasterLayer(path, layer_name, "gdal")
         if not layer.isValid():
             raise RuntimeError("Failed to load SAR image into QGIS.")
 
         layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
-
-        red_idx = BAND_INDEX_MAP.get(band_names[0], 1)
-        green_idx = BAND_INDEX_MAP.get(band_names[1], 2)
-        blue_idx = BAND_INDEX_MAP.get(band_names[2], 3)
-
-        renderer = QgsMultiBandColorRenderer(
-            layer.dataProvider(),
-            red_idx,
-            green_idx,
-            blue_idx,
-        )
-
-        layer.setRenderer(renderer)
         RasterRendererUtils.add_layer_to_project(layer, at_top=True)
         layer.triggerRepaint()
 
