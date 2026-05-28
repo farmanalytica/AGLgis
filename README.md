@@ -8,10 +8,16 @@ This plugin allows users to configure and run Sentinel-1 SAR data processing wit
 
 ### Main features
 
-- Graphical interface for selecting area, dates, and processing parameters.
-- Direct integration with the `ee-s1-ard` package, making the workflow more accessible.
-- Support for border noise correction, terrain flattening, and speckle filtering.
-- Export of results ready for analysis and visualization.
+- **DEM Module**: Download and visualize elevation data with interactive filtering and styling.
+- **SAR Module**: Process Sentinel-1 SAR data with full control over acquisition parameters and preprocessing options.
+  - Support for multiple spectral indices: VV/VH Ratio, RVI (Radar Vegetation Index), DpRVI (Dual-pol SAR Vegetation Index)
+  - Flexible render modes: RGB composites and single-band pseudocolor with Viridis palette
+  - Batch download with progress tracking and cancellation support
+  - Interactive time-series visualization with date filtering
+  - CSV export of results
+- Border noise correction, terrain flattening, and speckle filtering options.
+- Non-modal dialogs for filter and preview operations with immediate chart updates.
+- Automatic layer management: new layers appear at top of Layers panel, basemaps stay at bottom.
 
 ### Supported Parameters
 
@@ -50,24 +56,32 @@ AGLgis/
 ├── controllers/
 │   ├── __init__.py          # Controllers package marker
 │   ├── auth_ctrl.py         # Auth page controller — handles authentication, reset, and folder selection
-│   └── dem_ctrl.py          # DEM page controller — orchestrates AOI management and service calls
+│   ├── dem_ctrl.py          # DEM page controller — orchestrates AOI management and service calls
+│   └── sar_ctrl.py          # SAR page controller — orchestrates SAR processing, preview, filtering, and export
 ├── view/
-│   ├── __init__.py          # View package marker
-│   ├── auth.py              # Authentication page widget construction (setup_auth_page)
-│   ├── download_dem.py      # AOI/DEM page widget construction (setup_download_dem_page)
-│   ├── radar.py             # Radar (SAR) page widget construction (setup_radar_page)
-│   ├── sidebar.py           # Permanent collapsible navigation sidebar (Sidebar, SidebarNavButton)
-│   └── styles.py            # Shared Qt stylesheet constants (STYLE_DIALOG, STYLE_BTN_PRIMARY, …)
+│   ├── __init__.py                  # View package marker
+│   ├── auth.py                      # Authentication page widget construction (setup_auth_page)
+│   ├── download_dem.py              # AOI/DEM page widget construction (setup_download_dem_page)
+│   ├── radar.py                     # Radar (SAR) page widget construction (setup_radar_page)
+│   ├── sar_plot.py                  # SAR time-series chart rendering with Plotly
+│   ├── sar_date_filter_dialog.py    # Non-modal date filter dialog with cascading checkboxes
+│   ├── sidebar.py                   # Permanent collapsible navigation sidebar (Sidebar, SidebarNavButton)
+│   └── styles.py                    # Shared Qt stylesheet constants (STYLE_DIALOG, STYLE_BTN_PRIMARY, …)
 └── services/
-    ├── __init__.py          # Exports service classes
-    ├── gee_service.py       # Google Earth Engine business logic
-    ├── aoi_service.py       # AOI extraction and conversion to EE objects
-    ├── dem_service.py       # Downloads DEM GeoTIFF from Google Earth Engine
-    ├── dem_registry.py      # Loads and queries the DEM catalog; checks dataset availability
-    ├── dem_renderer.py      # Color ramp rendering and raster layer styling
-    ├── dataset_manager.py   # Dataset availability queries and UI updates
-    ├── settings_manager.py  # Settings persistence (QgsSettings)
-    └── map_utils.py         # Map-related utility functions
+    ├── __init__.py                  # Exports service classes
+    ├── gee_service.py               # Google Earth Engine business logic and authentication
+    ├── aoi_service.py               # AOI extraction and conversion to EE objects
+    ├── dem_service.py               # Downloads DEM GeoTIFF from Google Earth Engine
+    ├── dem_registry.py              # Loads and queries the DEM catalog; checks dataset availability
+    ├── dem_renderer.py              # DEM layer loading with Magma color ramp
+    ├── dataset_manager.py           # Dataset availability queries and UI updates
+    ├── settings_manager.py          # Settings persistence (QgsSettings)
+    ├── map_utils.py                 # Map-related utility functions (Google Hybrid basemap)
+    ├── sar_service.py               # SAR data processing with spectral indices (RVI, DpRVI, VV/VH Ratio)
+    ├── sar_worker.py                # Background workers: SARWorker, SARPreviewWorker, SARBatchDownloadWorker
+    ├── sar_renderer.py              # SAR layer loading with RGB composites and pseudocolor rendering
+    ├── raster_renderer_utils.py     # Common utilities for pseudocolor rendering (shared by DEM and SAR)
+    └── sar_metadata_dialog.py       # Metadata display dialogs
 ```
 
 ---
@@ -181,6 +195,20 @@ Orchestrates DEM operations and coordinates between services. Owns the current A
 | `on_dataset_changed` | `()` | Delegates to `DatasetManager` to update the dataset info panel |
 | `handle_hybrid_layer` | `()` | Loads the Google Hybrid basemap via `map_utils.hybrid_function()` and reports success via the message bar |
 
+#### `controllers/sar_ctrl.py` — `SARCtrl`
+Orchestrates SAR operations: processing, preview, filtering, export, and batch download. Manages time-series state and filter persistence.
+
+| Method | Signature | Purpose |
+|---|---|---|
+| `handle_sar_run` | `()` | Validates inputs, triggers `SARWorker`, shows loading spinner, and displays results on completion |
+| `handle_preview_image` | `()` | Downloads a single image to temp directory and loads it with selected render mode |
+| `handle_download_preview` | `()` | Downloads a single image to user's folder and loads it with selected render mode |
+| `handle_batch_download` | `()` | Creates progress dialog and triggers `SARBatchDownloadWorker` for batch download of filtered dates |
+| `handle_filter_dates` | `()` | Opens non-modal date filter dialog; emits `filter_changed` signal on checkbox changes |
+| `handle_export_csv` | `()` | Exports filtered time-series data to CSV with user-selected filename |
+| `handle_open_browser` | `()` | Opens the time-series chart in the default browser with full Plotly toolbar |
+| `handle_layer_changed` | `()` | Zooms map canvas to the selected AOI layer |
+
 ### `services/gee_service.py` — GEE Service
 Contains `GEEService`. Imports `ee` and owns all Earth Engine SDK calls.
 
@@ -216,13 +244,21 @@ Contains `DEMDataset` and `DEMRegistry`. Loads dataset definitions from `assets/
 | `get_image` | `(name: str)` | Returns the `ee.Image` for the given dataset |
 | `is_available` | `(name: str, region, aoi_bbox=None)` | Checks whether the dataset has EE coverage over the given geometry; pass pre-computed `aoi_bbox` to skip the remote GEE bounds call |
 
-### `services/dem_renderer.py` — DEM Renderer
-Contains `DEMRenderer`. Handles color ramp creation and raster layer styling for DEM visualization.
+### `services/raster_renderer_utils.py` — Common Raster Rendering Utilities
+Contains `RasterRendererUtils`. Provides reusable methods for pseudocolor rendering shared by DEM and SAR modules.
 
 | Method | Signature | Purpose |
 |---|---|---|
-| `build_color_renderer` | `(provider, min_val, max_val)` | Creates a `QgsSingleBandPseudoColorRenderer` with a Magma color ramp for the given value range |
-| `load_dem_to_qgis` | `(path: str, dataset_name: str)` | Loads a DEM GeoTIFF into QGIS, applies the color renderer, and adds it to the layer tree at the top |
+| `apply_pseudocolor_renderer` | `(layer, band_idx, color_ramp_name, min_val, max_val, num_stops=256)` | Applies pseudocolor rendering with a named color ramp to a raster layer |
+| `add_layer_to_project` | `(layer, at_top=True)` | Adds a raster layer to the project at top or bottom of the Layers panel |
+| `load_pseudocolor_raster` | `(path, layer_name, band_idx, color_ramp_name, at_top=True)` | Loads and styles a raster with pseudocolor in one call |
+
+### `services/dem_renderer.py` — DEM Renderer
+Contains `DEMRenderer`. Delegates to `RasterRendererUtils` for color ramp creation and layer management.
+
+| Method | Signature | Purpose |
+|---|---|---|
+| `load_dem_to_qgis` | `(path: str, dataset_name: str)` | Loads a DEM GeoTIFF into QGIS with Magma color ramp and adds it to the layer tree |
 
 ### `services/dataset_manager.py` — Dataset Manager
 Contains `DatasetManager`. Manages dataset availability queries and UI updates for the dataset combobox and info panel.
@@ -233,12 +269,31 @@ Contains `DatasetManager`. Manages dataset availability queries and UI updates f
 | `update_dataset_info` | `(dem_combo, dem_info_widget)` | Updates the dataset info panel when a different dataset is selected in the combobox |
 
 ### `services/settings_manager.py` — Settings Manager
-Contains `SettingsManager`. Handles persistence of user preferences in QGIS settings under the `qgis-AGLgis/` prefix (kept distinct from any other plugin's settings group).
+Contains `SettingsManager`. Handles persistence of user preferences in QGIS settings under the `qgis-AGLgis/` prefix.
 
 | Method | Signature | Purpose |
 |---|---|---|
-| `save_download_folder` | `(folder_path: str)` | Persists the chosen DEM download folder in `QgsSettings` |
+| `save_download_folder` | `(folder_path: str)` | Persists the chosen download folder in `QgsSettings` |
 | `load_download_folder` | `()` | Returns the previously saved download folder, or an empty string if not set |
+
+### `services/sar_service.py` — SAR Service
+Contains `SARService`. Manages Sentinel-1 SAR data processing with spectral index support.
+
+| Method | Signature | Purpose |
+|---|---|---|
+| `get_collection` | `(aoi, start_date, end_date, polarization, ...)` | Creates an Earth Engine image collection filtered by AOI, date range, and processing options |
+| `add_vvvh_ratio_band` | `(image)` | Computes VV/VH Ratio spectral index |
+| `add_rvi_band` | `(image)` | Computes Radar Vegetation Index (4 × VH / (VV + VH)) |
+| `add_dprvi_band` | `(image)` | Computes Dual-pol SAR Vegetation Index (VH / (VH + VV)) |
+| `get_index_timeseries` | `(collection, aoi, band_name)` | Computes mean values over AOI for the specified spectral index |
+| `get_image_for_date` | `(collection, aoi, date, index_band)` | Retrieves a single image for a given date with all 5 bands |
+| `download_image` | `(image, aoi, date, output_folder, ...)` | Downloads image as GeoTIFF with embedded band descriptions |
+
+### `services/sar_worker.py` — SAR Background Workers
+Contains `SARWorker`, `SARPreviewWorker`, `SARBatchDownloadWorker`. Manages off-UI-thread SAR operations with progress tracking and cancellation.
+
+### `services/sar_renderer.py` — SAR Renderer
+Contains `SARRenderer`. Loads SAR GeoTIFFs with flexible render modes: RGB composites or single-band pseudocolor with Viridis palette. Delegates common rendering logic to `RasterRendererUtils`.
 
 ---
 
@@ -306,8 +361,12 @@ If you are an AI assistant working on this codebase, read this before making cha
 - New signal connections → `aglgis.py` (inside `_finish_init()`)
 - Auth page event handlers → `controllers/auth_ctrl.py`
 - DEM page event handlers and orchestration → `controllers/dem_ctrl.py`
-- SAR page event handlers → `controllers/sar_ctrl.py` (create when needed)
-- New rendering/styling logic → `services/dem_renderer.py`
+- SAR page event handlers and orchestration → `controllers/sar_ctrl.py`
+- New pseudocolor rendering logic (shared by DEM and SAR) → `services/raster_renderer_utils.py`
+- DEM-specific rendering → `services/dem_renderer.py`
+- SAR-specific rendering → `services/sar_renderer.py`
+- SAR data processing and spectral indices → `services/sar_service.py`
+- SAR background workers (preview, batch download) → `services/sar_worker.py`
 - New dataset management logic → `services/dataset_manager.py`
 - New settings persistence logic → `services/settings_manager.py`
 - New GEE logic → `services/gee_service.py`
