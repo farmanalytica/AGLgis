@@ -16,10 +16,10 @@ from .sar_renderer import SARRenderer
 
 
 class SARWorker(QThread):
-    """Runs the GEE collection build and VV/VH-ratio time-series fetch."""
+    """Runs the GEE collection build and spectral-index time-series fetch."""
 
-    # (collection with ratio band, data list of dicts)
-    finished_ok = pyqtSignal(object, object)
+    # (collection with index band, data list of dicts, index_name)
+    finished_ok = pyqtSignal(object, object, str)
     failed = pyqtSignal(str)
 
     def __init__(self, aoi, params):
@@ -41,9 +41,16 @@ class SARWorker(QThread):
                 apply_speckle_filtering=p["speckle"],
                 ascending=False,
             )
+            index_name = p.get("index", "VV/VH Ratio")
+            meta = SARService.INDEX_REGISTRY[index_name]
+
+            # Add all three spectral indices to the collection for download
             collection = collection.map(SARService.add_vvvh_ratio_band)
-            data = SARService.get_vvvh_ratio_timeseries(collection, self._aoi)
-            self.finished_ok.emit(collection, data)
+            collection = collection.map(SARService.add_rvi_band)
+            collection = collection.map(SARService.add_dprvi_band)
+
+            data = SARService.get_index_timeseries(collection, self._aoi, meta["band"])
+            self.finished_ok.emit(collection, data, index_name)
         except Exception as e:  # noqa: BLE001 - surface any failure to the UI
             self.failed.emit(str(e))
 
@@ -55,13 +62,15 @@ class SARPreviewWorker(QThread):
     finished_ok = pyqtSignal(str, str)
     failed = pyqtSignal(str)
 
-    def __init__(self, collection, aoi, selected_date, output_folder, label):
+    def __init__(self, collection, aoi, selected_date, output_folder, label, index_band="VVVH_ratio", index_label="VV/VH Ratio"):
         super().__init__()
         self._collection = collection
         self._aoi = aoi
         self._selected_date = selected_date
         self._output_folder = output_folder
         self._label = label
+        self._index_band = index_band
+        self._index_label = index_label
 
     def run(self):
         try:
@@ -69,12 +78,15 @@ class SARPreviewWorker(QThread):
                 self._collection,
                 self._aoi,
                 self._selected_date,
+                index_band=self._index_band,
             )
             output_path = SARService.download_image(
                 selected_image,
                 self._aoi,
                 self._selected_date,
                 output_folder=self._output_folder,
+                index_band=self._index_band,
+                index_label=self._index_label,
             )
             self.finished_ok.emit(output_path, self._label)
         except Exception as e:  # noqa: BLE001 - surface any failure to the UI
@@ -89,12 +101,14 @@ class SARBatchDownloadWorker(QThread):
     failed = pyqtSignal(str)
     cancelled = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
 
-    def __init__(self, collection, aoi, dates, output_folder):
+    def __init__(self, collection, aoi, dates, output_folder, index_band="VVVH_ratio", index_label="VV/VH Ratio"):
         super().__init__()
         self._collection = collection
         self._aoi = aoi
         self._dates = dates
         self._output_folder = output_folder
+        self._index_band = index_band
+        self._index_label = index_label
         self._cancel_requested = False
         self._mutex = QMutex()
 
@@ -123,12 +137,15 @@ class SARBatchDownloadWorker(QThread):
                     self._collection,
                     self._aoi,
                     date,
+                    index_band=self._index_band,
                 )
                 output_path = SARService.download_image(
                     selected_image,
                     self._aoi,
                     date,
                     output_folder=self._output_folder,
+                    index_band=self._index_band,
+                    index_label=self._index_label,
                 )
                 downloaded_paths.append(output_path)
                 successful += 1

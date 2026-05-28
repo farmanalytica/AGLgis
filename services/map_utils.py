@@ -27,7 +27,7 @@ def hybrid_function():
         QgsProject.instance().addMapLayer(google_hybrid_layer, False)
 
         google_hybrid_layer.setOpacity(1)
-        
+
         root = QgsProject.instance().layerTreeRoot()
         root.insertLayer(-1, google_hybrid_layer)
 

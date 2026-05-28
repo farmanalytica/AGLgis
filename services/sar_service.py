@@ -26,6 +26,30 @@ class SARService:
         "#f0f921",
     ]
 
+    INDEX_REGISTRY = {
+        "VV/VH Ratio": {
+            "band": "VVVH_ratio",
+            "add_fn": "add_vvvh_ratio_band",
+            "title": "VV/VH Ratio Mean Time Series",
+            "ylabel": "VV/VH Ratio Mean",
+            "band_label": "VV/VH Ratio",
+        },
+        "RVI": {
+            "band": "RVI",
+            "add_fn": "add_rvi_band",
+            "title": "Radar Vegetation Index (RVI) Time Series",
+            "ylabel": "RVI Mean",
+            "band_label": "RVI",
+        },
+        "DpRVI": {
+            "band": "DpRVI",
+            "add_fn": "add_dprvi_band",
+            "title": "Dual-pol Vegetation Index (DpRVI) Time Series",
+            "ylabel": "DpRVI Mean",
+            "band_label": "DpRVI",
+        },
+    }
+
     @staticmethod
     def get_collection(
         aoi,
@@ -54,14 +78,27 @@ class SARService:
 
     @staticmethod
     def add_vvvh_ratio_band(image):
-
         ratio = image.select("VV").divide(image.select("VH")).rename("VVVH_ratio")
         return image.addBands(ratio)
 
     @staticmethod
-    def get_vvvh_ratio_timeseries(collection, aoi):
+    def add_rvi_band(image):
+        rvi = image.select("VH").multiply(4).divide(
+            image.select("VV").add(image.select("VH"))
+        ).rename("RVI")
+        return image.addBands(rvi)
+
+    @staticmethod
+    def add_dprvi_band(image):
+        dprvi = image.select("VH").divide(
+            image.select("VH").add(image.select("VV"))
+        ).rename("DpRVI")
+        return image.addBands(dprvi)
+
+    @staticmethod
+    def get_index_timeseries(collection, aoi, band_name):
         def get_mean(image):
-            stats = image.select("VVVH_ratio").reduceRegion(
+            stats = image.select(band_name).reduceRegion(
                 reducer=ee.Reducer.mean(),
                 geometry=aoi,
                 scale=10,
@@ -74,7 +111,7 @@ class SARService:
                 None,
                 {
                     "date": date,
-                    "VVVH_ratio_mean": stats.get("VVVH_ratio"),
+                    f"{band_name}_mean": stats.get(band_name),
                 },
             )
 
@@ -86,14 +123,18 @@ class SARService:
             data.append(
                 {
                     "dates": properties.get("date"),
-                    "AOI_average": properties.get("VVVH_ratio_mean"),
+                    "AOI_average": properties.get(f"{band_name}_mean"),
                 }
             )
 
         return data
 
     @staticmethod
-    def get_image_for_date(collection, aoi, date):
+    def get_vvvh_ratio_timeseries(collection, aoi):
+        return SARService.get_index_timeseries(collection, aoi, "VVVH_ratio")
+
+    @staticmethod
+    def get_image_for_date(collection, aoi, date, index_band="VVVH_ratio"):
         next_date = (datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)).strftime(
             "%Y-%m-%d"
         )
@@ -101,7 +142,7 @@ class SARService:
         return (
             collection.filterDate(date, next_date)
             .first()
-            .select(["VV", "VH", "VVVH_ratio"])
+            .select(["VV", "VH", "VVVH_ratio", "RVI", "DpRVI"])
             .clip(aoi)
         )
 
@@ -120,7 +161,7 @@ class SARService:
         )
 
     @staticmethod
-    def download_image(image, aoi, date, output_folder=None):
+    def download_image(image, aoi, date, output_folder=None, index_band="VVVH_ratio", index_label="VV/VH Ratio"):
         url = image.getDownloadURL(
             {
                 "scale": 10,
@@ -147,11 +188,11 @@ class SARService:
         with open(output_path, "wb") as f:
             f.write(response.content)
 
-        SARService._set_band_names(output_path)
+        SARService._set_band_names(output_path, index_label)
         return output_path
 
     @staticmethod
-    def _set_band_names(file_path):
+    def _set_band_names(file_path, index_label="VV/VH Ratio"):
         if gdal is None:
             return
 
@@ -160,7 +201,7 @@ class SARService:
             if dataset is None:
                 return
 
-            band_names = ["VV", "VH", "VV/VH Ratio"]
+            band_names = ["VV", "VH", "VV/VH Ratio", "RVI", "DpRVI"]
             for i in range(1, min(dataset.RasterCount + 1, len(band_names) + 1)):
                 band = dataset.GetRasterBand(i)
                 if band is not None:

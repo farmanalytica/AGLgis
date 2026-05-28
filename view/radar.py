@@ -397,6 +397,34 @@ def _build_results_tab(dialog, parent):
     date_row.addWidget(dialog.sar_btn_download_preview)
     date_row.addStretch(1)
     controls_lay.addLayout(date_row)
+
+    # Render mode row
+    render_row = QHBoxLayout()
+    render_row.setSpacing(8)
+    render_row.setContentsMargins(0, 0, 0, 0)
+    render_lbl = QLabel(_tr("Render Mode"))
+    render_lbl.setStyleSheet(
+        "color: #616161; font-size: 12px; background: transparent; border: none;"
+    )
+    render_lbl.setFixedWidth(80)
+    render_row.addWidget(render_lbl)
+    dialog.sar_render_combo = QComboBox()
+    _prepare_field(dialog.sar_render_combo, 30)
+    dialog.sar_render_combo.setFixedWidth(240)
+    dialog.sar_render_combo.addItems([
+        _tr("RGB: VV, VH, VV/VH Ratio"),
+        _tr("RGB: VV, RVI, DpRVI"),
+        _tr("RGB: VV/VH Ratio, RVI, DpRVI"),
+        _tr("Band: VV"),
+        _tr("Band: VH"),
+        _tr("Band: VV/VH Ratio"),
+        _tr("Band: RVI"),
+        _tr("Band: DpRVI"),
+    ])
+    dialog.sar_render_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
+    render_row.addWidget(dialog.sar_render_combo)
+    render_row.addStretch(1)
+    controls_lay.addLayout(render_row)
     lay.addWidget(controls_panel)
 
     scroll.setWidget(scroll_w)
@@ -409,11 +437,11 @@ def setup_radar_page(dialog, page):
 
     Exposes on dialog:
       sar_layer_combo, sar_date_start, sar_date_end,
-      sar_pol_combo, sar_format_combo,
+      sar_pol_combo, sar_format_combo, sar_index_combo,
       sar_chk_border_noise, sar_chk_terrain, sar_chk_speckle,
       sar_web_view, sar_btn_open_browser, sar_btn_download_csv, sar_btn_filter_dates,
       sar_result_date_combo, sar_btn_preview, sar_btn_download_preview,
-      sar_btn_batch_download,
+      sar_btn_batch_download, sar_render_combo,
       sar_stack, sar_btn_back, sar_btn_next, sar_step_lbl
     """
     page.setObjectName("sarPage")

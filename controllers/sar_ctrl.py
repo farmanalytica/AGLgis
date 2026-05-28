@@ -57,6 +57,7 @@ class SARCtrl:
         self._batch_worker = None
         self._batch_dialog = None
         self._zoom_enabled = True
+        self._current_index = "VV/VH Ratio"
 
     def _show_auth_required_message(self):
         self.dlg.pop_message(
@@ -130,6 +131,7 @@ class SARCtrl:
             "border_noise": self.dlg.sar_chk_border_noise.isChecked(),
             "terrain": self.dlg.sar_chk_terrain.isChecked(),
             "speckle": self.dlg.sar_chk_speckle.isChecked(),
+            "index": self.dlg.sar_index_combo.currentText(),
         }
 
         # Show progress without blocking: spinner in the Results tab + busy button.
@@ -167,7 +169,7 @@ class SARCtrl:
         if worker is not None:
             worker.deleteLater()
 
-    def _on_sar_done(self, collection, data):
+    def _on_sar_done(self, collection, data, index):
         self._set_running(False)
         self._clear_worker()
 
@@ -182,6 +184,7 @@ class SARCtrl:
         self.collection = collection
         self.dataframe = pd.DataFrame(data)
         self._active_dates = None
+        self._current_index = index
 
         self.dlg.sar_result_date_combo.clear()
         self.dlg.sar_result_date_combo.addItems(self.dataframe["dates"].tolist())
@@ -204,7 +207,8 @@ class SARCtrl:
     def _on_preview_done(self, output_path, label):
         self._set_preview_running(False)
         self._clear_preview_worker()
-        SARRenderer.load_sar_to_qgis(output_path, label)
+        render_mode = self.dlg.sar_render_combo.currentText()
+        SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
         if self.interface:
             self.interface.messageBar().pushMessage(
                 "AGLgis", f"SAR preview '{output_path.split('/')[-1]}' loaded into QGIS."
@@ -213,7 +217,8 @@ class SARCtrl:
     def _on_download_preview_done(self, output_path, label):
         self._set_preview_running(False)
         self._clear_preview_worker()
-        SARRenderer.load_sar_to_qgis(output_path, label)
+        render_mode = self.dlg.sar_render_combo.currentText()
+        SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
         if self.interface:
             self.interface.messageBar().pushMessage(
                 "AGLgis",
@@ -235,12 +240,15 @@ class SARCtrl:
 
         selected_date = self.dlg.sar_result_date_combo.currentText()
         self._set_preview_running(True)
+        meta = SARService.INDEX_REGISTRY[self._current_index]
         self._preview_worker = SARPreviewWorker(
             self.collection,
             self.aoi,
             selected_date,
             tempfile.gettempdir(),
             f"SAR_Preview_{selected_date}",
+            index_band=meta["band"],
+            index_label=meta["band_label"],
         )
         self._preview_worker.finished_ok.connect(self._on_preview_done)
         self._preview_worker.failed.connect(self._on_preview_failed)
@@ -257,12 +265,15 @@ class SARCtrl:
         selected_date = self.dlg.sar_result_date_combo.currentText()
         output_folder = SettingsManager.load_download_folder()
         self._set_preview_running(True)
+        meta = SARService.INDEX_REGISTRY[self._current_index]
         self._preview_worker = SARPreviewWorker(
             self.collection,
             self.aoi,
             selected_date,
             output_folder,
             f"SAR_{selected_date}",
+            index_band=meta["band"],
+            index_label=meta["band_label"],
         )
         self._preview_worker.finished_ok.connect(
             lambda path, label: self._on_download_preview_done(path, label)
@@ -296,8 +307,11 @@ class SARCtrl:
         self._batch_dialog.setModal(True)
         self._batch_dialog.show()
 
+        meta = SARService.INDEX_REGISTRY[self._current_index]
         self._batch_worker = SARBatchDownloadWorker(
-            self.collection, self.aoi, dates, output_folder
+            self.collection, self.aoi, dates, output_folder,
+            index_band=meta["band"],
+            index_label=meta["band_label"],
         )
         self._batch_worker.progress.connect(self._on_batch_progress)
         self._batch_worker.finished_ok.connect(self._on_batch_done)
@@ -344,12 +358,13 @@ class SARCtrl:
             self.dlg.pop_message(_tr("Batch download cancelled by user."), "info")
 
     def _load_downloaded_images(self, paths):
+        render_mode = self.dlg.sar_render_combo.currentText()
         for idx, path in enumerate(paths, start=1):
             try:
                 filename = os.path.basename(path)
                 date_str = filename.replace("Sentinel1_", "").replace(".tiff", "")
                 label = f"SAR_{date_str}"
-                SARRenderer.load_sar_to_qgis(path, label)
+                SARRenderer.load_sar_to_qgis(path, label, render_mode=render_mode)
             except Exception as e:
                 pass
 
@@ -389,7 +404,8 @@ class SARCtrl:
         df = self.dataframe
         if self._active_dates is not None:
             df = df[df["dates"].isin(self._active_dates)]
-        html = render_chart_html(df, hide_toolbar=False)
+        meta = SARService.INDEX_REGISTRY[self._current_index]
+        html = render_chart_html(df, hide_toolbar=False, title=meta["title"], ylabel=meta["ylabel"])
         with tempfile.NamedTemporaryFile(
             suffix=".html", delete=False, mode="w", encoding="utf-8"
         ) as f:
@@ -431,7 +447,8 @@ class SARCtrl:
         df = self.dataframe
         if self._active_dates is not None:
             df = df[df["dates"].isin(self._active_dates)]
-        html = render_chart_html(df)
+        meta = SARService.INDEX_REGISTRY[self._current_index]
+        html = render_chart_html(df, title=meta["title"], ylabel=meta["ylabel"])
         # Write to a fresh temp file and load it: QtWebKit renders large embedded
         # Plotly content reliably from a file:// URL, unlike setContent/setHtml.
         fd, path = tempfile.mkstemp(suffix=".html", prefix="aglgis_sar_")

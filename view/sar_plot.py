@@ -31,25 +31,25 @@ def _plotly_js():
     return _plotly_js_cache
 
 
-def _build_figure(dataframe):
-    """Build the shared VV/VH-ratio time-series figure."""
+def _build_figure(dataframe, title="VV/VH Ratio Mean Time Series", ylabel="VV/VH Ratio Mean"):
+    """Build the spectral-index time-series figure."""
     fig = px.line(
         dataframe,
         x="dates",
         y="AOI_average",
         markers=True,
-        title="VV/VH Ratio Mean Time Series",
+        title=title,
     )
     fig.update_layout(
         xaxis_title="Date",
-        yaxis_title="VV/VH Ratio Mean",
+        yaxis_title=ylabel,
         yaxis=dict(tickformat=".3f"),
         margin=dict(l=80, r=20, t=40, b=40),
     )
     return fig
 
 
-def render_chart_html(dataframe, hide_toolbar=True):
+def render_chart_html(dataframe, hide_toolbar=True, title="VV/VH Ratio Mean Time Series", ylabel="VV/VH Ratio Mean"):
     """Return a self-contained page that renders the figure with the vendored
     plotly.js v1.58 (QtWebKit-compatible), fed the figure JSON via Plotly.newPlot.
 
@@ -58,12 +58,14 @@ def render_chart_html(dataframe, hide_toolbar=True):
         hide_toolbar: If True, hide toolbar buttons (for in-plugin view).
                      If False, show toolbar (for browser export).
                      Defaults to True for in-plugin use.
+        title: Chart title (default: "VV/VH Ratio Mean Time Series").
+        ylabel: Y-axis label (default: "VV/VH Ratio Mean").
 
     The default v6 template is dropped so the JSON stays within what the old
     engine understands. Intended to be written to a temp file and loaded from a
     ``file://`` URL.
     """
-    fig = _build_figure(dataframe)
+    fig = _build_figure(dataframe, title=title, ylabel=ylabel)
     fig.update_layout(template="none")
     # plotly 6.x encodes numeric arrays as base64 typed-arrays ("bdata"), even in
     # to_dict(); plotly.js v1.58 can't decode that, so the y values render as

@@ -56,6 +56,7 @@ class AuthCtrl:
 
         if success:
             self.dlg.show_radar_page()
+            self.dlg.sar_set_tab(1)
             self.dlg.pop_message(_tr("Authentication successful!"), "info")
         elif message == CANCELLED:
             pass  # User aborted; UI is already back to its idle state.
