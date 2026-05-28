@@ -1,130 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AGLgis Plugin Documentation</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-                body { font-family: Arial, sans-serif; margin: 2em; background: #f9f9f9; color: #222; }
-                h1, h2, h3 { color: #2a5d84; }
-                table { border-collapse: collapse; width: 100%; margin-top: 1em; background: #fff; }
-                th, td { border: 1px solid #ccc; padding: 0.5em 1em; text-align: left; }
-                th { background: #e6f2fa; }
-                a { color: #1a73e8; text-decoration: none; }
-                a:hover { text-decoration: underline; }
-                .container { max-width: 900px; margin: auto; background: #fff; padding: 2em; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
-                .lang-btns { text-align: center; margin-bottom: 2em; }
-                .lang-btns button { margin: 0 8px; padding: 8px 18px; font-size: 1em; border-radius: 6px; border: 1px solid #2a5d84; background: #e6f2fa; color: #2a5d84; cursor: pointer; }
-                .lang-btns button.active { background: #2a5d84; color: #fff; }
-                .hidden { display: none; }
-        </style>
-        <script>
-            function showLang(lang) {
-                document.getElementById('pt').classList.add('hidden');
-                document.getElementById('en').classList.add('hidden');
-                document.getElementById(lang).classList.remove('hidden');
-                document.getElementById('btn-pt').classList.remove('active');
-                document.getElementById('btn-en').classList.remove('active');
-                document.getElementById('btn-' + lang).classList.add('active');
-            }
-            window.onload = function() {
-                var lang = 'pt';
-                var navLang = navigator.language || navigator.userLanguage;
-                if (navLang) {
-                    if (navLang.startsWith('en')) lang = 'en';
-                    else if (navLang.startsWith('pt')) lang = 'pt';
-                }
-                showLang(lang);
-            };
-        </script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AGLgis | Sentinel-1 SAR Processing in QGIS</title>
+	<meta name="description" content="QGIS plugin for Sentinel-1 SAR data processing. Multiple spectral indices, flexible render modes, batch download, and interactive time series visualization via Google Earth Engine.">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="AGLgis | QGIS Plugin for Sentinel-1 SAR Processing">
+	<meta property="og:description" content="Process Sentinel-1 SAR data with VV/VH Ratio, RVI, and DpRVI spectral indices. RGB composites with contrast enhancement and pseudocolor visualization.">
+	<meta property="og:url" content="https://farmanalytica.github.io/AGLgis/">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="AGLgis | QGIS Plugin for Sentinel-1 SAR">
+	<meta name="twitter:description" content="Sentinel-1 SAR data processing directly in QGIS. No coding required.">
+	<link rel="icon" type="image/png" href="icon.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+	<style>
+	html{scroll-behavior:smooth}:root{--bg:#fafafa;--ink:#1a1a1a;--soft:#1b6b39;--card:#ffffff;--accent:#d32f2f;--accent2:#00897b;--line:#dcdcdc;--ok:#1b6b39;--shadow:0 14px 40px rgba(26,26,26,.12)}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Sora",sans-serif;color:var(--ink);background:radial-gradient(circle at 15% 0%,#e8f5e9 0%,transparent 35%),radial-gradient(circle at 100% 20%,#b2dfdb 0%,transparent 30%),var(--bg);line-height:1.6}.container{width:min(1100px,92vw);margin:0 auto}header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);border-bottom:1px solid rgba(220,220,220,.7);background:rgba(250,250,250,.95)}.nav,.nav-right,.nav-links,.footer-brand{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap}.nav{justify-content:space-between;padding:.85rem 0}.brand{display:inline-flex;align-items:center;gap:.55rem;font-family:"Fraunces",serif;font-size:1.25rem;font-weight:700}.brand-logo,.footer-logo{width:34px;height:34px;border-radius:10px;object-fit:contain;background:#fff;box-shadow:0 6px 16px rgba(26,26,26,.2)}.nav-links a{text-decoration:none;color:var(--soft);font-weight:600;font-size:.95rem}.lang-toggle{display:inline-flex;background:#f0f0f0;border:1px solid #dcdcdc;border-radius:999px;padding:.2rem;gap:.2rem}.lang-toggle button{border:none;background:transparent;color:var(--soft);font-weight:700;font-size:.75rem;padding:.25rem .6rem;border-radius:999px;cursor:pointer}.lang-toggle button.active{background:var(--accent);color:#fff}.hero{padding:5rem 0 3rem;display:grid;grid-template-columns:1.15fr 1fr;gap:2rem;align-items:center}.tag{display:inline-flex;background:#f3e5f5;border:1px solid #e1bee7;color:#6a1b9a;padding:.35rem .7rem;border-radius:999px;font-size:.82rem;font-weight:700;margin-bottom:1rem}h1,h2{font-family:"Fraunces",serif}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.08;margin-bottom:1rem;max-width:18ch}h2{font-size:clamp(1.6rem,3.5vw,2.3rem);margin-bottom:.6rem}p,.section-lead,.card p{color:var(--soft)}.hero p{max-width:50ch;margin-bottom:1rem}.hero-note{font-size:.92rem}.preview{background:linear-gradient(160deg,#fff,#f5f5f5);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:1rem;transform:rotate(1.5deg)}.preview-box{border:1px dashed #dcdcdc;border-radius:14px;min-height:320px;padding:1rem;background:linear-gradient(130deg,rgba(27,107,57,.08),rgba(0,137,123,.08)),#ffffff;display:flex;flex-direction:column;gap:.8rem;justify-content:space-between}.mini-map{border-radius:10px;border:1px solid #dcdcdc;overflow:hidden;background:#f5f5f5}.mini-map img{display:block;width:100%;height:auto}.mini-list{display:grid;gap:.4rem;font-size:.88rem;color:#333333}section{padding:4rem 0}.section-lead{max-width:62ch;margin-bottom:1.4rem}.grid{display:grid;gap:1rem}.benefits,.steps{grid-template-columns:repeat(3,1fr)}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;box-shadow:0 8px 26px rgba(26,26,26,.08)}.card h3{margin-bottom:.4rem;font-size:1rem}.steps{counter-reset:step}.steps-vertical{counter-reset:step;display:flex;flex-direction:column;gap:1rem}.step{position:relative;padding-top:2.2rem}.step:before{counter-increment:step;content:"0" counter(step);position:absolute;top:0;left:0;font-family:"Fraunces",serif;font-size:1.2rem;color:#1b6b39;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:10px;width:40px;height:34px;display:grid;place-items:center}.highlight,.about{border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 28px rgba(26,26,26,.08)}.highlight{padding:1.2rem;display:grid;gap:.8rem;background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,.92)),radial-gradient(circle at right top,rgba(211,47,47,.15),transparent 50%)}.check{display:flex;align-items:flex-start;gap:.55rem;color:var(--soft)}.check-mark{color:var(--ok);font-weight:700}.about{background:#f5f5f5;padding:1.3rem}.about p:empty{display:none}.partner-block{display:flex;align-items:center;gap:.9rem;padding:.9rem 1rem;margin-bottom:1rem;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(240,250,250,.9));border:1px solid #dcdcdc;border-radius:16px}.partner-logo{width:82px;height:82px;border-radius:18px;object-fit:contain;background:#fff;padding:.5rem;box-shadow:0 10px 24px rgba(26,26,26,.12)}.partner-copy{display:grid;gap:.35rem}.partner-label{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#1b6b39;font-weight:700}.partner-name{font-family:"Fraunces",serif;font-size:1.15rem}.partner-contact-list{display:flex;flex-wrap:wrap;gap:.55rem}.partner-contact,.partner-cta{text-decoration:none;font-weight:700}.partner-contact{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .65rem;border-radius:999px;background:rgba(211,47,47,.08);color:#d32f2f;font-size:.84rem}.partner-contact.whatsapp{background:rgba(35,179,58,.12);color:#176f2c}.partner-contact-icon{width:16px;height:16px}.partner-cta{color:#d32f2f;font-size:.88rem}.footer-brand{justify-content:center}footer{padding:1rem 0 2rem;color:var(--soft);font-size:.9rem;text-align:center}.reveal{opacity:0;transform:translateY(14px);transition:opacity .65s ease,transform .65s ease}.reveal.show{opacity:1;transform:none}.cta-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem}.btn{display:inline-flex;align-items:center;gap:.5rem;font-family:"Sora",sans-serif;font-weight:700;border-radius:999px;border:none;cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .15s;font-size:.95rem;padding:.72rem 1.5rem;line-height:1}.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,26,26,.18)}.btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(211,47,47,.28)}.btn-secondary{background:#fff;border:1.5px solid var(--line);color:var(--soft)}.menu-toggle{display:none;background:none;border:1.5px solid var(--line);border-radius:8px;padding:.35rem .55rem;cursor:pointer;color:var(--soft);font-size:1.15rem;line-height:1;align-items:center;justify-content:center}table{width:100%;border-collapse:collapse;margin-top:1.2rem}th{background:#e8f5e9;color:var(--soft);font-weight:700;text-align:left;padding:.7rem;border:1px solid var(--line);font-size:.9rem}td{padding:.7rem;border:1px solid var(--line);font-size:.9rem;color:#333333}tbody tr:nth-child(odd){background:#fafafa}tbody tr:hover{background:#f0f8f5}td strong{color:var(--soft);font-weight:700}@media (max-width:900px){.nav,.hero,.partner-block{flex-direction:column}.hero{grid-template-columns:1fr;padding-top:3.5rem}.preview{transform:none}.benefits,.steps{grid-template-columns:1fr}.menu-toggle{display:inline-flex}.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(250,250,250,.98);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);flex-direction:column;padding:.75rem 1.5rem;gap:.25rem;z-index:10}.nav-links.open{display:flex}.nav-right{flex-direction:row;justify-content:flex-end;width:100%}}
+	</style>
 </head>
-<body>
-        <div style="text-align:center;margin-bottom:1em;">
-            <img src="icon.png" alt="AGLgis logo" style="height:64px;vertical-align:middle;margin-right:12px;">
-        </div>
-        <div class="lang-btns">
-            <button id="btn-pt" onclick="showLang('pt')">Português</button>
-            <button id="btn-en" onclick="showLang('en')">English</button>
-        </div>
-        <div id="pt" class="container">
-            <h1>AGLgis</h1>
-            <p>
-                O AGLgis é uma interface gráfica para facilitar do <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> no QGIS.
-            </p>
-            <p>
-                Este plugin permite configurar e executar o processamento de dados SAR Sentinel-1 sem necessidade de programação.
-            </p>
-            <h2>Principais funcionalidades</h2>
-            <ul>
-                <li>Interface gráfica para seleção de área, datas e parâmetros de processamento.</li>
-                <li>Integração direta com o pacote <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a>, tornando o fluxo de trabalho mais acessível.</li>
-                <li>Suporte à múltiplos índices espectrais: VV/VH Ratio, RVI (Radar Vegetation Index), DpRVI (Dual-pol SAR Vegetation Index).</li>
-                <li>Modos de renderização flexíveis: compostas RGB com contraste aprimorado e pseudocolor de banda única com paleta Viridis.</li>
-                <li>Suporte à correção de ruído de borda, nivelamento de terreno e filtragem de speckle.</li>
-                <li>Série temporal interativa, filtro de datas, download em lote e exportação CSV.</li>
-                <li>Exportação dos resultados prontos para análise e visualização.</li>
-            </ul>
-            <h2>Parâmetros suportados</h2>
-            <img src="medias/view.png" alt="Parâmetros suportados do AGLgis" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
-            <h2>Exemplo de Série Temporal e Imagem Selecionada</h2>
-            <img src="medias/demo.png" alt="Demonstração da série temporal e imagem da data selecionada" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
-            <p>
-                Acima, uma demonstração da série temporal gerada pelo plugin e uma imagem SAR da data selecionada.
-            <h2>Configuração do Projeto Google Cloud</h2>
-            <img src="medias/image01.png" alt="Exemplo de ID do Projeto Google Cloud" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
-            <p>
-                A imagem acima mostra onde encontrar o ID do seu Projeto Google Cloud, necessário para autenticar e executar o pacote <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> no Google Earth Engine.
-                Certifique-se de ter um projeto válido no <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> e utilize o ID ao configurar o plugin.
-            </p>
-            
-            <h2>Citação</h2>
-            <div style="background: #f0f8ff; border-left: 4px solid #2a5d84; padding: 1em; margin: 1em 0;">
-                <p>Qualquer trabalho publicado que utilize este plugin deve citar a seguinte referência como fonte do framework de processamento:</p>
-                <p style="font-family: monospace; font-size: 0.9em; background: #fff; padding: 0.5em; border: 1px solid #ccc; margin: 0.5em 0;">
-                    Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
-                </p>
-            </div>
-        </div>
-        <div id="en" class="container hidden">
-            <h1>AGLgis
-                
-            </h1>
-            <p>
-                AGLgis is a graphical interface designed to simplify the use of the <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> in QGIS.
-            </p>
-            <p>
-                This plugin allows users to configure and run Sentinel-1 SAR data processing without the need to write code.
-            </p>
-            <h2>Main features</h2>
-            <ul>
-                <li>Graphical interface for selecting area, dates, and processing parameters.</li>
-                <li>Direct integration with the <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> package, making the workflow more accessible.</li>
-                <li>Support for multiple spectral indices: VV/VH Ratio, RVI (Radar Vegetation Index), DpRVI (Dual-pol SAR Vegetation Index).</li>
-                <li>Flexible render modes: RGB composites with enhanced contrast and single-band pseudocolor with Viridis palette.</li>
-                <li>Support for border noise correction, terrain flattening, and speckle filtering.</li>
-                <li>Interactive time series, date filtering, batch download, and CSV export.</li>
-                <li>Export of results ready for analysis and visualization.</li>
-            </ul>
-            <h2>Supported Parameters</h2>
-            <img src="medias/view.png" alt="AGLgis Supported Parameters" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
-            <h2>Time Series Example and Selected Image</h2>
-            <img src="medias/demo.png" alt="Time series demonstration and selected date image" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
-            <p>
-                Above, a demonstration of the time series generated by the plugin and a SAR image from the selected date.
-            <h2>Google Cloud Project Setup</h2>
-            <img src="medias/image01.png" alt="Google Cloud Project ID Example" style="max-width:100%;border:1px solid #ccc;margin-bottom:1em;">
-            <p>
-                The image above shows where to find your Google Cloud Project ID, which is required for authenticating and running the <a href="https://pypi.org/project/ee-s1-ard/" target="_blank"><code>ee-s1-ard</code></a> package in Google Earth Engine.
-                Make sure you have a valid project set up in the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> and use the Project ID when configuring the plugin.
-            </p>
-            
-            <h2>Citation</h2>
-            <div style="background: #f0f8ff; border-left: 4px solid #2a5d84; padding: 1em; margin: 1em 0;">
-                <p>Any published work that uses this plugin must cite the following reference as the source for the processing framework:</p>
-                <p style="font-family: monospace; font-size: 0.9em; background: #fff; padding: 0.5em; border: 1px solid #ccc; margin: 0.5em 0;">
-                    Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. Remote Sens. 2021, 13, 1954. https://doi.org/10.3390/rs13101954
-                </p>
-            </div>
-        </div>
+<body id="top">
+	<header><div class="container nav"><div class="brand"><img class="brand-logo" src="icon.png" alt="AGLgis logo"><span>AGLgis</span></div><div class="nav-right"><button class="menu-toggle" id="menuToggle" aria-expanded="false">☰</button><nav class="nav-links" id="navLinks" aria-label="Main navigation"><a href="#features">Features</a><a href="#how-it-works">How it works</a><a href="#setup">GEE Setup</a></nav><div class="lang-toggle" role="group" aria-label="Language toggle"><button type="button" data-lang-btn="pt">PT</button><button type="button" data-lang-btn="en">EN</button></div></div></div></header>
+	<main>
+		<section class="container hero"><div class="reveal show"><div class="tag">Sentinel-1 SAR processing. No code.</div><h1>Process Sentinel-1 SAR data directly in QGIS</h1><p>Select your AOI, choose spectral indices and render modes, visualize time series, and export results — all without leaving QGIS.</p><div class="cta-row"><a class="btn btn-secondary" href="https://github.com/farmanalytica/AGLgis" target="_blank" rel="noopener noreferrer">View on GitHub</a></div></div><aside class="preview reveal" aria-label="Visual example of use"><div class="preview-box"><div style="background: linear-gradient(135deg, #e8f5e9 0%, #b2dfdb 100%); border-radius: 10px; padding: 1.5rem; text-align: center; color: #1b6b39;"><strong style="font-size: 1.2rem;">Sentinel-1 SAR</strong><p style="margin: 0.5rem 0 0;">Time Series & Spectral Indices</p></div><div class="mini-list"><strong>Key features</strong><span>✓ VV/VH Ratio, RVI, DpRVI indices</span><span>✓ RGB composites + pseudocolor</span><span>✓ Interactive time series charts</span><span>✓ Batch download & CSV export</span></div></div></aside></section>
+
+		<section id="features" class="container reveal"><h2>Core Features</h2><p class="section-lead">A complete workflow for SAR data processing in QGIS with Google Earth Engine integration.</p><div class="grid benefits"><article class="card"><h3>Multiple Spectral Indices</h3><p>VV/VH Ratio, RVI (Radar Vegetation Index), and DpRVI (Dual-pol SAR Vegetation Index) — choose the index that best fits your analysis.</p></article><article class="card"><h3>Flexible Render Modes</h3><p>RGB composites with cumulative cut contrast enhancement, or single-band pseudocolor with Viridis palette for intuitive visualization.</p></article><article class="card"><h3>Interactive Time Series</h3><p>Plotly charts with zoom, pan, and hover — filter by date and export results as CSV for external analysis.</p></article><article class="card"><h3>Batch Download</h3><p>Download multiple images with progress tracking and cancellation support. All images load automatically to your QGIS project.</p></article><article class="card"><h3>Preprocessing Options</h3><p>Border noise correction, terrain flattening, and speckle filtering with full control over SAR parameters.</p></article><article class="card"><h3>GEE Integration</h3><p>Authenticate with Google Cloud, access Sentinel-1 ARD collection directly, and process data without external tools.</p></article></div></section>
+
+		<section id="how-it-works" class="container reveal"><h2>How It Works</h2><p class="section-lead">A three-step workflow to go from authentication to loaded SAR imagery in QGIS.</p><div class="steps-vertical"><article class="card step"><h3>Authenticate</h3><p>Set up your Google Cloud project ID and authenticate with Google Earth Engine through the plugin.</p></article><article class="card step"><h3>Configure & Run</h3><p>Select your AOI, date range, spectral index, and processing parameters. Click "Run" to generate the time series.</p></article><article class="card step"><h3>Visualize & Export</h3><p>View interactive charts, filter dates, preview or download SAR images, and export results as CSV or GeoTIFF.</p></article></div></section>
+
+		<section id="setup" class="container reveal"><h2>Getting Started</h2><p class="section-lead">Set up Google Earth Engine and configure AGLgis to start processing Sentinel-1 data.</p><div class="steps-vertical"><article class="card step"><h3>Create a Google Earth Engine account</h3><p>Sign up for free at earthengine.google.com. GEE is free for non-commercial research, education, and nonprofit use.</p><a href="https://earthengine.google.com/" target="_blank" rel="noopener noreferrer" class="partner-contact">→ Go to Earth Engine</a></article><article class="card step"><h3>Create a Google Cloud project</h3><p>Create a new project and link it to your GEE account.</p><a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" class="partner-contact">→ Google Cloud Console</a></article><article class="card step"><h3>Enable Earth Engine API</h3><p>In Cloud Console, search for "Earth Engine API" and enable it. This allows the plugin to communicate with GEE.</p><a href="https://console.cloud.google.com/apis/library/earthengine.googleapis.com" target="_blank" rel="noopener noreferrer" class="partner-contact">→ Enable API</a></article><article class="card step"><h3>Set your use case</h3><p>Declare your use case (research, education, commercial, etc.) in the GEE configuration page.</p><a href="https://console.cloud.google.com/earth-engine/configuration" target="_blank" rel="noopener noreferrer" class="partner-contact">→ GEE Configuration</a></article><article class="card step"><h3>Authenticate in AGLgis</h3><p>Open AGLgis in QGIS, click "Authenticate", and enter your Cloud project ID. The plugin will guide you through OAuth.</p></article></div></section>
+
+		<section class="container reveal" aria-label="About the project"><h2>About AGLgis</h2><div class="about"><div class="partner-block"><img class="partner-logo" src="assets/farm_icon.png" alt="FARM Analytica logo"><div class="partner-copy"><span class="partner-label">Developed by</span><strong class="partner-name">FARM Analytica</strong><p>Technology and field intelligence working together to support practical operations.</p><div class="partner-contact-list"><a class="partner-contact whatsapp" href="https://api.whatsapp.com/send/?phone=5519992741032&text=Olá!+Preciso+de+mais+informações+sobre+os+serviços+da+FARM+Analytica.&type=phone_number&app_absent=0" target="_blank" rel="noopener noreferrer"><span>Talk on WhatsApp</span></a><a class="partner-contact" href="mailto:adm@farmanalytica.com.br">adm@farmanalytica.com.br</a></div><a class="partner-cta" href="https://farmanalytica.com.br" target="_blank" rel="noopener noreferrer">Speak with FARM about exclusive custom solutions</a></div></div><p style="margin-top: 1.5rem; font-size: 0.95rem;">AGLgis builds on the <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank" style="color: var(--soft); font-weight: 700;">Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine</a> framework by Mullissa et al.</p></div></section>
+	</main>
+	<footer><div class="container footer-brand"><img class="footer-logo" src="icon.png" alt="AGLgis logo"><img class="footer-logo" src="assets/farm_icon.png" alt="FARM Analytica logo"><span>AGLgis, an open and free project by FARM Analytica.</span></div></footer>
+	<script>
+	const menuToggle=document.getElementById("menuToggle");const navLinks=document.getElementById("navLinks");if(menuToggle&&navLinks){menuToggle.addEventListener("click",()=>{const open=navLinks.classList.toggle("open");menuToggle.setAttribute("aria-expanded",open?"true":"false");menuToggle.textContent=open?"✕":"☰"});navLinks.querySelectorAll("a").forEach((a)=>{a.addEventListener("click",()=>{navLinks.classList.remove("open");menuToggle.setAttribute("aria-expanded","false");menuToggle.textContent="☰"})})}const observer=new IntersectionObserver((entries)=>{entries.forEach((entry)=>{if(entry.isIntersecting){entry.target.classList.add("show")}})},{threshold:.15});document.querySelectorAll(".reveal").forEach((el)=>observer.observe(el));
+	</script>
 </body>
 </html>
