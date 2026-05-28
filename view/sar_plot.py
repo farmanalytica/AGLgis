@@ -43,7 +43,7 @@ def _build_figure(dataframe):
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="VV/VH Ratio Mean",
-        yaxis=dict(rangemode="tozero", tickformat=".3f"),
+        yaxis=dict(tickformat=".3f"),
         margin=dict(l=80, r=20, t=40, b=40),
     )
     return fig
