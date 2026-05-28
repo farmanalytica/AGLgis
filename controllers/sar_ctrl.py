@@ -318,7 +318,7 @@ class SARCtrl:
     def _load_downloaded_images(self, paths):
         for idx, path in enumerate(paths, start=1):
             try:
-                filename = path.split("/")[-1]
+                filename = os.path.basename(path)
                 date_str = filename.replace("Sentinel1_", "").replace(".tiff", "")
                 label = f"SAR_{date_str} [VV|VH|Ratio]"
                 SARRenderer.load_sar_to_qgis(path, label)
