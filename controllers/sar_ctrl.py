@@ -7,7 +7,7 @@ from ..view.sar_plot import render_chart_html
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QApplication, QFileDialog
 import os
 import tempfile
 import pandas as pd
@@ -271,6 +271,33 @@ class SARCtrl:
             f.write(html)
             path = f.name
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+    def handle_export_csv(self):
+        if self.dataframe is None:
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.dlg,
+            _tr("Export SAR Time Series as CSV"),
+            "",
+            _tr("CSV Files (*.csv);;All Files (*)"),
+        )
+
+        if not file_path:
+            return
+
+        df = self.dataframe
+        if self._active_dates is not None:
+            df = df[df["dates"].isin(self._active_dates)]
+
+        try:
+            df.to_csv(file_path, index=False)
+            self.dlg.pop_message(
+                _tr(f"CSV exported successfully to {file_path}"), "info"
+            )
+        except Exception as e:
+            self.dlg.pop_message(_tr(f"Failed to export CSV: {str(e)}"), "warning")
 
     def _render_timeseries(self):
         df = self.dataframe

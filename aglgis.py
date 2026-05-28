@@ -193,6 +193,9 @@ class AGLgis:
         self.dlg.sar_btn_open_browser.clicked.connect(
             self.sar_ctrl.handle_open_browser
         )
+        self.dlg.sar_btn_download_csv.clicked.connect(
+            self.sar_ctrl.handle_export_csv
+        )
         self.dlg.sar_btn_filter_dates.clicked.connect(
             self.sar_ctrl.handle_filter_dates
         )
