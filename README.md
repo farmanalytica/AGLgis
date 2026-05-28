@@ -11,7 +11,7 @@ This plugin allows users to configure and run Sentinel-1 SAR data processing wit
 - **DEM Module**: Download and visualize elevation data with interactive filtering and styling.
 - **SAR Module**: Process Sentinel-1 SAR data with full control over acquisition parameters and preprocessing options.
   - Support for multiple spectral indices: VV/VH Ratio, RVI (Radar Vegetation Index), DpRVI (Dual-pol SAR Vegetation Index)
-  - Flexible render modes: RGB composites and single-band pseudocolor with Viridis palette
+  - Flexible render modes: RGB composites with cumulative cut contrast enhancement, and single-band pseudocolor with Viridis palette
   - Batch download with progress tracking and cancellation support
   - Interactive time-series visualization with date filtering
   - CSV export of results
@@ -293,7 +293,7 @@ Contains `SARService`. Manages Sentinel-1 SAR data processing with spectral inde
 Contains `SARWorker`, `SARPreviewWorker`, `SARBatchDownloadWorker`. Manages off-UI-thread SAR operations with progress tracking and cancellation.
 
 ### `services/sar_renderer.py` — SAR Renderer
-Contains `SARRenderer`. Loads SAR GeoTIFFs with flexible render modes: RGB composites or single-band pseudocolor with Viridis palette. Delegates common rendering logic to `RasterRendererUtils`.
+Contains `SARRenderer`. Loads SAR GeoTIFFs with flexible render modes: RGB composites with cumulative cut contrast enhancement (2%-98%), or single-band pseudocolor with Viridis palette. Delegates common rendering logic to `RasterRendererUtils`.
 
 ---
 
