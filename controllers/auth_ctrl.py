@@ -56,7 +56,7 @@ class AuthCtrl:
             worker.deleteLater()
 
         if success:
-            self.dlg.show_aoi_page()
+            self.dlg.show_radar_page()
             self.dlg.pop_message(_tr("Authentication successful!"), "info")
 
             layer = self.dlg.layer_combo.currentLayer()
