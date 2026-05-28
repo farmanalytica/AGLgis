@@ -195,6 +195,18 @@ def setup_auth_page(dialog, page):
     row.addStretch(1)
     outer.addLayout(row)
 
+    # Inline, non-blocking status line shown while authentication is running
+    # (and used to surface a "reopen sign-in page" link). Hidden when idle.
+    outer.addSpacing(6)
+    dialog.auth_status_lbl = QLabel("")
+    dialog.auth_status_lbl.setWordWrap(True)
+    dialog.auth_status_lbl.setTextFormat(Qt.TextFormat.RichText)
+    dialog.auth_status_lbl.setOpenExternalLinks(True)
+    dialog.auth_status_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+    dialog.auth_status_lbl.setStyleSheet("color: #616161; font-size: 11px;")
+    dialog.auth_status_lbl.hide()
+    outer.addWidget(dialog.auth_status_lbl)
+
     # Hidden navigation hook used by the sidebar and controller to load
     # datasets before showing the AOI page.
     dialog.btn_go_to_aoi = QPushButton(page)
@@ -202,30 +214,84 @@ def setup_auth_page(dialog, page):
     dialog.btn_go_to_aoi.clicked.connect(dialog.show_aoi_page)
 
     # ── Download folder picker ────────────────────────────────────────────
-    outer.addSpacing(8)
+    # Anchored toward the bottom of the page as a self-contained settings bar,
+    # visually separated from the auth card above it.
+    outer.addStretch(2)
 
-    folder_row = QHBoxLayout()
-    folder_row.setContentsMargins(0, 0, 0, 0)
-    folder_row.setSpacing(8)
-    folder_row.addStretch(1)
+    folder_frame = QFrame()
+    folder_frame.setFixedWidth(560)
+    folder_frame.setStyleSheet("""
+        QFrame {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        QLabel { background: transparent; border: none; }
+    """)
+    folder_lay = QHBoxLayout(folder_frame)
+    folder_lay.setContentsMargins(14, 8, 10, 8)
+    folder_lay.setSpacing(8)
 
     folder_lbl = QLabel(_tr("Download folder"))
-    folder_lbl.setStyleSheet("color: #9e9e9e; font-size: 11px;")
-    folder_row.addWidget(folder_lbl)
+    folder_lbl.setStyleSheet(
+        "color: #616161; font-size: 11px; font-weight: bold;"
+    )
+    folder_lay.addWidget(folder_lbl)
 
+    # Read-only path field; stretches to fill so long paths stay visible.
     dialog.folder_input = QLineEdit()
     dialog.folder_input.setReadOnly(True)
     dialog.folder_input.setPlaceholderText(_tr("System temp (default)"))
-    dialog.folder_input.setFixedHeight(26)
-    dialog.folder_input.setFixedWidth(180)
-    folder_row.addWidget(dialog.folder_input)
+    dialog.folder_input.setFixedHeight(28)
+    dialog.folder_input.setStyleSheet("""
+        QLineEdit {
+            background-color: #f5f5f5;
+            color: #424242;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+    """)
+    folder_lay.addWidget(dialog.folder_input, 1)
+
+    # Quick-clear: resets to the system-temp default. Disabled when empty.
+    dialog.btn_clear_folder = QPushButton("✕")
+    dialog.btn_clear_folder.setFixedSize(28, 28)
+    dialog.btn_clear_folder.setToolTip(_tr("Clear download folder"))
+    dialog.btn_clear_folder.setStyleSheet("""
+        QPushButton {
+            background-color: transparent;
+            color: #bdbdbd;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        QPushButton:hover:enabled {
+            color: #c62828;
+            background-color: #fdecea;
+        }
+        QPushButton:disabled { color: #eeeeee; }
+    """)
+    folder_lay.addWidget(dialog.btn_clear_folder)
 
     dialog.btn_browse_folder = QPushButton(_tr("Browse"))
-    dialog.btn_browse_folder.setFixedHeight(26)
+    dialog.btn_browse_folder.setFixedHeight(28)
     dialog.btn_browse_folder.setStyleSheet(STYLE_BTN_SECONDARY)
-    folder_row.addWidget(dialog.btn_browse_folder)
+    folder_lay.addWidget(dialog.btn_browse_folder)
 
-    folder_row.addStretch(1)
-    outer.addLayout(folder_row)
+    # Keep the clear button enabled only when a folder is actually selected.
+    def _sync_clear_enabled(text):
+        dialog.btn_clear_folder.setEnabled(bool(text))
 
-    outer.addStretch(2)
+    dialog.folder_input.textChanged.connect(_sync_clear_enabled)
+    _sync_clear_enabled(dialog.folder_input.text())
+
+    folder_outer_row = QHBoxLayout()
+    folder_outer_row.setContentsMargins(0, 0, 0, 0)
+    folder_outer_row.addStretch(1)
+    folder_outer_row.addWidget(folder_frame)
+    folder_outer_row.addStretch(1)
+    outer.addLayout(folder_outer_row)
+
+    outer.addSpacing(16)

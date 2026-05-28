@@ -7,9 +7,11 @@ Signal connections will be wired externally by ``aglgis.py`` once the
 service layer is in place.
 """
 
+import os
+
 from qgis.core import QgsMapLayerProxyModel
 from qgis.gui import QgsMapLayerComboBox
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QDate
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QDate, QUrl
 from qgis.PyQt.QtWebKitWidgets import QWebView
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -153,6 +155,25 @@ def _section_panel():
     return panel
 
 
+def _build_intro_tab(dialog, parent):
+    """Render assets/intro_sar.html directly from the plugin source."""
+    outer = QVBoxLayout(parent)
+    outer.setContentsMargins(0, 0, 0, 0)
+    outer.setSpacing(0)
+
+    view = QWebView()
+    view.setStyleSheet("background: #ffffff; border: none;")
+    intro_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "assets",
+        "intro_sar.html",
+    )
+    # load() reads the file in place, so relative asset paths resolve from assets/.
+    view.load(QUrl.fromLocalFile(intro_path))
+    dialog.sar_intro_view = view
+    outer.addWidget(view, 1)
+
+
 def _build_inputs_tab(dialog, parent):
     outer = QVBoxLayout(parent)
     outer.setContentsMargins(0, 0, 0, 0)
@@ -168,7 +189,7 @@ def _build_inputs_tab(dialog, parent):
     scroll_w = QWidget()
     scroll_w.setStyleSheet("background: transparent;")
     lay = QVBoxLayout(scroll_w)
-    lay.setContentsMargins(18, 16, 18, 14)
+    lay.setContentsMargins(6, 16, 6, 14)
     lay.setSpacing(12)
 
     inputs_panel = _section_panel()
@@ -196,7 +217,7 @@ def _build_inputs_tab(dialog, parent):
     dialog.sar_date_start = QDateEdit()
     dialog.sar_date_start.setDisplayFormat("yyyy-MM-dd")
     dialog.sar_date_start.setCalendarPopup(True)
-    dialog.sar_date_start.setDate(QDate.currentDate())
+    dialog.sar_date_start.setDate(QDate.currentDate().addYears(-1))
     _prepare_field(dialog.sar_date_start)
     dialog.sar_date_end = QDateEdit()
     dialog.sar_date_end.setDisplayFormat("yyyy-MM-dd")
@@ -299,7 +320,7 @@ def _build_results_tab(dialog, parent):
     scroll_w = QWidget()
     scroll_w.setStyleSheet("background: transparent;")
     lay = QVBoxLayout(scroll_w)
-    lay.setContentsMargins(18, 16, 18, 14)
+    lay.setContentsMargins(6, 16, 6, 14)
     lay.setSpacing(12)
 
     # Plot
@@ -479,8 +500,12 @@ def setup_radar_page(dialog, page):
         }
     """)
     tab_bar_lay = QHBoxLayout(tab_bar)
-    tab_bar_lay.setContentsMargins(18, 0, 18, 0)
+    tab_bar_lay.setContentsMargins(6, 0, 6, 0)
     tab_bar_lay.setSpacing(8)
+
+    btn_tab_intro = QPushButton(_tr("Intro"))
+    btn_tab_intro.setFixedHeight(40)
+    btn_tab_intro.setCursor(Qt.CursorShape.PointingHandCursor)
 
     btn_tab_inputs = QPushButton(_tr("Inputs"))
     btn_tab_inputs.setFixedHeight(40)
@@ -490,6 +515,7 @@ def setup_radar_page(dialog, page):
     btn_tab_results.setFixedHeight(40)
     btn_tab_results.setCursor(Qt.CursorShape.PointingHandCursor)
 
+    tab_bar_lay.addWidget(btn_tab_intro)
     tab_bar_lay.addWidget(btn_tab_inputs)
     tab_bar_lay.addWidget(btn_tab_results)
     tab_bar_lay.addStretch(1)
@@ -499,6 +525,10 @@ def setup_radar_page(dialog, page):
     # -- Stacked content
     stack = QStackedWidget()
     stack.setStyleSheet("QStackedWidget { background: transparent; border: none; }")
+
+    intro_page = QWidget()
+    _build_intro_tab(dialog, intro_page)
+    stack.addWidget(intro_page)
 
     inputs_page = QWidget()
     _build_inputs_tab(dialog, inputs_page)
@@ -522,7 +552,7 @@ def setup_radar_page(dialog, page):
         }
     """)
     nav_lay = QHBoxLayout(nav_bar)
-    nav_lay.setContentsMargins(18, 0, 18, 0)
+    nav_lay.setContentsMargins(6, 0, 6, 0)
     nav_lay.setSpacing(8)
 
     btn_back = QPushButton(_tr("Back"))
@@ -538,10 +568,15 @@ def setup_radar_page(dialog, page):
 
     nav_lay.addStretch(1)
 
+    # Forward control on the Intro tab — pure navigation to the Inputs step.
+    btn_intro_next = QPushButton(_tr("Next"))
+    btn_intro_next.setFixedSize(80, 30)
+    btn_intro_next.setStyleSheet(STYLE_BTN_PRIMARY)
+    nav_lay.addWidget(btn_intro_next)
+
     btn_next = QPushButton(_tr("Run"))
     btn_next.setFixedSize(80, 30)
     btn_next.setStyleSheet(STYLE_BTN_PRIMARY)
-
     nav_lay.addWidget(btn_next)
     outer.addWidget(nav_bar)
 
@@ -550,23 +585,24 @@ def setup_radar_page(dialog, page):
     dialog.sar_step_lbl = step_lbl
 
     # -- Tab switching logic (self-contained, no service dependencies)
+    # Three-step flow: 0 = Intro (docs), 1 = Inputs, 2 = Results.
     def _set_tab(index):
         stack.setCurrentIndex(index)
         btn_back.setEnabled(index > 0)
-        step_lbl.setText(f"Step {index + 1} of 2")
-        btn_next.setVisible(index == 0)
-        btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
-        btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
+        step_lbl.setText(f"Step {index + 1} of 3")
+        btn_intro_next.setVisible(index == 0)  # "Next" advances Intro -> Inputs
+        btn_next.setVisible(index == 1)  # "Run" lives on the Inputs tab only
+        btn_tab_intro.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
+        btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
+        btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 2 else _TAB_INACTIVE)
 
-    btn_tab_inputs.clicked.connect(lambda: _set_tab(0))
-    btn_tab_results.clicked.connect(lambda: _set_tab(1))
-    btn_next.clicked.connect(
-        lambda: (
-            _set_tab(stack.currentIndex() + 1)
-            if stack.currentIndex() < stack.count() - 1
-            else None
-        )
-    )
+    # Exposed so the controller can advance to Results only on a successful run.
+    dialog.sar_set_tab = _set_tab
+
+    btn_tab_intro.clicked.connect(lambda: _set_tab(0))
+    btn_tab_inputs.clicked.connect(lambda: _set_tab(1))
+    btn_tab_results.clicked.connect(lambda: _set_tab(2))
+    btn_intro_next.clicked.connect(lambda: _set_tab(1))
     btn_back.clicked.connect(
         lambda: _set_tab(stack.currentIndex() - 1) if stack.currentIndex() > 0 else None
     )

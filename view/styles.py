@@ -30,16 +30,29 @@ QLineEdit:focus {
 }
 QScrollBar:vertical {
     background: #f5f5f5;
-    width: 6px;
+    width: 12px;
     margin: 0;
 }
 QScrollBar::handle:vertical {
     background: #bdbdbd;
-    border-radius: 3px;
+    border-radius: 6px;
     min-height: 20px;
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0;
+}
+QScrollBar:horizontal {
+    background: #f5f5f5;
+    height: 12px;
+    margin: 0;
+}
+QScrollBar::handle:horizontal {
+    background: #bdbdbd;
+    border-radius: 6px;
+    min-width: 20px;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0;
 }
 """
 

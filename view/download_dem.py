@@ -107,7 +107,7 @@ def setup_download_dem_page(dialog, page):
     page.setStyleSheet(STYLE_AOI_PAGE)
 
     outer = QVBoxLayout(page)
-    outer.setContentsMargins(14, 10, 14, 10)
+    outer.setContentsMargins(6, 8, 6, 8)
     outer.setSpacing(0)
 
     panel = QFrame()
