@@ -245,11 +245,18 @@ def _build_inputs_tab(dialog, parent):
     dialog.sar_format_combo.addItems(["DB", "LINEAR"])
     _prepare_field(dialog.sar_format_combo)
     dialog.sar_format_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
+    dialog.sar_index_combo = QComboBox()
+    dialog.sar_index_combo.addItems(["VV/VH Ratio", "RVI", "DpRVI"])
+    dialog.sar_index_combo.setCurrentText("VV/VH Ratio")
+    _prepare_field(dialog.sar_index_combo)
+    dialog.sar_index_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
 
     fields_grid.addWidget(_field_label(_tr("POLARIZATION")), 2, 0)
     fields_grid.addWidget(_field_label(_tr("OUTPUT FORMAT")), 2, 1)
+    fields_grid.addWidget(_field_label(_tr("SPECTRAL INDEX")), 4, 0)
     fields_grid.addWidget(dialog.sar_pol_combo, 3, 0)
     fields_grid.addWidget(dialog.sar_format_combo, 3, 1)
+    fields_grid.addWidget(dialog.sar_index_combo, 5, 0)
     inputs_lay.addLayout(fields_grid)
     lay.addWidget(inputs_panel)
 

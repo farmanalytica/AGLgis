@@ -92,13 +92,20 @@
             Use o filtro de datas para focar em períodos específicos e exportar os dados para análise externa.
         </p>
 
-        <h2>🖼️ Bandas Disponíveis</h2>
-        <p>Cada imagem SAR contém 3 bandas:</p>
+        <h2>🖼️ Bandas e Índices Espectrais</h2>
+        <p>Cada imagem SAR contém 3 bandas: as duas polarizações (VV, VH) mais um índice espectral selecionável.</p>
         <ul>
             <li><strong>Band 1 - VV:</strong> Polarização vertical-vertical</li>
             <li><strong>Band 2 - VH:</strong> Polarização vertical-horizontal</li>
-            <li><strong>Band 3 - VV/VH Ratio:</strong> Razão entre as polarizações</li>
+            <li><strong>Band 3 - Índice Espectral:</strong> Escolha entre:
+                <ul>
+                    <li><strong>VV/VH Ratio:</strong> Razão direta entre as polarizações (padrão)</li>
+                    <li><strong>RVI:</strong> Radar Vegetation Index: <code>4 × VH / (VV + VH)</code></li>
+                    <li><strong>DpRVI:</strong> Dual-pol SAR Vegetation Index: <code>VH / (VH + VV)</code></li>
+                </ul>
+            </li>
         </ul>
+        <p>Selecione o índice desejado na aba "Inputs" antes de executar o processamento. O índice escolhido será incluído na série temporal e nas imagens baixadas.</p>
 
         <h2>🔧 Configuração Inicial</h2>
         <p>
@@ -153,13 +160,20 @@
             Use the date filter to focus on specific periods and export data for external analysis.
         </p>
 
-        <h2>🖼️ Available Bands</h2>
-        <p>Each SAR image contains 3 bands:</p>
+        <h2>🖼️ Bands & Spectral Indices</h2>
+        <p>Each SAR image contains 3 bands: the two polarizations (VV, VH) plus a selectable spectral index.</p>
         <ul>
             <li><strong>Band 1 - VV:</strong> Vertical-vertical polarization</li>
             <li><strong>Band 2 - VH:</strong> Vertical-horizontal polarization</li>
-            <li><strong>Band 3 - VV/VH Ratio:</strong> Ratio between polarizations</li>
+            <li><strong>Band 3 - Spectral Index:</strong> Choose from:
+                <ul>
+                    <li><strong>VV/VH Ratio:</strong> Direct ratio between polarizations (default)</li>
+                    <li><strong>RVI:</strong> Radar Vegetation Index: <code>4 × VH / (VV + VH)</code></li>
+                    <li><strong>DpRVI:</strong> Dual-pol SAR Vegetation Index: <code>VH / (VH + VV)</code></li>
+                </ul>
+            </li>
         </ul>
+        <p>Select the desired index in the "Inputs" tab before running the processing. The chosen index will be included in the time series and in downloaded images.</p>
 
         <h2>🔧 Initial Setup</h2>
         <p>
