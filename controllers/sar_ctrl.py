@@ -105,6 +105,21 @@ class SARCtrl:
         self.dlg.sar_btn_next.setEnabled(not running)
         self.dlg.sar_btn_next.setText(_tr("Running…") if running else _tr("Run"))
 
+    def _set_preview_running(self, running):
+        self.dlg.sar_btn_preview.setEnabled(not running)
+        self.dlg.sar_btn_download_preview.setEnabled(not running)
+        if running:
+            self._preview_btn_text = (
+                self.dlg.sar_btn_preview.text(),
+                self.dlg.sar_btn_download_preview.text(),
+            )
+            self.dlg.sar_btn_preview.setText(_tr("Loading…"))
+            self.dlg.sar_btn_download_preview.setText(_tr("Loading…"))
+        else:
+            if hasattr(self, "_preview_btn_text"):
+                self.dlg.sar_btn_preview.setText(self._preview_btn_text[0])
+                self.dlg.sar_btn_download_preview.setText(self._preview_btn_text[1])
+
     def _clear_worker(self):
         worker = self._worker
         self._worker = None
@@ -145,6 +160,7 @@ class SARCtrl:
             worker.deleteLater()
 
     def _on_preview_done(self, output_path, label):
+        self._set_preview_running(False)
         self._clear_preview_worker()
         SARRenderer.load_sar_to_qgis(output_path, label)
         if self.interface:
@@ -153,6 +169,7 @@ class SARCtrl:
             )
 
     def _on_download_preview_done(self, output_path, label):
+        self._set_preview_running(False)
         self._clear_preview_worker()
         SARRenderer.load_sar_to_qgis(output_path, label)
         if self.interface:
@@ -162,6 +179,7 @@ class SARCtrl:
             )
 
     def _on_preview_failed(self, message):
+        self._set_preview_running(False)
         self._clear_preview_worker()
         self.dlg.pop_message(message, "warning")
 
@@ -174,6 +192,7 @@ class SARCtrl:
             return
 
         selected_date = self.dlg.sar_result_date_combo.currentText()
+        self._set_preview_running(True)
         self._preview_worker = SARPreviewWorker(
             self.collection,
             self.aoi,
@@ -195,6 +214,7 @@ class SARCtrl:
 
         selected_date = self.dlg.sar_result_date_combo.currentText()
         output_folder = SettingsManager.load_download_folder()
+        self._set_preview_running(True)
         self._preview_worker = SARPreviewWorker(
             self.collection,
             self.aoi,
