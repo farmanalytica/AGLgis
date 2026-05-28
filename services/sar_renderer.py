@@ -35,14 +35,25 @@ class SARRenderer:
             blue_idx,
         )
 
-        # Add contrast enhancement for better visualization
+        # Add contrast enhancement for each band
         provider = layer.dataProvider()
-        for band_idx in [red_idx, green_idx, blue_idx]:
-            contrast = QgsContrastEnhancement(provider.dataType(band_idx))
-            contrast.setContrastEnhancementAlgorithm(
-                QgsContrastEnhancement.StretchToMinimumMaximum
-            )
-            renderer.setContrastEnhancement(contrast, band_idx)
+        red_contrast = QgsContrastEnhancement(provider.dataType(red_idx))
+        red_contrast.setContrastEnhancementAlgorithm(
+            QgsContrastEnhancement.StretchToMinimumMaximum
+        )
+        renderer.setRedContrastEnhancement(red_contrast)
+
+        green_contrast = QgsContrastEnhancement(provider.dataType(green_idx))
+        green_contrast.setContrastEnhancementAlgorithm(
+            QgsContrastEnhancement.StretchToMinimumMaximum
+        )
+        renderer.setGreenContrastEnhancement(green_contrast)
+
+        blue_contrast = QgsContrastEnhancement(provider.dataType(blue_idx))
+        blue_contrast.setContrastEnhancementAlgorithm(
+            QgsContrastEnhancement.StretchToMinimumMaximum
+        )
+        renderer.setBlueContrastEnhancement(blue_contrast)
 
         layer.setRenderer(renderer)
 
