@@ -1,7 +1,7 @@
 from ..services.aoi_service import AOIService
 from ..services.sar_service import SARService
 from ..services.sar_renderer import SARRenderer
-from ..services.sar_worker import SARWorker
+from ..services.sar_worker import SARWorker, SARPreviewWorker
 from ..services.settings_manager import SettingsManager
 from ..view.sar_plot import render_chart_html
 
@@ -41,6 +41,7 @@ class SARCtrl:
         self.aoi = None
         self.dataframe = None
         self._worker = None
+        self._preview_worker = None
 
     def _show_auth_required_message(self):
         self.dlg.pop_message(
@@ -137,69 +138,75 @@ class SARCtrl:
         self.dlg.sar_set_tab(1)
         self.dlg.pop_message(message, "warning")
 
+    def _clear_preview_worker(self):
+        worker = self._preview_worker
+        self._preview_worker = None
+        if worker is not None:
+            worker.deleteLater()
+
+    def _on_preview_done(self, output_path, label):
+        self._clear_preview_worker()
+        SARRenderer.load_sar_to_qgis(output_path, label)
+        if self.interface:
+            self.interface.messageBar().pushMessage(
+                "AGLgis", f"SAR preview '{output_path.split('/')[-1]}' loaded into QGIS."
+            )
+
+    def _on_download_preview_done(self, output_path, label):
+        self._clear_preview_worker()
+        SARRenderer.load_sar_to_qgis(output_path, label)
+        if self.interface:
+            self.interface.messageBar().pushMessage(
+                "AGLgis",
+                f"SAR image '{output_path.split('/')[-1]}' downloaded and loaded successfully.",
+            )
+
+    def _on_preview_failed(self, message):
+        self._clear_preview_worker()
+        self.dlg.pop_message(message, "warning")
+
     def handle_preview_image(self):
+        if self._preview_worker is not None and self._preview_worker.isRunning():
+            return  # a preview operation is already in flight
+
         if self.collection is None or self.aoi is None:
             self.dlg.pop_message("Run SAR processing first.", "warning")
             return
 
-        QApplication.setOverrideCursor(WAIT_CURSOR)
-        QApplication.processEvents()
-
-        try:
-            selected_date = self.dlg.sar_result_date_combo.currentText()
-            selected_image = SARService.get_image_for_date(
-                self.collection,
-                self.aoi,
-                selected_date,
-            )
-            output_path = SARService.download_image(
-                selected_image,
-                self.aoi,
-                selected_date,
-                output_folder=tempfile.gettempdir(),
-            )
-            SARRenderer.load_sar_to_qgis(output_path, f"Preview_{selected_date}")
-            if self.interface:
-                self.interface.messageBar().pushMessage(
-                    "AGLgis", f"SAR preview '{selected_date}' loaded into QGIS."
-                )
-        except Exception as e:
-            self.dlg.pop_message(str(e), "warning")
-        finally:
-            QApplication.restoreOverrideCursor()
+        selected_date = self.dlg.sar_result_date_combo.currentText()
+        self._preview_worker = SARPreviewWorker(
+            self.collection,
+            self.aoi,
+            selected_date,
+            tempfile.gettempdir(),
+            f"Preview_{selected_date}",
+        )
+        self._preview_worker.finished_ok.connect(self._on_preview_done)
+        self._preview_worker.failed.connect(self._on_preview_failed)
+        self._preview_worker.start()
 
     def handle_download_preview(self):
+        if self._preview_worker is not None and self._preview_worker.isRunning():
+            return  # a preview operation is already in flight
+
         if self.collection is None or self.aoi is None:
             self.dlg.pop_message("Run SAR processing first.", "warning")
             return
 
-        QApplication.setOverrideCursor(WAIT_CURSOR)
-        QApplication.processEvents()
-
-        try:
-            selected_date = self.dlg.sar_result_date_combo.currentText()
-            selected_image = SARService.get_image_for_date(
-                self.collection,
-                self.aoi,
-                selected_date,
-            )
-            output_folder = SettingsManager.load_download_folder()
-            output_path = SARService.download_image(
-                selected_image,
-                self.aoi,
-                selected_date,
-                output_folder=output_folder,
-            )
-            SARRenderer.load_sar_to_qgis(output_path, f"Sentinel1_{selected_date}")
-            if self.interface:
-                self.interface.messageBar().pushMessage(
-                    "AGLgis",
-                    f"SAR image '{selected_date}' downloaded and loaded successfully.",
-                )
-        except Exception as e:
-            self.dlg.pop_message(str(e), "warning")
-        finally:
-            QApplication.restoreOverrideCursor()
+        selected_date = self.dlg.sar_result_date_combo.currentText()
+        output_folder = SettingsManager.load_download_folder()
+        self._preview_worker = SARPreviewWorker(
+            self.collection,
+            self.aoi,
+            selected_date,
+            output_folder,
+            f"Sentinel1_{selected_date}",
+        )
+        self._preview_worker.finished_ok.connect(
+            lambda path, label: self._on_download_preview_done(path, label)
+        )
+        self._preview_worker.failed.connect(self._on_preview_failed)
+        self._preview_worker.start()
 
     def handle_open_browser(self):
         if self.dataframe is None:
