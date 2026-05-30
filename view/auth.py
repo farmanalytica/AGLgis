@@ -145,6 +145,22 @@ def setup_auth_page(dialog, page):
         _tr("Click to re-check your Earth Engine sign-in status")
     )
     dialog.auth_status_badge.setFixedHeight(22)
+    # Base pill style so it always renders as a styled pill, even before the
+    # async status check resolves and recolours it via set_auth_state.
+    dialog.auth_status_badge.setStyleSheet(
+        """
+        QPushButton {
+            background-color: #f0f0f0;
+            color: #757575;
+            border: 1px solid #e0e0e0;
+            border-radius: 11px;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 0 10px;
+            text-align: center;
+        }
+        """
+    )
     card_lay.addWidget(dialog.auth_status_badge)
     card_lay.addSpacing(4)
 

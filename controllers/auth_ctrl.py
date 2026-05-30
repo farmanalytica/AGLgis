@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QTimer
 from qgis.PyQt.QtWidgets import QFileDialog
 
 from ..services.auth_worker import AuthWorker, AuthStatusWorker, CANCELLED
@@ -15,11 +15,21 @@ def _tr(text):
 class AuthCtrl:
     """Handles all user interactions on the authentication page."""
 
+    # The first-ever ee.Initialize on a fresh install can be slow (cold import,
+    # token refresh, network), so the status check gets a watchdog: if it
+    # doesn't resolve in time the pill falls back to an actionable state
+    # instead of being stuck on "Checking…".
+    _STATUS_TIMEOUT_MS = 12000
+
     def __init__(self, dialog, gee_service):
         self.dlg = dialog
         self.gee_service = gee_service
         self._worker = None
         self._status_worker = None
+        # Strong refs to status workers so a hung/orphaned QThread isn't
+        # garbage-collected mid-run; cleared when each one finishes.
+        self._status_workers = set()
+        self._status_gen = 0
 
     def check_status(self):
         """
@@ -29,22 +39,45 @@ class AuthCtrl:
         # Don't interfere with an in-flight sign-in.
         if self._worker is not None and self._worker.isRunning():
             return
+        # A previous check still running (and not yet timed out) — leave it.
         if self._status_worker is not None and self._status_worker.isRunning():
             return
 
         self.dlg.set_auth_state("checking")
-        self._status_worker = AuthStatusWorker(
-            self.gee_service, self.dlg.project_id_input.text()
-        )
-        self._status_worker.status_ready.connect(self._on_status_ready)
-        self._status_worker.start()
+        self._status_gen += 1
+        gen = self._status_gen
 
-    def _on_status_ready(self, state):
+        worker = AuthStatusWorker(self.gee_service, self.dlg.project_id_input.text())
+        self._status_worker = worker
+        self._status_workers.add(worker)
+        worker.status_ready.connect(
+            lambda state, g=gen: self._on_status_ready(g, state)
+        )
+        worker.finished.connect(lambda w=worker: self._status_finished(w))
+        worker.start()
+
+        QTimer.singleShot(self._STATUS_TIMEOUT_MS, lambda g=gen: self._status_timeout(g))
+
+    def _on_status_ready(self, gen, state):
+        if gen != self._status_gen:
+            return  # superseded by a newer check or already timed out
         self.dlg.set_auth_state(state)
-        worker = self._status_worker
-        self._status_worker = None
-        if worker is not None:
-            worker.deleteLater()
+
+    def _status_timeout(self, gen):
+        if gen != self._status_gen:
+            return  # already resolved or superseded
+        # Give up waiting; ignore the hung worker's eventual result and show an
+        # actionable fallback the user can click to retry.
+        self._status_gen += 1
+        self._status_worker = None  # allow a fresh re-check; hung thread lives in the set
+        state = "stored" if self.gee_service.has_stored_credentials() else "none"
+        self.dlg.set_auth_state(state)
+
+    def _status_finished(self, worker):
+        self._status_workers.discard(worker)
+        worker.deleteLater()
+        if self._status_worker is worker:
+            self._status_worker = None
 
     def on_project_id_changed(self, _text):
         """A changed project ID invalidates a prior verified state, so the
