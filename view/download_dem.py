@@ -159,6 +159,18 @@ def setup_download_dem_page(dialog, page):
     dialog.layer_combo.setFixedHeight(28)
     aoi_row_lay.addWidget(dialog.layer_combo, 1)
 
+    dialog.btn_draw_aoi = QPushButton(_tr("Draw AOI"))
+    dialog.btn_draw_aoi.setToolTip(
+        _tr("Drag on the map to draw a box (Shift = square, Esc = cancel)")
+    )
+    dialog.btn_draw_aoi.setFixedHeight(28)
+    dialog.btn_draw_aoi.setSizePolicy(
+        QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+    )
+    dialog.btn_draw_aoi.adjustSize()
+    dialog.btn_draw_aoi.setStyleSheet(STYLE_BTN_SECONDARY)
+    aoi_row_lay.addWidget(dialog.btn_draw_aoi)
+
     dialog.btn_hybrid_layer = QPushButton(_tr("Add Google Hybrid Layer"))
     dialog.btn_hybrid_layer.setFixedHeight(28)
     dialog.btn_hybrid_layer.setSizePolicy(

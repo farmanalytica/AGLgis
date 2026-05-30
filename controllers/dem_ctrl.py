@@ -15,6 +15,7 @@ from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QTimer, QCoreApplication
 
 from ..services.map_utils import hybrid_function
+from ..services.aoi_draw_tool import start_draw_aoi
 from ..services.aoi_service import AOIService
 from ..services.dem_renderer import DEMRenderer
 from ..services.dataset_manager import DatasetManager
@@ -309,6 +310,12 @@ class DEMCtrl:
         hybrid_function()
         self.interface.messageBar().pushMessage(
             "AGLgis", _tr("Google Hybrid Layer loaded successfully")
+        )
+
+    def handle_draw_aoi(self):
+        """Draw a rectangular AOI on the canvas and select it as the AOI."""
+        self._draw_tool = start_draw_aoi(
+            self.interface, self.dlg.layer_combo, self.dlg.btn_draw_aoi
         )
 
     def _apply_buffer(self, aoi, buffer_distance: int):

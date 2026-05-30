@@ -7,6 +7,7 @@ from ..services.sar_worker import (
     SARBatchDownloadWorker,
 )
 from ..services.settings_manager import SettingsManager
+from ..services.aoi_draw_tool import start_draw_aoi
 from ..view.sar_plot import render_chart_html
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
@@ -66,6 +67,12 @@ class SARCtrl:
                 "Please go to the Auth page and validate your Google Cloud project ID."
             ),
             "warning",
+        )
+
+    def handle_draw_aoi(self):
+        """Draw a rectangular AOI on the canvas and select it as the AOI."""
+        self._draw_tool = start_draw_aoi(
+            self.interface, self.dlg.sar_layer_combo, self.dlg.sar_btn_draw_aoi
         )
 
     def handle_layer_changed(self):

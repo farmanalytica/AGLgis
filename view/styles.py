@@ -106,6 +106,23 @@ QPushButton:disabled {
 """
 
 # ---------------------------------------------------------------------------
+# Draw-active button — solid amber, signals an armed map-draw mode
+# ---------------------------------------------------------------------------
+STYLE_BTN_DRAW_ACTIVE = """
+QPushButton {
+    background-color: #e8833a;
+    color: #ffffff;
+    border: 1px solid #c96a26;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0 12px;
+}
+QPushButton:hover  { background-color: #f0954f; }
+QPushButton:pressed { background-color: #d3742e; }
+"""
+
+# ---------------------------------------------------------------------------
 # AOI page — white panel card, field labels, combo boxes, metadata browser
 # ---------------------------------------------------------------------------
 STYLE_AOI_PAGE = """

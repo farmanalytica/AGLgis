@@ -211,6 +211,18 @@ def _build_inputs_tab(dialog, parent):
     dialog.sar_layer_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
     aoi_row_lay.addWidget(dialog.sar_layer_combo, 1)
 
+    dialog.sar_btn_draw_aoi = QPushButton(_tr("Draw AOI"))
+    dialog.sar_btn_draw_aoi.setToolTip(
+        _tr("Drag on the map to draw a box (Shift = square, Esc = cancel)")
+    )
+    dialog.sar_btn_draw_aoi.setFixedHeight(28)
+    dialog.sar_btn_draw_aoi.setSizePolicy(
+        QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+    )
+    dialog.sar_btn_draw_aoi.adjustSize()
+    dialog.sar_btn_draw_aoi.setStyleSheet(STYLE_BTN_SECONDARY)
+    aoi_row_lay.addWidget(dialog.sar_btn_draw_aoi)
+
     dialog.sar_btn_hybrid_layer = QPushButton(_tr("Add Google Hybrid Layer"))
     dialog.sar_btn_hybrid_layer.setFixedHeight(28)
     dialog.sar_btn_hybrid_layer.setSizePolicy(
