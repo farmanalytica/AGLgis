@@ -72,8 +72,15 @@ def render_chart_html(dataframe, hide_toolbar=True, title="VV/VH Ratio Mean Time
     # garbage. Rebuild the single trace's coordinates as plain lists from the
     # source dataframe and serialize with the stdlib json encoder.
     fig_dict = fig.to_dict()
-    x = dataframe["dates"].tolist()
-    y = [float(v) for v in dataframe["AOI_average"].tolist()]
+    # Empty-AOI dates are already dropped at the source (get_index_timeseries),
+    # so the series is valid-only here. The collection is sorted newest-first,
+    # so sort chronologically to draw the line in date order.
+    pairs = sorted(
+        zip(dataframe["dates"].tolist(), dataframe["AOI_average"].tolist()),
+        key=lambda p: p[0],
+    )
+    x = [p[0] for p in pairs]
+    y = [float(p[1]) for p in pairs]
     for trace in fig_dict.get("data", []):
         trace["x"] = x
         trace["y"] = y

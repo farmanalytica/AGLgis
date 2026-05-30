@@ -120,10 +120,17 @@ class SARService:
         data = []
         for feature in result["features"]:
             properties = feature.get("properties", {})
+            value = properties.get(f"{band_name}_mean")
+            # reduceRegion returns null when an acquisition has no unmasked
+            # pixels over the AOI (e.g. a swath that only clips the AOI edge).
+            # Drop those dates at the source so the plot, CSV export, and batch
+            # download all work from the same valid-only series.
+            if value is None:
+                continue
             data.append(
                 {
                     "dates": properties.get("date"),
-                    "AOI_average": properties.get(f"{band_name}_mean"),
+                    "AOI_average": value,
                 }
             )
 
