@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 
 import ee
@@ -139,6 +140,163 @@ class SARService:
     @staticmethod
     def get_vvvh_ratio_timeseries(collection, aoi):
         return SARService.get_index_timeseries(collection, aoi, "VVVH_ratio")
+
+    # ------------------------------------------------------------------
+    # Synthetic (composite) image of one index over the selected dates
+    # ------------------------------------------------------------------
+    # Same metric set as the EasyDEM/RAVI Sentinel-2 composite tool.
+    COMPOSITE_METRICS = [
+        "Mean",
+        "Median",
+        "Min",
+        "Max",
+        "Amplitude",
+        "Standard Deviation",
+        "Sum",
+        "Area Under Curve (AUC)",
+    ]
+
+    @staticmethod
+    def aggregate_index_collection(index_collection, metric, start_date=None):
+        """Reduce a single-band index collection to one image by ``metric``."""
+        first_image = index_collection.first()
+        metric_functions = {
+            "Mean": lambda: index_collection.mean(),
+            "Median": lambda: index_collection.median(),
+            "Min": lambda: index_collection.min(),
+            "Max": lambda: index_collection.max(),
+            "Amplitude": lambda: index_collection.max().subtract(
+                index_collection.min()
+            ),
+            "Standard Deviation": lambda: index_collection.reduce(
+                ee.Reducer.stdDev()
+            ),
+            "Sum": lambda: index_collection.sum(),
+            "Area Under Curve (AUC)": lambda: SARService._calculate_auc(
+                index_collection, start_date
+            ),
+        }
+        if metric not in metric_functions:
+            raise ValueError(
+                "Invalid metric: {}. Valid metrics: {}".format(
+                    metric, ", ".join(metric_functions)
+                )
+            )
+        result_image = metric_functions[metric]()
+        # Keep the spatial alignment of the source imagery.
+        return result_image.setDefaultProjection(first_image.projection())
+
+    @staticmethod
+    def _calculate_auc(index_collection, start_date):
+        """Trapezoidal Area-Under-Curve of a single-band index over time."""
+        if start_date is None:
+            raise ValueError("AUC requires a start date.")
+        first_image = index_collection.first()
+        index_stack = index_collection.toBands()
+        valid_mask = index_stack.mask().reduce(ee.Reducer.min())
+        start = ee.Date(start_date)
+        timestamps = index_collection.aggregate_array("system:time_start").map(
+            lambda d: ee.Date(d).difference(start, "day")
+        )
+        time_diffs = (
+            ee.List(timestamps)
+            .slice(0, -1)
+            .zip(ee.List(timestamps).slice(1))
+            .map(
+                lambda pair: ee.Number(ee.List(pair).get(1)).subtract(
+                    ee.Number(ee.List(pair).get(0))
+                )
+            )
+        )
+        index_array = index_stack.toArray()
+        sums = index_array.arraySlice(0, 1).add(index_array.arraySlice(0, 0, -1))
+        auc = (
+            ee.Image.constant(time_diffs)
+            .toArray()
+            .multiply(sums)
+            .divide(2)
+            .arrayReduce(ee.Reducer.sum(), [0])
+        )
+        auc_image = auc.arrayGet([0]).updateMask(valid_mask)
+        return first_image.select(0).multiply(0).add(auc_image)
+
+    @staticmethod
+    def get_index_composite(
+        collection, aoi, band_name, metric, dates=None, start_date=None
+    ):
+        """
+        Build a single-band composite image of ``band_name`` reduced by
+        ``metric`` over the given ``dates`` (all images if dates is None),
+        masked to the AOI.
+        """
+        coll = collection.map(
+            lambda img: img.set("comp_date", img.date().format("YYYY-MM-dd"))
+        )
+        if dates:
+            coll = coll.filter(ee.Filter.inList("comp_date", ee.List(list(dates))))
+
+        index_collection = coll.select(band_name)
+        composite = SARService.aggregate_index_collection(
+            index_collection, metric, start_date
+        )
+        composite = composite.rename(band_name).toFloat()
+
+        # Mask precisely to the AOI shape (download region stays a bbox).
+        mask = ee.Image(1).clip(aoi.geometry()).mask()
+        return composite.updateMask(mask)
+
+    @staticmethod
+    def download_composite(
+        image, aoi, metric, index_label, output_folder=None
+    ):
+        """Download a single-band composite GeoTIFF and name its band."""
+        url = image.getDownloadURL(
+            {
+                "scale": 10,
+                "region": aoi.geometry().bounds().getInfo(),
+                "format": "GeoTIFF",
+                "crs": "EPSG:4326",
+            }
+        )
+        response = requests.get(url, timeout=300)
+        if not response.ok:
+            raise RuntimeError(
+                "SAR composite download failed (HTTP {}): {}".format(
+                    response.status_code, response.reason
+                )
+            )
+
+        def _safe(text):
+            return re.sub(r"[^A-Za-z0-9_-]+", "_", text).strip("_")
+
+        filename = "SAR_{}_{}.tiff".format(_safe(index_label), _safe(metric))
+        base_dir = (
+            output_folder
+            if (output_folder and os.path.isdir(output_folder))
+            else tempfile.gettempdir()
+        )
+        output_path = SARService._resolve_path(base_dir, filename)
+
+        with open(output_path, "wb") as f:
+            f.write(response.content)
+
+        SARService._set_single_band_name(output_path, "{} {}".format(index_label, metric))
+        return output_path
+
+    @staticmethod
+    def _set_single_band_name(file_path, name):
+        if gdal is None:
+            return
+        try:
+            dataset = gdal.Open(file_path, gdal.GA_Update)
+            if dataset is None:
+                return
+            band = dataset.GetRasterBand(1)
+            if band is not None:
+                band.SetDescription(name)
+            dataset = None
+        except Exception:
+            pass
 
     @staticmethod
     def get_image_for_date(collection, aoi, date, index_band="VVVH_ratio"):

@@ -92,6 +92,20 @@ class SARRenderer:
         return layer
 
     @staticmethod
+    def load_composite_to_qgis(path, layer_name, color_ramp_name="Viridis"):
+        """Load a single-band composite GeoTIFF with a pseudocolor palette."""
+        layer = RasterRendererUtils.load_pseudocolor_raster(
+            path,
+            layer_name,
+            band_idx=1,
+            color_ramp_name=color_ramp_name,
+            at_top=True,
+        )
+        if layer is None:
+            raise RuntimeError(f"Failed to load SAR composite into QGIS from {path}")
+        return layer
+
+    @staticmethod
     def load_sar_to_qgis(path, layer_name, render_mode="RGB: VV, VH, VV/VH Ratio"):
         """Load SAR image with specified render mode.
 

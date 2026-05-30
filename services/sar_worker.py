@@ -93,6 +93,58 @@ class SARPreviewWorker(QThread):
             self.failed.emit(str(e))
 
 
+class SARCompositeWorker(QThread):
+    """Builds and downloads a single-index composite image off the UI thread."""
+
+    # (output_path, label)
+    finished_ok = pyqtSignal(str, str)
+    failed = pyqtSignal(str)
+
+    def __init__(
+        self,
+        collection,
+        aoi,
+        band_name,
+        index_label,
+        metric,
+        dates,
+        start_date,
+        output_folder,
+        label,
+    ):
+        super().__init__()
+        self._collection = collection
+        self._aoi = aoi
+        self._band_name = band_name
+        self._index_label = index_label
+        self._metric = metric
+        self._dates = dates
+        self._start_date = start_date
+        self._output_folder = output_folder
+        self._label = label
+
+    def run(self):
+        try:
+            composite = SARService.get_index_composite(
+                self._collection,
+                self._aoi,
+                self._band_name,
+                self._metric,
+                dates=self._dates,
+                start_date=self._start_date,
+            )
+            output_path = SARService.download_composite(
+                composite,
+                self._aoi,
+                self._metric,
+                self._index_label,
+                output_folder=self._output_folder,
+            )
+            self.finished_ok.emit(output_path, self._label)
+        except Exception as e:  # noqa: BLE001 - surface any failure to the UI
+            self.failed.emit(str(e))
+
+
 class SARBatchDownloadWorker(QThread):
     """Downloads multiple SAR images sequentially with progress tracking."""
 

@@ -460,6 +460,101 @@ def _build_results_tab(dialog, parent):
     controls_lay.addLayout(render_row)
     lay.addWidget(controls_panel)
 
+    # ── Synthetic image (composite) ───────────────────────────────────────
+    # Reduce the currently selected index over the selected dates into a
+    # single composite image, with the same metrics as the Sentinel-2 tool.
+    composite_panel = _section_panel()
+    composite_lay = QVBoxLayout(composite_panel)
+    composite_lay.setContentsMargins(16, 14, 16, 14)
+    composite_lay.setSpacing(10)
+
+    composite_title = QLabel(_tr("SYNTHETIC IMAGE (COMPOSITE)"))
+    composite_title.setStyleSheet(
+        "color: #9e9e9e; font-size: 11px; font-weight: bold; letter-spacing: 1px;"
+        " background: transparent; border: none;"
+    )
+    composite_lay.addWidget(composite_title)
+
+    composite_hint = QLabel(
+        _tr("Composite the selected index over the selected dates.")
+    )
+    composite_hint.setStyleSheet(
+        "color: #616161; font-size: 11px; background: transparent; border: none;"
+    )
+    composite_lay.addWidget(composite_hint)
+
+    # Metric + color-ramp selectors.
+    metric_row = QHBoxLayout()
+    metric_row.setSpacing(8)
+    metric_row.setContentsMargins(0, 0, 0, 0)
+    metric_lbl = QLabel(_tr("Metric"))
+    metric_lbl.setStyleSheet(
+        "color: #616161; font-size: 12px; background: transparent; border: none;"
+    )
+    metric_lbl.setFixedWidth(80)
+    metric_row.addWidget(metric_lbl)
+    dialog.sar_composite_metric_combo = QComboBox()
+    _prepare_field(dialog.sar_composite_metric_combo, 30)
+    dialog.sar_composite_metric_combo.setFixedWidth(240)
+    dialog.sar_composite_metric_combo.addItems([
+        _tr("Mean"),
+        _tr("Median"),
+        _tr("Min"),
+        _tr("Max"),
+        _tr("Amplitude"),
+        _tr("Standard Deviation"),
+        _tr("Sum"),
+        _tr("Area Under Curve (AUC)"),
+    ])
+    dialog.sar_composite_metric_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
+    metric_row.addWidget(dialog.sar_composite_metric_combo)
+    metric_row.addStretch(1)
+    composite_lay.addLayout(metric_row)
+
+    ramp_row = QHBoxLayout()
+    ramp_row.setSpacing(8)
+    ramp_row.setContentsMargins(0, 0, 0, 0)
+    ramp_lbl = QLabel(_tr("Color Ramp"))
+    ramp_lbl.setStyleSheet(
+        "color: #616161; font-size: 12px; background: transparent; border: none;"
+    )
+    ramp_lbl.setFixedWidth(80)
+    ramp_row.addWidget(ramp_lbl)
+    dialog.sar_composite_ramp_combo = QComboBox()
+    _prepare_field(dialog.sar_composite_ramp_combo, 30)
+    dialog.sar_composite_ramp_combo.setFixedWidth(240)
+    dialog.sar_composite_ramp_combo.addItems([
+        "Viridis",
+        "Magma",
+        "Plasma",
+        "Inferno",
+        "RdYlGn",
+        "Greys",
+    ])
+    dialog.sar_composite_ramp_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
+    ramp_row.addWidget(dialog.sar_composite_ramp_combo)
+    ramp_row.addStretch(1)
+    composite_lay.addLayout(ramp_row)
+
+    # Preview / download actions.
+    composite_btn_row = QHBoxLayout()
+    composite_btn_row.setSpacing(8)
+    composite_btn_row.setContentsMargins(0, 0, 0, 0)
+    dialog.sar_btn_composite_preview = QPushButton(_tr("Preview Composite"))
+    dialog.sar_btn_composite_preview.setFixedSize(150, 30)
+    dialog.sar_btn_composite_preview.setStyleSheet(STYLE_BTN_PRIMARY)
+    dialog.sar_btn_composite_download = QPushButton(
+        _tr("Download & Preview").replace("&", "&&")
+    )
+    dialog.sar_btn_composite_download.setFixedSize(160, 30)
+    dialog.sar_btn_composite_download.setStyleSheet(STYLE_BTN_SECONDARY)
+    composite_btn_row.addWidget(dialog.sar_btn_composite_preview)
+    composite_btn_row.addWidget(dialog.sar_btn_composite_download)
+    composite_btn_row.addStretch(1)
+    composite_lay.addLayout(composite_btn_row)
+
+    lay.addWidget(composite_panel)
+
     scroll.setWidget(scroll_w)
     outer.addWidget(scroll)
 

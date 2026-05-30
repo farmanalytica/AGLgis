@@ -5,6 +5,7 @@ from ..services.sar_worker import (
     SARWorker,
     SARPreviewWorker,
     SARBatchDownloadWorker,
+    SARCompositeWorker,
 )
 from ..services.settings_manager import SettingsManager
 from ..services.aoi_draw_tool import start_draw_aoi
@@ -59,6 +60,7 @@ class SARCtrl:
         self._batch_dialog = None
         self._zoom_enabled = True
         self._current_index = "VV/VH Ratio"
+        self._composite_worker = None
 
     def _show_auth_required_message(self):
         self.dlg.pop_message(
@@ -287,6 +289,99 @@ class SARCtrl:
         )
         self._preview_worker.failed.connect(self._on_preview_failed)
         self._preview_worker.start()
+
+    # ------------------------------------------------------------------
+    # Synthetic image (composite of the selected index over selected dates)
+    # ------------------------------------------------------------------
+    def _selected_composite_dates(self):
+        dates = self.dataframe["dates"].tolist()
+        if self._active_dates is not None:
+            dates = [d for d in dates if d in self._active_dates]
+        return dates
+
+    def handle_composite_preview(self):
+        self._run_composite(to_folder=False)
+
+    def handle_composite_download(self):
+        self._run_composite(to_folder=True)
+
+    def _run_composite(self, to_folder):
+        if self._composite_worker is not None and self._composite_worker.isRunning():
+            return  # a composite operation is already in flight
+
+        if self.collection is None or self.aoi is None or self.dataframe is None:
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            return
+
+        dates = self._selected_composite_dates()
+        if not dates:
+            self.dlg.pop_message(_tr("No dates selected for the composite."), "warning")
+            return
+
+        metric = self.dlg.sar_composite_metric_combo.currentText()
+        meta = SARService.INDEX_REGISTRY[self._current_index]
+        start_date = min(dates)  # AUC needs a reference start date
+        output_folder = (
+            SettingsManager.load_download_folder()
+            if to_folder
+            else tempfile.gettempdir()
+        )
+        label = f"{meta['band_label']} {metric}"
+
+        self._set_composite_running(True)
+        self._composite_worker = SARCompositeWorker(
+            self.collection,
+            self.aoi,
+            meta["band"],
+            meta["band_label"],
+            metric,
+            dates,
+            start_date,
+            output_folder,
+            label,
+        )
+        self._composite_worker.finished_ok.connect(
+            lambda path, lbl, tf=to_folder: self._on_composite_done(path, lbl, tf)
+        )
+        self._composite_worker.failed.connect(self._on_composite_failed)
+        self._composite_worker.start()
+
+    def _set_composite_running(self, running):
+        self.dlg.sar_btn_composite_preview.setEnabled(not running)
+        self.dlg.sar_btn_composite_download.setEnabled(not running)
+        if running:
+            self._composite_btn_text = (
+                self.dlg.sar_btn_composite_preview.text(),
+                self.dlg.sar_btn_composite_download.text(),
+            )
+            self.dlg.sar_btn_composite_preview.setText(_tr("Working…"))
+            self.dlg.sar_btn_composite_download.setText(_tr("Working…"))
+        elif hasattr(self, "_composite_btn_text"):
+            self.dlg.sar_btn_composite_preview.setText(self._composite_btn_text[0])
+            self.dlg.sar_btn_composite_download.setText(self._composite_btn_text[1])
+
+    def _clear_composite_worker(self):
+        worker = self._composite_worker
+        self._composite_worker = None
+        if worker is not None:
+            worker.deleteLater()
+
+    def _on_composite_done(self, output_path, label, to_folder):
+        self._set_composite_running(False)
+        self._clear_composite_worker()
+        ramp = self.dlg.sar_composite_ramp_combo.currentText()
+        SARRenderer.load_composite_to_qgis(output_path, label, color_ramp_name=ramp)
+        if self.interface:
+            verb = _tr("downloaded and loaded") if to_folder else _tr("loaded")
+            self.interface.messageBar().pushMessage(
+                "AGLgis",
+                f"Composite '{os.path.basename(output_path)}' {verb} into QGIS.",
+            )
+
+    def _on_composite_failed(self, message):
+        self._set_composite_running(False)
+        self._clear_composite_worker()
+        self.dlg.pop_message(message, "warning")
 
     def handle_batch_download(self):
         if self.collection is None or self.aoi is None:
