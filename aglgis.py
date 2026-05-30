@@ -168,10 +168,14 @@ class AGLgis:
             self.dlg.folder_input.setText(saved_folder)
 
         self.dlg.project_id_input.textChanged.connect(self.gee_service.save_project_id)
+        self.dlg.project_id_input.textChanged.connect(
+            self.auth_ctrl.on_project_id_changed
+        )
         self.dlg.btn_authenticate.clicked.connect(self.auth_ctrl.handle_authentication)
         self.dlg.btn_reset_auth.clicked.connect(
             self.auth_ctrl.handle_reset_authentication
         )
+        self.dlg.auth_status_badge.clicked.connect(self.auth_ctrl.check_status)
         self.dlg.btn_browse_folder.clicked.connect(
             self.auth_ctrl.handle_folder_selection
         )
@@ -210,6 +214,9 @@ class AGLgis:
         self.dlg.sar_layer_combo.layerChanged.connect(
             self.sar_ctrl.handle_layer_changed
         )
+
+        # Surface the current GEE sign-in status on the auth page right away.
+        self.auth_ctrl.check_status()
 
     def _on_extlibs_ready(self, success, error_msg):
         self._waiting_for_extlibs = False

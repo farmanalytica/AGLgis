@@ -38,6 +38,33 @@ class GEEService:
     def __init__(self):
         self.is_authenticated = False
 
+    def has_stored_credentials(self) -> bool:
+        """Return True if Earth Engine OAuth credentials are stored on disk."""
+        try:
+            return os.path.exists(ee.oauth.get_credentials_path())
+        except Exception:
+            return False
+
+    def verify_silent(self, project_id: str) -> bool:
+        """
+        Check authentication without ever launching the browser OAuth flow.
+
+        Initializes Earth Engine with stored credentials and makes one light
+        call to confirm the project is usable.  Never prompts; returns False
+        on any failure.  Updates ``is_authenticated`` to match the result.
+        """
+        if not project_id or not self.has_stored_credentials():
+            self.is_authenticated = False
+            return False
+        try:
+            ee.Initialize(project=project_id)
+            ee.data.listAssets({"parent": f"projects/{project_id}/assets/"})
+            self.is_authenticated = True
+            return True
+        except Exception:
+            self.is_authenticated = False
+            return False
+
     def get_saved_project_id(self) -> str:
         """
         Retrieve the saved GEE project ID from settings.

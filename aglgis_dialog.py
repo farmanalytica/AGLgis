@@ -397,17 +397,75 @@ class AGLgisDialog(QDialog):
         While busy the project-ID field and the reset/browse buttons are
         disabled, and the primary button becomes a Cancel control.
         """
+        self._auth_busy = busy
         self.project_id_input.setEnabled(not busy)
         self.btn_reset_auth.setEnabled(not busy)
         self.btn_browse_folder.setEnabled(not busy)
+        self.auth_status_badge.setEnabled(not busy)
 
         if busy:
             self.btn_authenticate.setText(_tr("Cancel"))
             self.set_auth_status(_tr("Starting authentication…"))
         else:
-            self.btn_authenticate.setText(_tr("🔑   Validate ID"))
+            # Restore the label appropriate to the last known sign-in state.
+            if getattr(self, "_auth_state", None) == "authenticated":
+                self.btn_authenticate.setText(_tr("Continue  →"))
+            else:
+                self.btn_authenticate.setText(_tr("🔑   Validate ID"))
             self.auth_status_lbl.hide()
             self.auth_status_lbl.clear()
+
+    # Pill styles per state: (text, text colour, background, border colour).
+    _AUTH_STATE_STYLES = {
+        "checking": ("◔  Checking sign-in status…", "#757575", "#f0f0f0", "#e0e0e0"),
+        "none": ("●  Not signed in", "#b71c1c", "#fdecea", "#f5c6c2"),
+        "stored": (
+            "●  Credentials found — validate to finish",
+            "#8a5300",
+            "#fff4e0",
+            "#f0d9a8",
+        ),
+        "authenticated": ("●  Signed in & ready", "#1b5e20", "#e8f5e9", "#a5d6a7"),
+    }
+
+    def set_auth_state(self, state):
+        """
+        Update the auth-page status pill.
+
+        ``state`` is one of ``"checking"``, ``"none"``, ``"stored"``, or
+        ``"authenticated"``; unknown values fall back to ``"stored"``.
+        """
+        text, fg, bg, border = self._AUTH_STATE_STYLES.get(
+            state, self._AUTH_STATE_STYLES["stored"]
+        )
+        self._auth_state = state
+
+        # When already signed in, the primary button just continues to the
+        # workflow — no point re-running authentication. Don't fight the busy
+        # state, which owns the button label while a sign-in is in flight.
+        if not getattr(self, "_auth_busy", False):
+            if state == "authenticated":
+                self.btn_authenticate.setText(_tr("Continue  →"))
+            elif state != "checking":
+                self.btn_authenticate.setText(_tr("🔑   Validate ID"))
+
+        self.auth_status_badge.setText(_tr(text))
+        self.auth_status_badge.setStyleSheet(
+            """
+            QPushButton {
+                background-color: %s;
+                color: %s;
+                border: 1px solid %s;
+                border-radius: 11px;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 0 10px;
+                text-align: center;
+            }
+            QPushButton:hover { border-color: %s; }
+            """
+            % (bg, fg, border, fg)
+        )
 
     def set_auth_status(self, text, url=""):
         """Show a non-blocking status line; if ``url`` is given, append a

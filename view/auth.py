@@ -124,7 +124,7 @@ def setup_auth_page(dialog, page):
     # ── Right card ────────────────────────────────────────────────────────
     card = QFrame()
     card.setFixedWidth(258)
-    card.setFixedHeight(218)
+    card.setFixedHeight(250)
     card.setStyleSheet("""
         QFrame {
             background-color: #ffffff;
@@ -136,6 +136,17 @@ def setup_auth_page(dialog, page):
     card_lay = QVBoxLayout(card)
     card_lay.setContentsMargins(20, 18, 20, 14)
     card_lay.setSpacing(7)
+
+    # Sign-in status pill — auto-checked on entry, click to re-check. Colour
+    # and text are driven by ``dialog.set_auth_state``.
+    dialog.auth_status_badge = QPushButton(_tr("Checking sign-in status…"))
+    dialog.auth_status_badge.setCursor(Qt.CursorShape.PointingHandCursor)
+    dialog.auth_status_badge.setToolTip(
+        _tr("Click to re-check your Earth Engine sign-in status")
+    )
+    dialog.auth_status_badge.setFixedHeight(22)
+    card_lay.addWidget(dialog.auth_status_badge)
+    card_lay.addSpacing(4)
 
     # Field label.
     pid_lbl = QLabel(_tr("PROJECT ID (GOOGLE CLOUD)"))
