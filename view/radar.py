@@ -9,7 +9,7 @@ service layer is in place.
 
 import os
 
-from qgis.core import QgsMapLayerProxyModel
+from qgis.core import QgsMapLayerProxyModel, QgsSettings
 from qgis.gui import QgsMapLayerComboBox
 from qgis.PyQt.QtCore import Qt, QCoreApplication, QDate, QUrl
 from qgis.PyQt.QtWebKitWidgets import QWebView
@@ -169,7 +169,11 @@ def _build_intro_tab(dialog, parent):
         "intro_sar.html",
     )
     # load() reads the file in place, so relative asset paths resolve from assets/.
-    view.load(QUrl.fromLocalFile(intro_path))
+    # Pass QGIS UI locale to the page via fragment so it auto-picks the language.
+    locale = QgsSettings().value("locale/userLocale", "en_US") or "en_US"
+    intro_url = QUrl.fromLocalFile(intro_path)
+    intro_url.setFragment("lang=" + locale[:2].lower())
+    view.load(intro_url)
     dialog.sar_intro_view = view
     outer.addWidget(view, 1)
 
