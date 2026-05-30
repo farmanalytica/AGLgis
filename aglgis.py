@@ -35,10 +35,6 @@ from qgis.core import (
 
 from .aglgis_dialog import AGLgisDialog
 from .services.settings_manager import SettingsManager
-from .services.gee_service import GEEService
-from .controllers.dem_ctrl import DEMCtrl
-from .controllers.auth_ctrl import AuthCtrl
-from .controllers.sar_ctrl import SARCtrl
 
 
 class AGLgis:
@@ -152,6 +148,12 @@ class AGLgis:
             self.interface.removeToolBarIcon(action)
 
     def _finish_init(self):
+        # Imported here (not at module top) so they only load after extlibs/
+        # is on sys.path — gee_service imports `ee`, which lives in extlibs/.
+        from .services.gee_service import GEEService
+        from .controllers.dem_ctrl import DEMCtrl
+        from .controllers.auth_ctrl import AuthCtrl
+        from .controllers.sar_ctrl import SARCtrl
 
         self._services_ready = True
         self.gee_service = GEEService()
