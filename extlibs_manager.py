@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import importlib
 import os
 import sys
 import zipfile
@@ -21,6 +22,11 @@ def is_ready():
 def ensure_on_path():
     if EXTLIBS_PATH not in sys.path:
         sys.path.insert(0, EXTLIBS_PATH)
+    # __init__.py may have inserted EXTLIBS_PATH while the dir was still empty
+    # (pre-download), poisoning Python's path-finder cache for that directory.
+    # Drop the cached finders so freshly extracted packages become importable
+    # without a QGIS restart.
+    importlib.invalidate_caches()
 
 
 def get_downloader():
