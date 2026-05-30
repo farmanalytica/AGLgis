@@ -198,12 +198,29 @@ def _build_inputs_tab(dialog, parent):
     inputs_lay.setSpacing(10)
 
     inputs_lay.addWidget(_field_label(_tr("AOI LAYER")))
+
+    aoi_row = QWidget()
+    aoi_row_lay = QHBoxLayout(aoi_row)
+    aoi_row_lay.setContentsMargins(0, 0, 0, 0)
+    aoi_row_lay.setSpacing(6)
+
     dialog.sar_layer_combo = QgsMapLayerComboBox()
     dialog.sar_layer_combo.setFilters(QgsMapLayerProxyModel.VectorLayer)
     _prepare_field(dialog.sar_layer_combo)
     dialog.sar_layer_combo.setAllowEmptyLayer(True)
     dialog.sar_layer_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
-    inputs_lay.addWidget(dialog.sar_layer_combo)
+    aoi_row_lay.addWidget(dialog.sar_layer_combo, 1)
+
+    dialog.sar_btn_hybrid_layer = QPushButton(_tr("Add Google Hybrid Layer"))
+    dialog.sar_btn_hybrid_layer.setFixedHeight(28)
+    dialog.sar_btn_hybrid_layer.setSizePolicy(
+        QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+    )
+    dialog.sar_btn_hybrid_layer.adjustSize()
+    dialog.sar_btn_hybrid_layer.setStyleSheet(STYLE_BTN_SECONDARY)
+    aoi_row_lay.addWidget(dialog.sar_btn_hybrid_layer)
+
+    inputs_lay.addWidget(aoi_row)
 
     inputs_lay.addSpacing(6)
 

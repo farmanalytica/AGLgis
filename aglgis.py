@@ -185,6 +185,9 @@ class AGLgis:
             lambda: self.dem_ctrl.handle_dem_service(self.interface)
         )
         self.dlg.btn_hybrid_layer.clicked.connect(self.dem_ctrl.handle_hybrid_layer)
+        self.dlg.sar_btn_hybrid_layer.clicked.connect(
+            self.dem_ctrl.handle_hybrid_layer
+        )
         self.dlg.sar_btn_next.clicked.connect(self.sar_ctrl.handle_sar_run)
         self.dlg.sar_btn_preview.clicked.connect(self.sar_ctrl.handle_preview_image)
         self.dlg.sar_btn_download_preview.clicked.connect(
