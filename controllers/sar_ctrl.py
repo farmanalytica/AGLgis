@@ -72,7 +72,17 @@ class SARCtrl:
         )
 
     def handle_draw_aoi(self):
-        """Draw a rectangular AOI on the canvas and select it as the AOI."""
+        """Toggle rectangular AOI drawing on the canvas.
+
+        Clicking the button while draw mode is already armed turns it off
+        (restoring the previous map tool) instead of re-arming it.
+        """
+        canvas = self.interface.mapCanvas()
+        tool = getattr(self, "_draw_tool", None)
+        if tool is not None and canvas.mapTool() is tool:
+            canvas.unsetMapTool(tool)
+            self._draw_tool = None
+            return
         self._draw_tool = start_draw_aoi(
             self.interface, self.dlg.sar_layer_combo, self.dlg.sar_btn_draw_aoi
         )
