@@ -11,7 +11,15 @@ import os
 
 from qgis.core import QgsMapLayerProxyModel, QgsSettings
 from qgis.gui import QgsMapLayerComboBox
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QDate, QUrl
+from qgis.PyQt.QtCore import (
+    Qt,
+    QCoreApplication,
+    QDate,
+    QPoint,
+    QRect,
+    QSize,
+    QUrl,
+)
 from qgis.PyQt.QtWebKitWidgets import QWebView
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -21,9 +29,11 @@ from qgis.PyQt.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QSplitter,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -133,6 +143,145 @@ def _prepare_field(widget, height=30):
     widget.setFixedHeight(height)
     widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     return widget
+
+
+class FlowLayout(QLayout):
+    """Left-to-right layout that wraps items onto new lines when the available
+    width runs out. Widening the window packs more controls per line, so fewer
+    lines are needed and more options stay visible without scrolling."""
+
+    def __init__(self, parent=None, margin=0, spacing=8):
+        super().__init__(parent)
+        if parent is not None:
+            self.setContentsMargins(margin, margin, margin, margin)
+        self.setSpacing(spacing)
+        self._items = []
+
+    def __del__(self):
+        while self.count():
+            self.takeAt(0)
+
+    def addItem(self, item):
+        self._items.append(item)
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, index):
+        if 0 <= index < len(self._items):
+            return self._items[index]
+        return None
+
+    def takeAt(self, index):
+        if 0 <= index < len(self._items):
+            return self._items.pop(index)
+        return None
+
+    def expandingDirections(self):
+        return Qt.Orientation(0)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        return self._do_layout(QRect(0, 0, width, 0), True)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+        self._do_layout(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        size = QSize()
+        for item in self._items:
+            size = size.expandedTo(item.minimumSize())
+        margins = self.contentsMargins()
+        size += QSize(
+            margins.left() + margins.right(), margins.top() + margins.bottom()
+        )
+        return size
+
+    def _do_layout(self, rect, test_only):
+        margins = self.contentsMargins()
+        effective = rect.adjusted(
+            margins.left(), margins.top(), -margins.right(), -margins.bottom()
+        )
+        x = effective.x()
+        y = effective.y()
+        line_height = 0
+        spacing = self.spacing()
+        for item in self._items:
+            hint = item.sizeHint()
+            next_x = x + hint.width() + spacing
+            if next_x - spacing > effective.right() and line_height > 0:
+                x = effective.x()
+                y = y + line_height + spacing
+                next_x = x + hint.width() + spacing
+                line_height = 0
+            if not test_only:
+                item.setGeometry(QRect(QPoint(x, y), hint))
+            x = next_x
+            line_height = max(line_height, hint.height())
+        return y + line_height - rect.y() + margins.bottom()
+
+
+def _flow(widgets, spacing=8):
+    """Wrap ``widgets`` in a container driven by a FlowLayout."""
+    container = QWidget()
+    container.setStyleSheet("background: transparent;")
+    flow = FlowLayout(container, margin=0, spacing=spacing)
+    for w in widgets:
+        flow.addWidget(w)
+    policy = container.sizePolicy()
+    policy.setHeightForWidth(True)
+    container.setSizePolicy(policy)
+    return container
+
+
+def _group(widgets, spacing=6):
+    """Bundle task-related controls into one tight cluster that the flow treats
+    as a single item — they stay shoulder-to-shoulder and never wrap apart,
+    while the wider gap between clusters signals they're different tasks."""
+    box = QWidget()
+    box.setStyleSheet("background: transparent;")
+    row = QHBoxLayout(box)
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(spacing)
+    for w in widgets:
+        row.addWidget(w)
+    return box
+
+
+def _labeled(text, widget, lbl_width=None):
+    """Group a caption label with its control as a single flow item, so they
+    never wrap apart from each other."""
+    group = QWidget()
+    group.setStyleSheet("background: transparent;")
+    row = QHBoxLayout(group)
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(8)
+    lbl = QLabel(text)
+    lbl.setStyleSheet(
+        "color: #616161; font-size: 12px; background: transparent; border: none;"
+    )
+    if lbl_width:
+        lbl.setFixedWidth(lbl_width)
+    row.addWidget(lbl)
+    row.addWidget(widget)
+    return group
+
+
+def _caption(text):
+    """Small uppercase group caption — a cheap, scannable visual anchor that
+    keeps related controls readable as one cluster after the row wraps."""
+    lbl = QLabel(text)
+    lbl.setStyleSheet(
+        "color: #9e9e9e; font-size: 11px; font-weight: bold; letter-spacing: 1px;"
+        " background: transparent; border: none;"
+    )
+    return lbl
 
 
 def _make_divider():
@@ -350,6 +499,29 @@ def _build_results_tab(dialog, parent):
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(0)
 
+    # Plot sits above the controls in a draggable vertical splitter: grab the
+    # handle to make the plot taller or shorter. Keeps a sane default height
+    # instead of the plot eating all the vertical space.
+    dialog.sar_results_splitter = QSplitter(Qt.Orientation.Vertical)
+    dialog.sar_results_splitter.setChildrenCollapsible(False)
+    dialog.sar_results_splitter.setHandleWidth(4)
+    dialog.sar_results_splitter.setStyleSheet("""
+        QSplitter::handle {
+            background: transparent;
+            margin: 0px 6px;
+            border-top: 2px solid #d6e0d9;
+        }
+        QSplitter::handle:hover { border-top-color: #1b6b39; }
+    """)
+
+    # Plot
+    dialog.sar_web_view = QWebView()
+    dialog.sar_web_view.setStyleSheet(
+        "border: 1px solid #dce6df; border-radius: 8px; background: #ffffff;"
+    )
+    dialog.sar_web_view.setMinimumHeight(200)
+    dialog.sar_results_splitter.addWidget(dialog.sar_web_view)
+
     scroll = QScrollArea()
     scroll.setWidgetResizable(True)
     scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -360,87 +532,42 @@ def _build_results_tab(dialog, parent):
     scroll_w = QWidget()
     scroll_w.setStyleSheet("background: transparent;")
     lay = QVBoxLayout(scroll_w)
-    lay.setContentsMargins(6, 16, 6, 14)
+    lay.setContentsMargins(6, 0, 6, 14)
     lay.setSpacing(12)
-
-    # Plot
-    dialog.sar_web_view = QWebView()
-    dialog.sar_web_view.setStyleSheet(
-        "border: 1px solid #dce6df; border-radius: 8px; background: #ffffff;"
-    )
-    dialog.sar_web_view.setMinimumHeight(200)
-    dialog.sar_web_view.setSizePolicy(
-        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-    )
-    lay.addWidget(dialog.sar_web_view, 1)
 
     controls_panel = _section_panel()
     controls_lay = QVBoxLayout(controls_panel)
     controls_lay.setContentsMargins(16, 14, 16, 14)
     controls_lay.setSpacing(10)
 
-    # Export and batch action buttons — equal height, left-aligned
-    plot_row = QHBoxLayout()
-    plot_row.setSpacing(8)
-    plot_row.setContentsMargins(0, 0, 0, 0)
+    # ── Time-series exports ───────────────────────────────────────────────
+    controls_lay.addWidget(_caption(_tr("TIME SERIES")))
     dialog.sar_btn_open_browser = QPushButton(_tr("Open in Browser"))
-    dialog.sar_btn_open_browser.setFixedSize(120, 30)
+    dialog.sar_btn_open_browser.setFixedHeight(30)
     dialog.sar_btn_open_browser.setStyleSheet(STYLE_BTN_SECONDARY)
     dialog.sar_btn_download_csv = QPushButton(_tr("Export CSV"))
-    dialog.sar_btn_download_csv.setFixedSize(110, 30)
+    dialog.sar_btn_download_csv.setFixedHeight(30)
     dialog.sar_btn_download_csv.setStyleSheet(STYLE_BTN_SECONDARY)
     dialog.sar_btn_batch_download = QPushButton(_tr("Batch Download (All Dates)"))
-    dialog.sar_btn_batch_download.setFixedSize(200, 30)
+    dialog.sar_btn_batch_download.setFixedHeight(30)
     dialog.sar_btn_batch_download.setStyleSheet(STYLE_BTN_SECONDARY)
-    plot_row.addWidget(dialog.sar_btn_open_browser)
-    plot_row.addWidget(dialog.sar_btn_download_csv)
-    plot_row.addWidget(dialog.sar_btn_batch_download)
-    plot_row.addStretch(1)
-    controls_lay.addLayout(plot_row)
+    controls_lay.addWidget(_flow([
+        dialog.sar_btn_open_browser,
+        dialog.sar_btn_download_csv,
+        dialog.sar_btn_batch_download,
+    ]))
+
     controls_lay.addWidget(_make_divider())
 
-    # Date selection row — filter, combo and preview actions grouped together
-    date_row = QHBoxLayout()
-    date_row.setSpacing(8)
-    date_row.setContentsMargins(0, 0, 0, 0)
-    date_lbl = QLabel(_tr("Date"))
-    date_lbl.setStyleSheet(
-        "color: #616161; font-size: 12px; background: transparent; border: none;"
-    )
-    date_lbl.setFixedWidth(34)
-    date_row.addWidget(date_lbl)
+    # ── Single-date image ─────────────────────────────────────────────────
+    controls_lay.addWidget(_caption(_tr("SINGLE-DATE IMAGE")))
     dialog.sar_result_date_combo = QComboBox()
     _prepare_field(dialog.sar_result_date_combo, 30)
     dialog.sar_result_date_combo.setFixedWidth(136)
-    date_row.addWidget(dialog.sar_result_date_combo)
     dialog.sar_btn_filter_dates = QPushButton(_tr("Filter dates"))
-    dialog.sar_btn_filter_dates.setFixedSize(110, 30)
+    dialog.sar_btn_filter_dates.setFixedHeight(30)
     dialog.sar_btn_filter_dates.setStyleSheet(STYLE_BTN_SECONDARY)
-    date_row.addWidget(dialog.sar_btn_filter_dates)
-    date_row.addSpacing(12)
-    dialog.sar_btn_preview = QPushButton(_tr("Preview"))
-    dialog.sar_btn_preview.setFixedSize(100, 30)
-    dialog.sar_btn_preview.setStyleSheet(STYLE_BTN_PRIMARY)
-    dialog.sar_btn_download_preview = QPushButton(
-        _tr("Download & Preview").replace("&", "&&")
-    )
-    dialog.sar_btn_download_preview.setFixedSize(140, 30)
-    dialog.sar_btn_download_preview.setStyleSheet(STYLE_BTN_SECONDARY)
-    date_row.addWidget(dialog.sar_btn_preview)
-    date_row.addWidget(dialog.sar_btn_download_preview)
-    date_row.addStretch(1)
-    controls_lay.addLayout(date_row)
 
-    # Render mode row
-    render_row = QHBoxLayout()
-    render_row.setSpacing(8)
-    render_row.setContentsMargins(0, 0, 0, 0)
-    render_lbl = QLabel(_tr("Render Mode"))
-    render_lbl.setStyleSheet(
-        "color: #616161; font-size: 12px; background: transparent; border: none;"
-    )
-    render_lbl.setFixedWidth(80)
-    render_row.addWidget(render_lbl)
     dialog.sar_render_combo = QComboBox()
     _prepare_field(dialog.sar_render_combo, 30)
     dialog.sar_render_combo.setFixedWidth(240)
@@ -455,9 +582,29 @@ def _build_results_tab(dialog, parent):
         _tr("Band: DpRVI"),
     ])
     dialog.sar_render_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
-    render_row.addWidget(dialog.sar_render_combo)
-    render_row.addStretch(1)
-    controls_lay.addLayout(render_row)
+
+    dialog.sar_btn_preview = QPushButton(_tr("Preview"))
+    dialog.sar_btn_preview.setFixedHeight(30)
+    dialog.sar_btn_preview.setStyleSheet(STYLE_BTN_PRIMARY)
+    dialog.sar_btn_download_preview = QPushButton(
+        _tr("Download & Preview").replace("&", "&&")
+    )
+    dialog.sar_btn_download_preview.setFixedHeight(30)
+    dialog.sar_btn_download_preview.setStyleSheet(STYLE_BTN_SECONDARY)
+
+    # Two task clusters: choose-the-date, then render-and-preview. Tight within
+    # each cluster, wider gap between them.
+    controls_lay.addWidget(_flow([
+        _group([
+            _labeled(_tr("Date"), dialog.sar_result_date_combo, 34),
+            dialog.sar_btn_filter_dates,
+        ]),
+        _group([
+            _labeled(_tr("Render Mode"), dialog.sar_render_combo, 80),
+            dialog.sar_btn_preview,
+            dialog.sar_btn_download_preview,
+        ]),
+    ], spacing=18))
     lay.addWidget(controls_panel)
 
     # ── Synthetic image (composite) ───────────────────────────────────────
@@ -483,16 +630,7 @@ def _build_results_tab(dialog, parent):
     )
     composite_lay.addWidget(composite_hint)
 
-    # Metric + color-ramp selectors.
-    metric_row = QHBoxLayout()
-    metric_row.setSpacing(8)
-    metric_row.setContentsMargins(0, 0, 0, 0)
-    metric_lbl = QLabel(_tr("Metric"))
-    metric_lbl.setStyleSheet(
-        "color: #616161; font-size: 12px; background: transparent; border: none;"
-    )
-    metric_lbl.setFixedWidth(80)
-    metric_row.addWidget(metric_lbl)
+    # Metric + color-ramp selectors and composite actions — one wrapping row.
     dialog.sar_composite_metric_combo = QComboBox()
     _prepare_field(dialog.sar_composite_metric_combo, 30)
     dialog.sar_composite_metric_combo.setFixedWidth(240)
@@ -507,19 +645,7 @@ def _build_results_tab(dialog, parent):
         _tr("Area Under Curve (AUC)"),
     ])
     dialog.sar_composite_metric_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
-    metric_row.addWidget(dialog.sar_composite_metric_combo)
-    metric_row.addStretch(1)
-    composite_lay.addLayout(metric_row)
 
-    ramp_row = QHBoxLayout()
-    ramp_row.setSpacing(8)
-    ramp_row.setContentsMargins(0, 0, 0, 0)
-    ramp_lbl = QLabel(_tr("Color Ramp"))
-    ramp_lbl.setStyleSheet(
-        "color: #616161; font-size: 12px; background: transparent; border: none;"
-    )
-    ramp_lbl.setFixedWidth(80)
-    ramp_row.addWidget(ramp_lbl)
     dialog.sar_composite_ramp_combo = QComboBox()
     _prepare_field(dialog.sar_composite_ramp_combo, 30)
     dialog.sar_composite_ramp_combo.setFixedWidth(240)
@@ -532,31 +658,38 @@ def _build_results_tab(dialog, parent):
         "Greys",
     ])
     dialog.sar_composite_ramp_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
-    ramp_row.addWidget(dialog.sar_composite_ramp_combo)
-    ramp_row.addStretch(1)
-    composite_lay.addLayout(ramp_row)
 
-    # Preview / download actions.
-    composite_btn_row = QHBoxLayout()
-    composite_btn_row.setSpacing(8)
-    composite_btn_row.setContentsMargins(0, 0, 0, 0)
     dialog.sar_btn_composite_preview = QPushButton(_tr("Preview Composite"))
-    dialog.sar_btn_composite_preview.setFixedSize(150, 30)
+    dialog.sar_btn_composite_preview.setFixedHeight(30)
     dialog.sar_btn_composite_preview.setStyleSheet(STYLE_BTN_PRIMARY)
     dialog.sar_btn_composite_download = QPushButton(
         _tr("Download & Preview").replace("&", "&&")
     )
-    dialog.sar_btn_composite_download.setFixedSize(160, 30)
+    dialog.sar_btn_composite_download.setFixedHeight(30)
     dialog.sar_btn_composite_download.setStyleSheet(STYLE_BTN_SECONDARY)
-    composite_btn_row.addWidget(dialog.sar_btn_composite_preview)
-    composite_btn_row.addWidget(dialog.sar_btn_composite_download)
-    composite_btn_row.addStretch(1)
-    composite_lay.addLayout(composite_btn_row)
+
+    # Configure cluster (metric + ramp) separated from the action cluster.
+    composite_lay.addWidget(_flow([
+        _group([
+            _labeled(_tr("Metric"), dialog.sar_composite_metric_combo, 80),
+            _labeled(_tr("Color Ramp"), dialog.sar_composite_ramp_combo, 80),
+        ]),
+        _group([
+            dialog.sar_btn_composite_preview,
+            dialog.sar_btn_composite_download,
+        ]),
+    ], spacing=18))
 
     lay.addWidget(composite_panel)
+    lay.addStretch(1)
 
     scroll.setWidget(scroll_w)
-    outer.addWidget(scroll)
+    dialog.sar_results_splitter.addWidget(scroll)
+    # Extra vertical space goes to the plot; the controls pane keeps its size
+    # and scrolls if cramped. The plot's minimum height sets the default.
+    dialog.sar_results_splitter.setStretchFactor(0, 1)
+    dialog.sar_results_splitter.setStretchFactor(1, 0)
+    outer.addWidget(dialog.sar_results_splitter)
 
 
 def setup_radar_page(dialog, page):
