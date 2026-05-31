@@ -67,6 +67,13 @@ class AuthCtrl:
         QTimer.singleShot(self._STATUS_TIMEOUT_MS, lambda g=gen: self._status_timeout(g))
 
     def _on_status_ready(self, gen, state):
+        # A verified sign-in is ground truth (verify_silent set is_authenticated),
+        # so honour it even if the watchdog already fired and bumped the gen —
+        # otherwise a slow first probe leaves the pill stuck on "stored" despite
+        # being signed in.
+        if state == "authenticated":
+            self.dlg.set_auth_state("authenticated")
+            return
         if gen != self._status_gen:
             return  # superseded by a newer check or already timed out
         self.dlg.set_auth_state(state)
@@ -74,8 +81,14 @@ class AuthCtrl:
     def _status_timeout(self, gen):
         if gen != self._status_gen:
             return  # already resolved or superseded
+        # The probe may have finished verifying just before this fired; don't
+        # downgrade a confirmed sign-in.
+        if self.gee_service.is_authenticated:
+            self.dlg.set_auth_state("authenticated")
+            return
         # Give up waiting; ignore the hung worker's eventual result and show an
-        # actionable fallback the user can click to retry.
+        # actionable fallback the user can click to retry. A late "authenticated"
+        # is still honoured by _on_status_ready above.
         self._status_gen += 1
         self._status_worker = None  # allow a fresh re-check; hung thread lives in the set
         state = "stored" if self.gee_service.has_stored_credentials() else "none"
