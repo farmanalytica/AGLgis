@@ -5,7 +5,7 @@ Settings management module.
 Handles persistence of user preferences and plugin settings in QGIS.
 """
 
-from qgis.core import QgsSettings, QgsProject
+from qgis.core import QgsSettings
 
 
 class SettingsManager:
@@ -39,11 +39,5 @@ class SettingsManager:
         Returns:
             Absolute path to the saved download folder, or empty string.
         """
-        project = QgsProject.instance()
-        project_file_path = project.fileName()
-
-        if not project_file_path:
-            settings = QgsSettings()
-            return settings.value(SettingsManager.DOWNLOAD_FOLDER_KEY, "", type=str)
-
-        return project_file_path
+        settings = QgsSettings()
+        return settings.value(SettingsManager.DOWNLOAD_FOLDER_KEY, "", type=str)
