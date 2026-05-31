@@ -101,10 +101,10 @@ class AGLgisDialog(QDialog):
             | Qt.WindowType.WindowCloseButtonHint
         )
         self.setWindowModality(Qt.WindowModality.NonModal)
-        # Resizable: keep the original 800x404 as the opening size and a sane
-        # floor, but let the user grow the window — pages scroll/expand and the
-        # SAR plot fills the extra space.
-        self.setMinimumSize(600, 360)
+        # Resizable: the original 800x404 is both the opening size and the
+        # floor — the user can only grow the window. Pages scroll/expand and
+        # the SAR plot fills the extra space.
+        self.setMinimumSize(800, 404)
         self.resize(800, 404)
         self.setSizeGripEnabled(True)
         self.setStyleSheet(STYLE_DIALOG)
