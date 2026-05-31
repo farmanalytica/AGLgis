@@ -262,10 +262,16 @@ def start_draw_aoi(interface, target_combo, button=None):
             level=Qgis.Success,
         )
 
+    # Tool active before drawing (typically pan), so we can hand control back
+    # to it when done — unsetMapTool alone would leave the canvas with no tool.
+    previous_tool = canvas.mapTool()
+
     def on_finished():
         bar.popWidget(banner)
         if button is not None:
             button.setStyleSheet(STYLE_BTN_SECONDARY)
+        if previous_tool is not None and previous_tool is not tool:
+            canvas.setMapTool(previous_tool)
 
     tool = RectangleAoiTool(canvas, on_created=on_created, on_finished=on_finished)
     canvas.setMapTool(tool)
