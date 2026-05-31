@@ -97,10 +97,16 @@ class AGLgisDialog(QDialog):
             | Qt.WindowType.WindowSystemMenuHint
             | Qt.WindowType.WindowTitleHint
             | Qt.WindowType.WindowMinimizeButtonHint
+            | Qt.WindowType.WindowMaximizeButtonHint
             | Qt.WindowType.WindowCloseButtonHint
         )
         self.setWindowModality(Qt.WindowModality.NonModal)
-        self.setFixedSize(800, 404)
+        # Resizable: keep the original 800x404 as the opening size and a sane
+        # floor, but let the user grow the window — pages scroll/expand and the
+        # SAR plot fills the extra space.
+        self.setMinimumSize(600, 360)
+        self.resize(800, 404)
+        self.setSizeGripEnabled(True)
         self.setStyleSheet(STYLE_DIALOG)
 
         root = QVBoxLayout(self)
