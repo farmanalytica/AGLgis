@@ -17,6 +17,12 @@ QDialog {
 QWidget {
     color: #212121;
 }
+QToolTip {
+    background-color: #ffffff;
+    color: #212121;
+    border: 1px solid #c8d8ce;
+    padding: 4px 6px;
+}
 QLineEdit {
     background-color: #ffffff;
     color: #212121;
@@ -103,6 +109,12 @@ QPushButton:disabled {
     color: #9e9e9e;
     border-color: #e0e0e0;
 }
+QToolTip {
+    background-color: #ffffff;
+    color: #212121;
+    border: 1px solid #c8d8ce;
+    padding: 4px 6px;
+}
 """
 
 # ---------------------------------------------------------------------------
@@ -120,6 +132,12 @@ QPushButton {
 }
 QPushButton:hover  { background-color: #f0954f; }
 QPushButton:pressed { background-color: #d3742e; }
+QToolTip {
+    background-color: #ffffff;
+    color: #212121;
+    border: 1px solid #c8d8ce;
+    padding: 4px 6px;
+}
 """
 
 # ---------------------------------------------------------------------------
