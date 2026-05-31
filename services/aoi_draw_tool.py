@@ -65,14 +65,21 @@ def _target_folder():
 
 
 def _unique_shp_path(folder, base="drawn_aoi"):
-    """Return a non-existing ``<folder>/<base>[_n].shp`` path and its name."""
+    """Return a shapefile path inside a fresh per-draw subfolder, plus its name.
+
+    Each draw gets its own ``<folder>/<base>[_n]/`` directory so the shapefile
+    sidecar files (.shp/.shx/.dbf/.prj) stay grouped and never collide with
+    earlier draws.
+    """
     name = base
-    path = os.path.join(folder, name + ".shp")
+    subdir = os.path.join(folder, name)
     n = 2
-    while os.path.exists(path):
+    while os.path.exists(subdir):
         name = "{}_{}".format(base, n)
-        path = os.path.join(folder, name + ".shp")
+        subdir = os.path.join(folder, name)
         n += 1
+    os.makedirs(subdir, exist_ok=True)
+    path = os.path.join(subdir, base + ".shp")
     return path, name
 
 
