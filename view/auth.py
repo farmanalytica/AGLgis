@@ -10,7 +10,6 @@ and authentication controls. Signal connections are wired externally by
 import os
 
 from qgis.PyQt.QtCore import Qt, QCoreApplication
-from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import (
     QFrame,
     QHBoxLayout,

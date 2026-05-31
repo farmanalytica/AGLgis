@@ -167,7 +167,6 @@ def setup_download_dem_page(dialog, page):
     dialog.btn_draw_aoi.setSizePolicy(
         QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
     )
-    dialog.btn_draw_aoi.adjustSize()
     dialog.btn_draw_aoi.setStyleSheet(STYLE_BTN_SECONDARY)
     aoi_row_lay.addWidget(dialog.btn_draw_aoi)
 
@@ -176,7 +175,6 @@ def setup_download_dem_page(dialog, page):
     dialog.btn_hybrid_layer.setSizePolicy(
         QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
     )
-    dialog.btn_hybrid_layer.adjustSize()
     dialog.btn_hybrid_layer.setStyleSheet(STYLE_BTN_SECONDARY)
     aoi_row_lay.addWidget(dialog.btn_hybrid_layer)
 

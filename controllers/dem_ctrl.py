@@ -11,7 +11,6 @@ from qgis.core import (
     QgsCoordinateTransform,
 )
 
-from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import QTimer, QCoreApplication
 
 from ..services.map_utils import hybrid_function
@@ -19,7 +18,6 @@ from ..services.aoi_draw_tool import start_draw_aoi
 from ..services.aoi_service import AOIService
 from ..services.dem_renderer import DEMRenderer
 from ..services.dataset_manager import DatasetManager
-from ..services.settings_manager import SettingsManager
 from ..services.dem_registry import DEMRegistry
 from ..services.dem_worker import DatasetAvailabilityWorker, DemDownloadWorker
 
@@ -67,32 +65,6 @@ class DEMCtrl:
             not self.gee_service.is_authenticated
             and "Earth Engine client library not initialized" in str(error)
         )
-
-    def handle_get_aoi(self):
-        """Load the AOI from the selected layer and store it for downstream use."""
-        try:
-            layer = self.dlg.layer_combo.currentLayer()
-
-            if not layer:
-                self.dlg.pop_message(_tr("Select a layer."), "warning")
-                return
-
-            if not self.gee_service.is_authenticated:
-                self.current_aoi = None
-                self.current_aoi_bbox = None
-                self.load_available_datasets()
-                return
-
-            self.current_aoi, self.current_aoi_bbox = AOIService.get_aoi_from_layer(
-                layer
-            )
-
-            self.load_available_datasets()
-
-        except Exception as e:
-            if self._is_passive_ee_init_error(e):
-                return
-            self.dlg.pop_message(str(e), "warning")
 
     def handle_dem_service(self, interface):
         """
@@ -286,20 +258,6 @@ class DEMCtrl:
         combo.blockSignals(False)
         if not self._is_passive_ee_init_error(message):
             self.dlg.pop_message(message, "warning")
-
-    def handle_folder_selection(self):
-        """Open a folder picker, persist the choice, and update the UI."""
-        current_folder = SettingsManager.load_download_folder()
-
-        folder = QFileDialog.getExistingDirectory(
-            self.dlg,
-            _tr("Select DEM Download Folder"),
-            current_folder,
-        )
-
-        if folder:
-            self.dlg.folder_input.setText(folder)
-            SettingsManager.save_download_folder(folder)
 
     def on_dataset_changed(self):
         """Update the dataset info panel when the selected dataset changes."""

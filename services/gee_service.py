@@ -183,14 +183,11 @@ class GEEService:
         """
         Clear saved Google Earth Engine credentials.
 
-        Args:
-            silent: If True, don't raise error if no credentials found.
-
         Returns:
-            Success message string, or None if silent and no credentials.
+            Success message string.
 
         Raises:
-            FileNotFoundError: If credentials not found.
+            FileNotFoundError: If no stored credentials are found.
         """
         credentials_path = ee.oauth.get_credentials_path()
 

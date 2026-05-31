@@ -123,7 +123,7 @@ class SARCtrl:
 
         layer = self.dlg.sar_layer_combo.currentLayer()
         if not layer:
-            self.dlg.pop_message("Select an AOI layer.", "warning")
+            self.dlg.pop_message(_tr("Select an AOI layer."), "warning")
             return
 
         start_qdate = self.dlg.sar_date_start.date()
@@ -254,7 +254,7 @@ class SARCtrl:
             return  # a preview operation is already in flight
 
         if self.collection is None or self.aoi is None:
-            self.dlg.pop_message("Run SAR processing first.", "warning")
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
             return
 
         selected_date = self.dlg.sar_result_date_combo.currentText()
@@ -278,7 +278,7 @@ class SARCtrl:
             return  # a preview operation is already in flight
 
         if self.collection is None or self.aoi is None:
-            self.dlg.pop_message("Run SAR processing first.", "warning")
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
             return
 
         selected_date = self.dlg.sar_result_date_combo.currentText()
@@ -471,14 +471,14 @@ class SARCtrl:
 
     def _load_downloaded_images(self, paths):
         render_mode = self.dlg.sar_render_combo.currentText()
-        for idx, path in enumerate(paths, start=1):
+        for path in paths:
             try:
                 filename = os.path.basename(path)
                 date_str = filename.replace("Sentinel1_", "").replace(".tiff", "")
                 label = f"SAR_{date_str}"
                 SARRenderer.load_sar_to_qgis(path, label, render_mode=render_mode)
-            except Exception as e:
-                pass
+            except Exception:
+                continue
 
     def handle_filter_dates(self):
         if self.dataframe is None:
@@ -511,7 +511,7 @@ class SARCtrl:
 
     def handle_open_browser(self):
         if self.dataframe is None:
-            self.dlg.pop_message("Run SAR processing first.", "warning")
+            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
             return
         df = self.dataframe
         if self._active_dates is not None:
