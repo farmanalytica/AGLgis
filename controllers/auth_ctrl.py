@@ -43,6 +43,14 @@ class AuthCtrl:
         if self._status_worker is not None and self._status_worker.isRunning():
             return
 
+        # Already verified this session — trust the in-memory flag instead of
+        # re-probing. A slow/flaky silent re-check could hit the watchdog and
+        # wrongly downgrade the pill to "stored". The flag is cleared on project
+        # change and on reset, so True reliably means verified-this-session.
+        if self.gee_service.is_authenticated:
+            self.dlg.set_auth_state("authenticated")
+            return
+
         self.dlg.set_auth_state("checking")
         self._status_gen += 1
         gen = self._status_gen
