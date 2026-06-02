@@ -13,7 +13,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtCore import QTimer, QCoreApplication
 
-from ..services.map_utils import hybrid_function
+from ..services.map_utils import add_google_hybrid_layer
 from ..services.aoi_draw_tool import start_draw_aoi
 from ..services.aoi_service import AOIService
 from ..services.dem_renderer import DEMRenderer
@@ -120,7 +120,9 @@ class DEMCtrl:
         if running and self._dem_btn_text is None:
             self._dem_btn_text = btn.text()
         btn.setEnabled(not running)
-        btn.setText(_tr("Downloading…") if running else (self._dem_btn_text or btn.text()))
+        btn.setText(
+            _tr("Downloading…") if running else (self._dem_btn_text or btn.text())
+        )
 
     def _on_dem_downloaded(self, dem_path, dataset_name):
         self._set_dem_running(False)
@@ -190,8 +192,8 @@ class DEMCtrl:
             self.current_aoi_bbox = None
             return
         try:
-            self.current_aoi, self.current_aoi_bbox = AOIService.get_aoi_from_layer(
-                layer
+            self.current_aoi, self.current_aoi_bbox = (
+                AOIService.get_ee_feature_colection_from_layer(layer)
             )
             self.load_available_datasets()
         except Exception as e:
@@ -265,7 +267,7 @@ class DEMCtrl:
 
     def handle_hybrid_layer(self):
         """Load the Google hybrid basemap layer."""
-        hybrid_function()
+        add_google_hybrid_layer()
         self.interface.messageBar().pushMessage(
             "AGLgis", _tr("Google Hybrid Layer loaded successfully")
         )

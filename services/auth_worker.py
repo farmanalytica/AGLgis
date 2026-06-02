@@ -19,12 +19,9 @@ def _tr(text):
 
 
 class AuthWorker(QThread):
-    """Runs ``GEEService.authenticate`` on a background thread."""
+    """Manage the EE authentication flow on browser without locking the UI"""
 
-    # Auth URL, emitted once the browser OAuth flow actually starts.
     browser_opened = pyqtSignal(str)
-    # (success, message): message is "" on success, CANCELLED if the user
-    # aborted, or an error string to surface otherwise.
     finished_auth = pyqtSignal(bool, str)
 
     def __init__(self, gee_service, project_id, timeout=180):
@@ -32,38 +29,30 @@ class AuthWorker(QThread):
         self._gee = gee_service
         self._project_id = project_id
         self._timeout = timeout
-        self._cancelled = False
+        self._is_cancelled = False
 
     def cancel(self):
-        self._cancelled = True
+        self._is_cancelled = True
 
     def run(self):
         try:
             self._gee.authenticate(
                 self._project_id,
                 timeout=self._timeout,
-                should_cancel=lambda: self._cancelled,
+                should_cancel=lambda: self._is_cancelled,
                 on_browser_open=self.browser_opened.emit,
             )
             self.finished_auth.emit(True, "")
         except AuthCancelled:
             self.finished_auth.emit(False, CANCELLED)
         except AuthTimeout:
-            self.finished_auth.emit(
-                False, _tr("Sign-in timed out. Please try again.")
-            )
+            self.finished_auth.emit(False, _tr("Sign-in timed out. Please try again."))
         except Exception as e:  # noqa: BLE001 - surface any failure to the UI
             self.finished_auth.emit(False, str(e))
 
 
 class AuthStatusWorker(QThread):
-    """
-    Off-thread, non-interactive check of the current sign-in status.
-
-    Never opens a browser; just reports one of ``"none"`` (no stored
-    credentials), ``"stored"`` (credentials present but project not yet
-    verified), or ``"authenticated"`` (credentials verified for the project).
-    """
+    """Check of the current sign-in status"""
 
     status_ready = pyqtSignal(str)
 
@@ -78,9 +67,9 @@ class AuthStatusWorker(QThread):
                 self.status_ready.emit("none")
             elif not self._project_id:
                 self.status_ready.emit("stored")
-            elif self._gee.verify_silent(self._project_id):
+            elif self._gee.check_silent_auth(self._project_id):
                 self.status_ready.emit("authenticated")
             else:
                 self.status_ready.emit("stored")
-        except Exception:  # noqa: BLE001 - never let the check crash the UI
+        except Exception:
             self.status_ready.emit("stored")

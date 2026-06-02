@@ -27,11 +27,7 @@ import os.path
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import QCoreApplication, QTranslator
-from qgis.core import (
-    Qgis,
-    QgsProject,
-    QgsSettings,
-)
+from qgis.core import QgsSettings
 
 from .aglgis_dialog import AGLgisDialog
 from .services.settings_manager import SettingsManager
@@ -56,11 +52,11 @@ class AGLgis:
         self._services_ready = False
 
         locale = QgsSettings().value("locale/userLocale", "en_US")
-        lang = locale[:2]
+        language = locale[:2]
         locale_map = {"pt": "pt_BR", "zh": "zh_CN"}
-        qm_lang = locale_map.get(lang, lang)
+        qm_language = locale_map.get(language, language)
         self._translator = QTranslator()
-        qm_path = os.path.join(self.plugin_dir, "i18n", f"aglgis_{qm_lang}.qm")
+        qm_path = os.path.join(self.plugin_dir, "i18n", f"aglgis_{qm_language}.qm")
         if os.path.exists(qm_path):
             self._translator.load(qm_path)
             QCoreApplication.installTranslator(self._translator)
@@ -169,6 +165,7 @@ class AGLgis:
         if saved_folder:
             self.dlg.folder_input.setText(saved_folder)
 
+        # Auth page
         self.dlg.project_id_input.textChanged.connect(self.gee_service.save_project_id)
         self.dlg.project_id_input.textChanged.connect(
             self.auth_ctrl.on_project_id_changed
@@ -181,10 +178,10 @@ class AGLgis:
         self.dlg.btn_browse_folder.clicked.connect(
             self.auth_ctrl.handle_folder_selection
         )
-        self.dlg.btn_clear_folder.clicked.connect(
-            self.auth_ctrl.handle_clear_folder
-        )
+        self.dlg.btn_clear_folder.clicked.connect(self.auth_ctrl.handle_clear_folder)
         self.dlg.btn_go_to_aoi.clicked.connect(self.dem_ctrl.load_available_datasets)
+
+        # DEM page
         self.dlg.layer_combo.activated.connect(self.dem_ctrl.handle_layer_activated)
         self.dlg.dem_combo.currentIndexChanged.connect(self.dem_ctrl.on_dataset_changed)
         self.dlg.btn_download_dem.clicked.connect(
@@ -192,27 +189,21 @@ class AGLgis:
         )
         self.dlg.btn_hybrid_layer.clicked.connect(self.dem_ctrl.handle_hybrid_layer)
         self.dlg.btn_draw_aoi.clicked.connect(self.dem_ctrl.handle_draw_aoi)
-        self.dlg.sar_btn_hybrid_layer.clicked.connect(
-            self.dem_ctrl.handle_hybrid_layer
-        )
+
+        # SAR page
+        self.dlg.sar_btn_hybrid_layer.clicked.connect(self.dem_ctrl.handle_hybrid_layer)
         self.dlg.sar_btn_draw_aoi.clicked.connect(self.sar_ctrl.handle_draw_aoi)
         self.dlg.sar_btn_next.clicked.connect(self.sar_ctrl.handle_sar_run)
         self.dlg.sar_btn_preview.clicked.connect(self.sar_ctrl.handle_preview_image)
         self.dlg.sar_btn_download_preview.clicked.connect(
             self.sar_ctrl.handle_download_preview
         )
-        self.dlg.sar_btn_open_browser.clicked.connect(
-            self.sar_ctrl.handle_open_browser
-        )
-        self.dlg.sar_btn_download_csv.clicked.connect(
-            self.sar_ctrl.handle_export_csv
-        )
+        self.dlg.sar_btn_open_browser.clicked.connect(self.sar_ctrl.handle_open_browser)
+        self.dlg.sar_btn_download_csv.clicked.connect(self.sar_ctrl.handle_export_csv)
         self.dlg.sar_btn_batch_download.clicked.connect(
             self.sar_ctrl.handle_batch_download
         )
-        self.dlg.sar_btn_filter_dates.clicked.connect(
-            self.sar_ctrl.handle_filter_dates
-        )
+        self.dlg.sar_btn_filter_dates.clicked.connect(self.sar_ctrl.handle_filter_dates)
         self.dlg.sar_btn_composite_preview.clicked.connect(
             self.sar_ctrl.handle_composite_preview
         )

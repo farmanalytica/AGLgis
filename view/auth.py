@@ -237,7 +237,7 @@ def setup_auth_page(dialog, page):
     # datasets before showing the AOI page.
     dialog.btn_go_to_aoi = QPushButton(page)
     dialog.btn_go_to_aoi.hide()
-    dialog.btn_go_to_aoi.clicked.connect(dialog.show_aoi_page)
+    dialog.btn_go_to_aoi.clicked.connect(dialog.show_dem_page)
 
     # ── Download folder picker ────────────────────────────────────────────
     # Anchored toward the bottom of the page as a self-contained settings bar,
@@ -259,9 +259,7 @@ def setup_auth_page(dialog, page):
     folder_lay.setSpacing(8)
 
     folder_lbl = QLabel(_tr("Download folder"))
-    folder_lbl.setStyleSheet(
-        "color: #616161; font-size: 11px; font-weight: bold;"
-    )
+    folder_lbl.setStyleSheet("color: #616161; font-size: 11px; font-weight: bold;")
     folder_lay.addWidget(folder_lbl)
 
     # Read-only path field; stretches to fill so long paths stay visible.

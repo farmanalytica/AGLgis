@@ -8,7 +8,15 @@ in ``aglgis_dialog.py`` so the dialog can keep header and active state in sync.
 
 import os
 
-from qgis.PyQt.QtCore import QCoreApplication, QEasingCurve, QRectF, Qt, QSize, QVariantAnimation, pyqtSignal
+from qgis.PyQt.QtCore import (
+    QCoreApplication,
+    QEasingCurve,
+    QRectF,
+    Qt,
+    QSize,
+    QVariantAnimation,
+    pyqtSignal,
+)
 from qgis.PyQt.QtCore import QPointF
 from qgis.PyQt.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap
 from qgis.PyQt.QtWidgets import (
@@ -69,12 +77,12 @@ class Sidebar(QFrame):
     Signals:
         auth_requested: emitted when the user clicks Auth.
         radar_requested: emitted when the user clicks Radar (SAR) data.
-        download_requested: emitted when the user clicks Download DEM.
+        dem_requested: emitted when the user clicks Download DEM.
     """
 
     auth_requested = pyqtSignal()
     radar_requested = pyqtSignal()
-    download_requested = pyqtSignal()
+    dem_requested = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -131,7 +139,7 @@ class Sidebar(QFrame):
         lay.addWidget(self.btn_radar)
 
         self.btn_download = self._make_button(_tr("Download DEM"), "download")
-        self.btn_download.clicked.connect(self.download_requested.emit)
+        self.btn_download.clicked.connect(self.dem_requested.emit)
         lay.addWidget(self.btn_download)
 
         self._group = QButtonGroup(self)
@@ -243,7 +251,9 @@ class Sidebar(QFrame):
         self._sync_brand_visibility()
 
         self.setStyleSheet(self._stylesheet(expanded))
-        self._animate_width(SIDEBAR_EXPANDED_WIDTH if expanded else SIDEBAR_COLLAPSED_WIDTH)
+        self._animate_width(
+            SIDEBAR_EXPANDED_WIDTH if expanded else SIDEBAR_COLLAPSED_WIDTH
+        )
 
     def _sync_brand_visibility(self) -> None:
         self.brand_block.setVisible(True)
@@ -311,9 +321,15 @@ class Sidebar(QFrame):
             icon.addPixmap(key_pix, QIcon.Mode.Active, QIcon.State.Off)
             return icon
 
-        icon.addPixmap(self._draw_icon(kind, "#E9F4ED"), QIcon.Mode.Normal, QIcon.State.Off)
-        icon.addPixmap(self._draw_icon(kind, "#FFFFFF"), QIcon.Mode.Normal, QIcon.State.On)
-        icon.addPixmap(self._draw_icon(kind, "#FFFFFF"), QIcon.Mode.Active, QIcon.State.Off)
+        icon.addPixmap(
+            self._draw_icon(kind, "#E9F4ED"), QIcon.Mode.Normal, QIcon.State.Off
+        )
+        icon.addPixmap(
+            self._draw_icon(kind, "#FFFFFF"), QIcon.Mode.Normal, QIcon.State.On
+        )
+        icon.addPixmap(
+            self._draw_icon(kind, "#FFFFFF"), QIcon.Mode.Active, QIcon.State.Off
+        )
         return icon
 
     def _draw_key_emoji_icon(self) -> QPixmap:

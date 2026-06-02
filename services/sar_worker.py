@@ -8,18 +8,15 @@ The AOI is extracted from the QGIS layer on the main thread (layers are not
 thread-safe) and passed in.
 """
 
-import tempfile
 from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
 
 from .sar_service import SARService
-from .sar_renderer import SARRenderer
 
 
 class SARWorker(QThread):
     """Runs the GEE collection build and spectral-index time-series fetch."""
 
-    # (collection with index band, data list of dicts, index_name)
-    finished_ok = pyqtSignal(object, object, str)
+    finished = pyqtSignal(object, object, str)
     failed = pyqtSignal(str)
 
     def __init__(self, aoi, params):
@@ -29,40 +26,47 @@ class SARWorker(QThread):
 
     def run(self):
         try:
-            p = self._params
+            parameters = self._params
             collection = SARService.get_collection(
                 aoi=self._aoi,
-                start_date=p["start_date"],
-                end_date=p["end_date"],
-                polarization=p["polarization"],
-                output_format=p["output_format"],
-                apply_border_noise_correction=p["border_noise"],
-                apply_terrain_flattening=p["terrain"],
-                apply_speckle_filtering=p["speckle"],
+                start_date=parameters["start_date"],
+                end_date=parameters["end_date"],
+                polarization=parameters["polarization"],
+                output_format=parameters["output_format"],
+                apply_border_noise_correction=parameters["border_noise"],
+                apply_terrain_flattening=parameters["terrain"],
+                apply_speckle_filtering=parameters["speckle"],
                 ascending=False,
             )
-            index_name = p.get("index", "VV/VH Ratio")
+            index_name = parameters.get("index", "VV/VH Ratio")
             meta = SARService.INDEX_REGISTRY[index_name]
 
-            # Add all three spectral indices to the collection for download
             collection = collection.map(SARService.add_vvvh_ratio_band)
             collection = collection.map(SARService.add_rvi_band)
             collection = collection.map(SARService.add_dprvi_band)
 
             data = SARService.get_index_timeseries(collection, self._aoi, meta["band"])
-            self.finished_ok.emit(collection, data, index_name)
-        except Exception as e:  # noqa: BLE001 - surface any failure to the UI
+            self.finished.emit(collection, data, index_name)
+        except Exception as e:
             self.failed.emit(str(e))
 
 
 class SARPreviewWorker(QThread):
     """Downloads a SAR image for preview or export off the UI thread."""
 
-    # (output_path, label)
-    finished_ok = pyqtSignal(str, str)
+    finished = pyqtSignal(str, str)
     failed = pyqtSignal(str)
 
-    def __init__(self, collection, aoi, selected_date, output_folder, label, index_band="VVVH_ratio", index_label="VV/VH Ratio"):
+    def __init__(
+        self,
+        collection,
+        aoi,
+        selected_date,
+        output_folder,
+        label,
+        index_band="VVVH_ratio",
+        index_label="VV/VH Ratio",
+    ):
         super().__init__()
         self._collection = collection
         self._aoi = aoi
@@ -74,7 +78,7 @@ class SARPreviewWorker(QThread):
 
     def run(self):
         try:
-            selected_image = SARService.get_image_for_date(
+            selected_image = SARService.get_dataset_image_for_date(
                 self._collection,
                 self._aoi,
                 self._selected_date,
@@ -86,18 +90,16 @@ class SARPreviewWorker(QThread):
                 self._selected_date,
                 output_folder=self._output_folder,
                 index_band=self._index_band,
-                index_label=self._index_label,
             )
-            self.finished_ok.emit(output_path, self._label)
-        except Exception as e:  # noqa: BLE001 - surface any failure to the UI
+            self.finished.emit(output_path, self._label)
+        except Exception as e:
             self.failed.emit(str(e))
 
 
 class SARCompositeWorker(QThread):
     """Builds and downloads a single-index composite image off the UI thread."""
 
-    # (output_path, label)
-    finished_ok = pyqtSignal(str, str)
+    finished = pyqtSignal(str, str)
     failed = pyqtSignal(str)
 
     def __init__(
@@ -140,8 +142,8 @@ class SARCompositeWorker(QThread):
                 self._index_label,
                 output_folder=self._output_folder,
             )
-            self.finished_ok.emit(output_path, self._label)
-        except Exception as e:  # noqa: BLE001 - surface any failure to the UI
+            self.finished.emit(output_path, self._label)
+        except Exception as e:
             self.failed.emit(str(e))
 
 
@@ -149,11 +151,19 @@ class SARBatchDownloadWorker(QThread):
     """Downloads multiple SAR images sequentially with progress tracking."""
 
     progress = pyqtSignal(int, int, str)  # (current, total, current_date)
-    finished_ok = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
+    finished = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
     failed = pyqtSignal(str)
     cancelled = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
 
-    def __init__(self, collection, aoi, dates, output_folder, index_band="VVVH_ratio", index_label="VV/VH Ratio"):
+    def __init__(
+        self,
+        collection,
+        aoi,
+        dates,
+        output_folder,
+        index_band="VVVH_ratio",
+        index_label="VV/VH Ratio",
+    ):
         super().__init__()
         self._collection = collection
         self._aoi = aoi
@@ -185,7 +195,7 @@ class SARBatchDownloadWorker(QThread):
             self.progress.emit(idx, total, str(date))
 
             try:
-                selected_image = SARService.get_image_for_date(
+                selected_image = SARService.get_dataset_image_for_date(
                     self._collection,
                     self._aoi,
                     date,
@@ -197,11 +207,10 @@ class SARBatchDownloadWorker(QThread):
                     date,
                     output_folder=self._output_folder,
                     index_band=self._index_band,
-                    index_label=self._index_label,
                 )
                 downloaded_paths.append(output_path)
                 successful += 1
-            except Exception as e:
+            except Exception:
                 pass
 
-        self.finished_ok.emit(successful, total, downloaded_paths)
+        self.finished.emit(successful, total, downloaded_paths)

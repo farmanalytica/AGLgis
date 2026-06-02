@@ -2,19 +2,21 @@
 """
 UI layer for the AGLgis QGIS plugin.
 
-Defines ``AGLgisDialog``, a two-page modal dialog that guides the user
+Defines ``AGLgisDialog``, a three-page modal dialog that guides the user
 through the full plugin workflow:
 
-1. **Authentication page** (``auth_page``) — user supplies a Google Cloud
-   project ID and validates GEE access, or browses datasets without
+1. **Authentication page** — user supplies a Google Cloud
+   project ID and validates GEE access, chooses a download
+   folder or browses datasets without
    authenticating.
-2. **AOI page** (``aoi_page``) — user selects a polygon layer as the Area
-   of Interest, picks a DEM dataset, sets an AOI buffer, chooses a download
-   folder, and triggers the download.
+2. **SAR page** - user selects (or draw) a polygon layer as the Area
+   of Interest, picks the start and end date, the polarization, the output format,
+   the spectral index and other processing options. Generate or preview a SAR time series
+   and a synthetic image
+3. **DEM page** — user selects a polygon layer as the Area
+   of Interest, picks a DEM dataset, sets an AOI buffer and triggers the download.
 
-This module owns the dialog shell only.  Page widget construction lives in
-``view/auth.py`` and ``view/download_dem.py``, while signal connections are
-made externally by ``aglgis.py`` to keep this module free of business logic
+This module owns the dialog shell only. Keep this module free of business logic
 and the ``ee`` SDK.
 """
 
@@ -52,18 +54,6 @@ class AGLgisDialog(QDialog):
     """
     Main dialog window for the AGLgis plugin.
 
-    Presents a two-page ``QStackedWidget`` flow:
-
-    - ``auth_page`` — shown on first open; collects the GCP project ID and
-      validates Google Earth Engine credentials, or lets the user skip to the
-      AOI page to browse available datasets.
-    - ``aoi_page`` — shown after authentication; allows the user to select a
-      polygon AOI layer, browse DEM datasets, adjust the AOI buffer, choose a
-      download folder, and trigger the download.
-
-    Public widget attributes created by the page modules (consumed by
-    ``aglgis.py`` and ``dem_ctrl.py``):
-
     Auth page:
         project_id_input: GCP project ID field.
         btn_authenticate: Triggers GEE authentication.
@@ -90,7 +80,7 @@ class AGLgisDialog(QDialog):
         self._setup_ui()
 
     def _setup_ui(self):
-        """Build the root layout: fixed header, central stack, fixed footer."""
+        """Build the main_layout layout: fixed header, central stack, fixed footer."""
         self.setWindowTitle("AGLgis")
         self.setWindowFlags(
             Qt.WindowType.Window
@@ -101,107 +91,110 @@ class AGLgisDialog(QDialog):
             | Qt.WindowType.WindowCloseButtonHint
         )
         self.setWindowModality(Qt.WindowModality.NonModal)
-        # Resizable: the original 800x404 is both the opening size and the
-        # floor — the user can only grow the window. Pages scroll/expand and
-        # the SAR plot fills the extra space.
+
         self.setMinimumSize(800, 404)
         self.resize(800, 404)
         self.setSizeGripEnabled(True)
         self.setStyleSheet(STYLE_DIALOG)
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        # 1. Main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-        root.addWidget(self._build_header())
+        main_layout.addWidget(self._build_header())
 
-        # Body row: permanent sidebar + page stack.
-        body = QWidget()
-        body.setStyleSheet("background-color: #f5f5f5;")
-        body_lay = QHBoxLayout(body)
-        body_lay.setContentsMargins(0, 0, 0, 0)
-        body_lay.setSpacing(2)
+        # 2. Central Body Area
+        body_container = QWidget()
+        body_container.setStyleSheet("background-color: #f5f5f5;")
+        body_layout = QHBoxLayout(body_container)
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(2)
 
+        # Sidebar
         self.sidebar = Sidebar()
         self.sidebar.auth_requested.connect(self._nav_to_auth)
         self.sidebar.radar_requested.connect(self._nav_to_radar)
-        self.sidebar.download_requested.connect(self._nav_to_download)
-        body_lay.addWidget(self.sidebar)
+        self.sidebar.dem_requested.connect(self._nav_to_dem)
+        body_layout.addWidget(self.sidebar)
 
-        # Right column: stack + footer stacked vertically, outside the sidebar.
-        right_col = QWidget()
-        right_col.setStyleSheet("background-color: #f5f5f5;")
-        right_lay = QVBoxLayout(right_col)
-        right_lay.setContentsMargins(0, 0, 0, 0)
-        right_lay.setSpacing(0)
+        # Main Content Column (Stack + Footer)
+        content_container = QWidget()
+        content_container.setStyleSheet("background-color: #f5f5f5;")
+        content_layout = QVBoxLayout(content_container)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
 
         self.stack = QStackedWidget()
         self.stack.setFrameShape(QFrame.Shape.NoFrame)
         self.stack.setLineWidth(0)
         self.stack.setStyleSheet("background-color: #f5f5f5;")
-        right_lay.addWidget(self.stack, 1)
+        content_layout.addWidget(self.stack, 1)
 
         self.footer = self._build_footer()
-        right_lay.addWidget(self.footer)
+        content_layout.addWidget(self.footer)
 
-        body_lay.addWidget(right_col, 1)
+        body_layout.addWidget(content_container, 1)
 
+        # 4. Pages Initialization
         self.loading_page = self._build_loading_page()
         self.auth_page = QWidget()
         self.radar_page = QWidget()
-        self.aoi_page = QWidget()
+        self.dem_page = QWidget()
 
         setup_auth_page(self, self.auth_page)
         setup_radar_page(self, self.radar_page)
-        setup_download_dem_page(self, self.aoi_page)
+        setup_download_dem_page(self, self.dem_page)
 
+        # Add to stack
         self.stack.addWidget(self.loading_page)
         self.stack.addWidget(self.auth_page)
         self.stack.addWidget(self.radar_page)
-        self.stack.addWidget(self.aoi_page)
+        self.stack.addWidget(self.dem_page)
         self.stack.currentChanged.connect(self._sync_page_state)
 
+        # Initial state
         self.stack.setCurrentWidget(self.auth_page)
         self._sync_page_state(self.stack.currentIndex())
 
-        root.addWidget(body, 1)
+        main_layout.addWidget(body_container, 1)
 
     # -----------------------------------------------------------------------
     # LOADING PAGE
     # -----------------------------------------------------------------------
 
     def _build_loading_page(self):
-        page = QWidget()
-        lay = QVBoxLayout(page)
-        lay.setContentsMargins(48, 0, 48, 24)
-        lay.setSpacing(12)
-        lay.addStretch()
+        loading_page = QWidget()
+        loading_layout = QVBoxLayout(loading_page)
+        loading_layout.setContentsMargins(48, 0, 48, 24)
+        loading_layout.setSpacing(12)
+        loading_layout.addStretch()
 
         title = QLabel(_tr("Setting up AGLgis…"))
-        title.setStyleSheet(
-            "color: #1b6b39; font-size: 14px; font-weight: bold;"
-        )
+        title.setStyleSheet("color: #1b6b39; font-size: 14px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(title)
+        loading_layout.addWidget(title)
 
-        sub = QLabel(_tr("Downloading dependencies. This only happens on first use."))
-        sub.setStyleSheet("color: #616161; font-size: 10px;")
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(sub)
+        subtitle = QLabel(
+            _tr("Downloading dependencies. This only happens on first use.")
+        )
+        subtitle.setStyleSheet("color: #616161; font-size: 10px;")
+        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        loading_layout.addWidget(subtitle)
 
-        bar = QProgressBar()
-        bar.setRange(0, 0)
-        bar.setFixedHeight(6)
-        bar.setTextVisible(False)
-        bar.setStyleSheet(
+        progress_bar = QProgressBar()
+        progress_bar.setRange(0, 0)
+        progress_bar.setFixedHeight(6)
+        progress_bar.setTextVisible(False)
+        progress_bar.setStyleSheet(
             "QProgressBar { border: none; border-radius: 3px; background: #e0e0e0; }"
             "QProgressBar::chunk { background: #1b6b39; border-radius: 3px; }"
         )
-        lay.addWidget(bar)
-        self._loading_bar = bar
+        loading_layout.addWidget(progress_bar)
+        self._loading_bar = progress_bar
 
-        lay.addStretch()
-        return page
+        loading_layout.addStretch()
+        return loading_page
 
     # -----------------------------------------------------------------------
     # HEADER
@@ -211,10 +204,10 @@ class AGLgisDialog(QDialog):
         """
         Build and return the dialog header widget.
 
-        The header is a fixed-height (38 px) white bar containing:
+        The header is a fixed-height white bar containing:
         - The "AGLgis" brand label (green).
         - A vertical separator.
-        - A dynamic page-title label (``_header_title``) updated by the
+        - A dynamic page-title label updated by the
           controller when the active page changes.
         - A "?" help button that opens the documentation URL in the browser.
         """
@@ -222,30 +215,30 @@ class AGLgisDialog(QDialog):
         header.setFixedHeight(38)
         header.setStyleSheet("background-color: #ffffff;")
 
-        lay = QHBoxLayout(header)
-        lay.setContentsMargins(28, 0, 20, 0)
-        lay.setSpacing(0)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(28, 0, 20, 0)
+        header_layout.setSpacing(0)
 
-        # Brand name — always green, always visible.
+        # Brand name
         brand = QLabel("AGLgis")
         brand.setStyleSheet(
             "color: #1b6b39; font-size: 13px; font-weight: bold; letter-spacing: 0.5px;"
         )
-        lay.addWidget(brand)
+        header_layout.addWidget(brand)
 
-        # Thin vertical divider between brand and page title.
-        sep_lbl = QLabel("  |")
-        sep_lbl.setStyleSheet("color: #d0d0d0; font-size: 16px;")
-        lay.addWidget(sep_lbl)
+        # Divider between brand and page title
+        separator = QLabel("  |")
+        separator.setStyleSheet("color: #d0d0d0; font-size: 16px;")
+        header_layout.addWidget(separator)
 
-        # Dynamic title updated by show_auth_page / show_aoi_page.
+        # Dynamic title updated by opened current page
         self._header_title = QLabel(_tr("GEE Configuration"))
         self._header_title.setStyleSheet(
             "color: #616161; font-size: 13px; margin-left: 4px;"
         )
-        lay.addWidget(self._header_title)
+        header_layout.addWidget(self._header_title)
 
-        lay.addStretch()
+        header_layout.addStretch()
 
         # Help button — opens the plugin documentation in the default browser.
         self.browser = QPushButton("?")
@@ -257,7 +250,7 @@ class AGLgisDialog(QDialog):
                 QUrl("https://farmanalytica.github.io/AGLgis/")
             )
         )
-        lay.addWidget(self.browser)
+        header_layout.addWidget(self.browser)
 
         return header
 
@@ -269,11 +262,9 @@ class AGLgisDialog(QDialog):
         """
         Build and return the dialog footer widget.
 
-        The footer is a fixed-height (52 px) white bar containing the FARM
-        Analytica logo (loaded from ``assets/farm_analytica_logo.svg``) and a
-        short attribution text with a clickable link to the FARM Analytica
-        website.  If the SVG file is not found, the logo falls back to a
-        plain-text label.
+        The footer is a fixed-height white bar containing the FARM
+        Analytica logo and a short attribution text with a clickable
+        link to the FARM Analytica website
         """
         footer = QWidget()
         footer.setMinimumHeight(36)
@@ -282,9 +273,9 @@ class AGLgisDialog(QDialog):
             "QLabel { border: none; background: transparent; }"
         )
 
-        lay = QHBoxLayout(footer)
-        lay.setContentsMargins(28, 4, 28, 4)
-        lay.setSpacing(8)
+        footer_layout = QHBoxLayout(footer)
+        footer_layout.setContentsMargins(28, 4, 28, 4)
+        footer_layout.setSpacing(8)
 
         # FARM Analytica logo — falls back to plain text if SVG is missing.
         farm_icon = QLabel()
@@ -309,7 +300,7 @@ class AGLgisDialog(QDialog):
         farm_icon.setAlignment(
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft
         )
-        lay.addWidget(farm_icon)
+        footer_layout.addWidget(farm_icon)
 
         # Attribution copy with an external link to the FARM Analytica website.
         farm_text = QLabel()
@@ -326,7 +317,7 @@ class AGLgisDialog(QDialog):
         farm_text.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
         )
-        lay.addWidget(farm_text)
+        footer_layout.addWidget(farm_text)
 
         return footer
 
@@ -338,9 +329,9 @@ class AGLgisDialog(QDialog):
         """Switch the stacked widget to the loading/download page."""
         self.stack.setCurrentWidget(self.loading_page)
 
-    def show_aoi_page(self):
+    def show_dem_page(self):
         """Switch the stacked widget to the AOI selection page."""
-        self.stack.setCurrentWidget(self.aoi_page)
+        self.stack.setCurrentWidget(self.dem_page)
 
     def show_auth_page(self):
         """Switch the stacked widget to the authentication page."""
@@ -358,12 +349,12 @@ class AGLgisDialog(QDialog):
         """Sidebar radar button — always navigates to the radar page."""
         self.show_radar_page()
 
-    def _nav_to_download(self):
+    def _nav_to_dem(self):
         """Sidebar download button follows the existing dataset-loading path."""
         if hasattr(self, "btn_go_to_aoi"):
             self.btn_go_to_aoi.click()
             return
-        self.show_aoi_page()
+        self.show_dem_page()
 
     def _sync_page_state(self, index):
         """Keep header and sidebar state aligned with the current stack page."""
@@ -387,7 +378,7 @@ class AGLgisDialog(QDialog):
             self.footer.setVisible(False)
             return
 
-        if current is self.aoi_page:
+        if current is self.dem_page:
             self._header_title.setText(_tr("Inputs & Parameters"))
             self.sidebar.set_active_page("download")
             self.footer.setVisible(False)
@@ -447,8 +438,7 @@ class AGLgisDialog(QDialog):
         self._auth_state = state
 
         # When already signed in, the primary button just continues to the
-        # workflow — no point re-running authentication. Don't fight the busy
-        # state, which owns the button label while a sign-in is in flight.
+        # workflow — no point re-running authentication
         if not getattr(self, "_auth_busy", False):
             if state == "authenticated":
                 self.btn_authenticate.setText(_tr("Continue  →"))
@@ -477,9 +467,9 @@ class AGLgisDialog(QDialog):
         """Show a non-blocking status line; if ``url`` is given, append a
         link that reopens the browser sign-in page."""
         if url:
-            text += (
-                '<br><a href="%s" style="color:#1b6b39;">%s</a>'
-                % (url, _tr("Reopen the sign-in page"))
+            text += '<br><a href="%s" style="color:#1b6b39;">%s</a>' % (
+                url,
+                _tr("Reopen the sign-in page"),
             )
         self.auth_status_lbl.setText(text)
         self.auth_status_lbl.show()
@@ -487,10 +477,6 @@ class AGLgisDialog(QDialog):
     def pop_message(self, message, kind):
         """
         Display a modal message box to the user.
-
-        Args:
-            message (str): Text content to display.
-            kind (str): ``"info"`` or ``"warning"``.
         """
         QApplication.restoreOverrideCursor()
 

@@ -134,7 +134,7 @@ class SARCtrl:
 
         # Extract the AOI on the UI thread — QGIS layers are not thread-safe.
         try:
-            aoi, _bbox = AOIService.get_aoi_from_layer(
+            aoi, _bbox = AOIService.get_ee_feature_colection_from_layer(
                 layer, use_selected_features=False
             )
         except Exception as e:
@@ -195,9 +195,7 @@ class SARCtrl:
         if not data:
             self.dlg.sar_web_view.setHtml("")
             self.dlg.sar_set_tab(1)
-            self.dlg.pop_message(
-                "No SAR images found for this date range.", "warning"
-            )
+            self.dlg.pop_message("No SAR images found for this date range.", "warning")
             return
 
         self.collection = collection
@@ -230,7 +228,8 @@ class SARCtrl:
         SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
         if self.interface:
             self.interface.messageBar().pushMessage(
-                "AGLgis", f"SAR preview '{output_path.split('/')[-1]}' loaded into QGIS."
+                "AGLgis",
+                f"SAR preview '{output_path.split('/')[-1]}' loaded into QGIS.",
             )
 
     def _on_download_preview_done(self, output_path, label):
@@ -421,7 +420,10 @@ class SARCtrl:
 
         meta = SARService.INDEX_REGISTRY[self._current_index]
         self._batch_worker = SARBatchDownloadWorker(
-            self.collection, self.aoi, dates, output_folder,
+            self.collection,
+            self.aoi,
+            dates,
+            output_folder,
             index_band=meta["band"],
             index_label=meta["band_label"],
         )
@@ -429,7 +431,9 @@ class SARCtrl:
         self._batch_worker.finished_ok.connect(self._on_batch_done)
         self._batch_worker.failed.connect(self._on_batch_failed)
         self._batch_worker.cancelled.connect(
-            lambda success, total, paths: self._on_batch_cancelled(success, total, paths)
+            lambda success, total, paths: self._on_batch_cancelled(
+                success, total, paths
+            )
         )
         self._batch_dialog.canceled.connect(self._batch_worker.request_cancel)
         self._batch_worker.start()
@@ -517,7 +521,9 @@ class SARCtrl:
         if self._active_dates is not None:
             df = df[df["dates"].isin(self._active_dates)]
         meta = SARService.INDEX_REGISTRY[self._current_index]
-        html = render_chart_html(df, hide_toolbar=False, title=meta["title"], ylabel=meta["ylabel"])
+        html = render_chart_html(
+            df, hide_toolbar=False, title=meta["title"], ylabel=meta["ylabel"]
+        )
         with tempfile.NamedTemporaryFile(
             suffix=".html", delete=False, mode="w", encoding="utf-8"
         ) as f:

@@ -64,10 +64,12 @@ class AuthCtrl:
         worker.finished.connect(lambda w=worker: self._status_finished(w))
         worker.start()
 
-        QTimer.singleShot(self._STATUS_TIMEOUT_MS, lambda g=gen: self._status_timeout(g))
+        QTimer.singleShot(
+            self._STATUS_TIMEOUT_MS, lambda g=gen: self._status_timeout(g)
+        )
 
     def _on_status_ready(self, gen, state):
-        # A verified sign-in is ground truth (verify_silent set is_authenticated),
+        # A verified sign-in is ground truth (check_silent_auth set is_authenticated),
         # so honour it even if the watchdog already fired and bumped the gen —
         # otherwise a slow first probe leaves the pill stuck on "stored" despite
         # being signed in.
@@ -90,7 +92,9 @@ class AuthCtrl:
         # actionable fallback the user can click to retry. A late "authenticated"
         # is still honoured by _on_status_ready above.
         self._status_gen += 1
-        self._status_worker = None  # allow a fresh re-check; hung thread lives in the set
+        self._status_worker = (
+            None  # allow a fresh re-check; hung thread lives in the set
+        )
         state = "stored" if self.gee_service.has_stored_credentials() else "none"
         self.dlg.set_auth_state(state)
 
@@ -137,9 +141,7 @@ class AuthCtrl:
         self._worker.start()
 
     def _on_browser_opened(self, url):
-        self.dlg.set_auth_status(
-            _tr("Waiting for sign-in in your browser…"), url
-        )
+        self.dlg.set_auth_status(_tr("Waiting for sign-in in your browser…"), url)
 
     def _on_auth_finished(self, success, message):
         self.dlg.set_auth_busy(False)
