@@ -6,8 +6,8 @@ stays responsive during GEE dataset-availability checks and DEM downloads.
 
 from qgis.PyQt.QtCore import QThread, pyqtSignal
 
-from .dem_service import DEMService
-from .dem_registry import DEMRegistry
+from ..services.dem_service import DEMService
+from ..services.dem_registry import DEMRegistry
 
 
 class DatasetAvailabilityWorker(QThread):

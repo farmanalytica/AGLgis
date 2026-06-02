@@ -9,7 +9,7 @@ sign-in can be aborted instead of freezing the plugin.
 
 from qgis.PyQt.QtCore import QCoreApplication, QThread, pyqtSignal
 
-from .gee_service import AuthCancelled, AuthTimeout
+from ..services.gee_service import AuthCancelled, AuthTimeout
 
 CANCELLED = "__cancelled__"
 

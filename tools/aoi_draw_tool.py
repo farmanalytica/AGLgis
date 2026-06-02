@@ -41,7 +41,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
 )
 
-from .settings_manager import SettingsManager
+from ..managers.settings_manager import SettingsManager
 from ..view.styles import STYLE_BTN_SECONDARY, STYLE_BTN_DRAW_ACTIVE
 
 

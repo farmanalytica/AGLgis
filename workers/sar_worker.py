@@ -10,7 +10,7 @@ thread-safe) and passed in.
 
 from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
 
-from .sar_service import SARService
+from ..services.sar_service import SARService
 
 
 class SARWorker(QThread):

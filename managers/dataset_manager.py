@@ -17,7 +17,7 @@ except AttributeError:
 
     WAIT_CURSOR = Qt.WaitCursor
 
-from .dem_registry import DEMRegistry
+from ..services.dem_registry import DEMRegistry
 
 
 class DatasetManager:
