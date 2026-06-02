@@ -100,10 +100,10 @@ Internal conventions:
 - `_setup_ui()` — builds header, body row (sidebar + stack), and footer; calls `setup_auth_page` and `setup_download_dem_page`
 - `_build_header()` — white bar with brand label, dynamic page-title label (`_header_title`), and help button
 - `_build_footer()` — FARM Analytica logo and attribution text
-- `show_loading_page()` / `show_auth_page()` / `show_radar_page()` / `show_aoi_page()` — switch the active stack page
+- `show_loading_page()` / `show_auth_page()` / `show_radar_page()` / `show_dem_page()` — switch the active stack page
 - `_sync_page_state(index)` — connected to `stack.currentChanged`; updates `_header_title` and calls `sidebar.set_active_page()` to keep navigation state in sync regardless of what triggers the page switch
 - Four pages managed by a `QStackedWidget`: `loading_page` (first-run dependency download), `auth_page` (shown once extlibs are ready), `radar_page` (SAR data workflow), `aoi_page` (shown after authentication or via the skip shortcut)
-- Permanent `Sidebar` instance lives in the body row; its `auth_requested`, `radar_requested`, and `download_requested` signals are connected to `_nav_to_auth`, `_nav_to_radar`, and `_nav_to_download`
+- Permanent `Sidebar` instance lives in the body row; its `auth_requested`, `radar_requested`, and `dem_requested` signals are connected to `_nav_to_auth`, `_nav_to_radar`, and `_nav_to_download`
 
 ### `view/` — Page Modules
 
@@ -157,7 +157,7 @@ Defines `Sidebar(QFrame)` and `SidebarNavButton(QPushButton)`. The sidebar is a 
 |---|---|
 | `btn_auth` | Navigates to the authentication page; emits `auth_requested` |
 | `btn_radar` | Navigates to the SAR data page; emits `radar_requested` |
-| `btn_download` | Navigates to the AOI/download page; emits `download_requested` |
+| `btn_download` | Navigates to the AOI/download page; emits `dem_requested` |
 | `set_active_page(page)` | Highlights the button matching `'auth'`, `'radar'`, or `'download'`; called by `_sync_page_state` in the dialog |
 
 #### `view/styles.py`
@@ -193,7 +193,7 @@ Orchestrates DEM operations and coordinates between services. Owns the current A
 | `load_available_datasets` | `()` | Queries `DEMRegistry` directly; lists all datasets when unauthenticated, otherwise filters by AOI coverage |
 | `handle_dem_service` | `(interface)` | Downloads the selected DEM (with optional buffer) and delegates to `DEMRenderer` to load and style it in QGIS |
 | `on_dataset_changed` | `()` | Delegates to `DatasetManager` to update the dataset info panel |
-| `handle_hybrid_layer` | `()` | Loads the Google Hybrid basemap via `map_utils.hybrid_function()` and reports success via the message bar |
+| `handle_hybrid_layer` | `()` | Loads the Google Hybrid basemap via `map_utils.add_google_hybrid_layer()` and reports success via the message bar |
 
 #### `controllers/sar_ctrl.py` — `SARCtrl`
 Orchestrates SAR operations: processing, preview, filtering, export, and batch download. Manages time-series state and filter persistence.
@@ -224,8 +224,8 @@ Contains `AOIService`. Extracts geometry from a QGIS layer and converts it to an
 
 | Method | Signature | Purpose |
 |---|---|---|
-| `get_aoi_from_layer` | `(layer: QgsVectorLayer)` | Returns `(ee.FeatureCollection, bbox)` from a layer object; bbox is `(min_x, min_y, max_x, max_y)` in EPSG:4326, computed locally from the QGIS geometry |
-| `get_aoi_from_layer_id` | `(layer_id: str)` | Same, but looks up the layer by ID from the current project |
+| `get_ee_feature_colection_from_layer` | `(layer: QgsVectorLayer)` | Returns `(ee.FeatureCollection, bbox)` from a layer object; bbox is `(min_x, min_y, max_x, max_y)` in EPSG:4326, computed locally from the QGIS geometry |
+| `get_ee_feature_colection_from_layer_id` | `(layer_id: str)` | Same, but looks up the layer by ID from the current project |
 
 ### `services/dem_service.py` — DEM Service
 Contains `DEMService`. Downloads a DEM GeoTIFF from Google Earth Engine for a given AOI and dataset. Output files are named `AGLgis_<dataset>.tif`.
@@ -241,8 +241,8 @@ Contains `DEMDataset` and `DEMRegistry`. Loads dataset definitions from `assets/
 |---|---|---|
 | `list_datasets` | `()` | Returns all registered `DEMDataset` objects |
 | `get_dataset` | `(name: str)` | Returns the `DEMDataset` for the given name |
-| `get_image` | `(name: str)` | Returns the `ee.Image` for the given dataset |
-| `is_available` | `(name: str, region, aoi_bbox=None)` | Checks whether the dataset has EE coverage over the given geometry; pass pre-computed `aoi_bbox` to skip the remote GEE bounds call |
+| `get_dataset_image` | `(name: str)` | Returns the `ee.Image` for the given dataset |
+| `has_coverage` | `(name: str, region, aoi_bbox=None)` | Checks whether the dataset has EE coverage over the given geometry; pass pre-computed `aoi_bbox` to skip the remote GEE bounds call |
 
 ### `services/raster_renderer_utils.py` — Common Raster Rendering Utilities
 Contains `RasterRendererUtils`. Provides reusable methods for pseudocolor rendering shared by DEM and SAR modules.
@@ -286,7 +286,7 @@ Contains `SARService`. Manages Sentinel-1 SAR data processing with spectral inde
 | `add_rvi_band` | `(image)` | Computes Radar Vegetation Index (4 × VH / (VV + VH)) |
 | `add_dprvi_band` | `(image)` | Computes Dual-pol SAR Vegetation Index (VH / (VH + VV)) |
 | `get_index_timeseries` | `(collection, aoi, band_name)` | Computes mean values over AOI for the specified spectral index |
-| `get_image_for_date` | `(collection, aoi, date, index_band)` | Retrieves a single image for a given date with all 5 bands |
+| `get_dataset_image_for_date` | `(collection, aoi, date, index_band)` | Retrieves a single image for a given date with all 5 bands |
 | `download_image` | `(image, aoi, date, output_folder, ...)` | Downloads image as GeoTIFF with embedded band descriptions |
 
 ### `services/sar_worker.py` — SAR Background Workers
