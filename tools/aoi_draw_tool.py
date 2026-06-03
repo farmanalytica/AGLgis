@@ -4,12 +4,11 @@ Interactive AOI drawing for AGLgis.
 
 Provides a rectangle map tool plus a single ``start_draw_aoi`` entry point
 shared by the DEM and SAR pages, so the draw-on-canvas behaviour is defined
-once.  Dragging on the canvas creates a WGS84 in-memory polygon layer that is
+once. Dragging on the canvas creates a WGS84 in-memory polygon layer that is
 added to the project and selected in the page's AOI combo.
 
 The drawn box is written immediately as an ESRI Shapefile into the currently
-selected download folder (``SettingsManager.load_download_folder()``, falling
-back to the system temp dir) and that on-disk layer is loaded into the project.
+selected download folder and that on-disk layer is loaded into the project.
 
 UX over a plain emit-point tool:
   * live translucent preview while dragging,
@@ -22,8 +21,9 @@ UX over a plain emit-point tool:
 import os
 import tempfile
 
-from qgis.PyQt.QtCore import Qt, QTimer, QCoreApplication
+from qgis.PyQt.QtCore import Qt, QTimer, QCoreApplication, QVariant
 from qgis.PyQt.QtGui import QColor
+from qgis.gui import QgsMapTool, QgsRubberBand
 from qgis.core import (
     Qgis,
     QgsProject,
@@ -40,10 +40,8 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
 )
-from qgis.PyQt.QtCore import QVariant
-from qgis.gui import QgsMapTool, QgsRubberBand
 
-from .settings_manager import SettingsManager
+from ..managers.settings_manager import SettingsManager
 from ..view.styles import STYLE_BTN_SECONDARY, STYLE_BTN_DRAW_ACTIVE
 
 
@@ -66,10 +64,7 @@ def _target_folder():
 
 def _unique_shp_path(folder, base="drawn_aoi"):
     """Return a shapefile path inside a fresh per-draw subfolder, plus its name.
-
-    Each draw gets its own ``<folder>/<base>[_n]/`` directory so the shapefile
-    sidecar files (.shp/.shx/.dbf/.prj) stay grouped and never collide with
-    earlier draws.
+    ``<folder>/<base>[_n]/``
     """
     name = base
     subdir = os.path.join(folder, name)
@@ -127,7 +122,7 @@ def create_aoi_shapefile(geom_wgs84):
         del writer
         return None
     writer.addFeature(feature)
-    del writer  # flush/close the file
+    del writer
 
     layer = QgsVectorLayer(path, name, "ogr")
     if not layer.isValid():
@@ -201,12 +196,12 @@ class RectangleAoiTool(QgsMapTool):
         return point
 
     def _draw_band(self, end):
-        rect = QgsRectangle(self._start, end)
-        self._band.setToGeometry(QgsGeometry.fromRect(rect), None)
+        rectangle = QgsRectangle(self._start, end)
+        self._band.setToGeometry(QgsGeometry.fromRect(rectangle), None)
         self._band.show()
 
-    def _emit_layer(self, rect_proj):
-        geom = QgsGeometry.fromRect(rect_proj)
+    def _emit_layer(self, rectangle_project):
+        geom = QgsGeometry.fromRect(rectangle_project)
         project_crs = self.canvas.mapSettings().destinationCrs()
         wgs84 = QgsCoordinateReferenceSystem(_WGS84)
         if project_crs != wgs84:
@@ -229,33 +224,22 @@ class RectangleAoiTool(QgsMapTool):
 
 
 def start_draw_aoi(interface, target_combo, button=None):
-    """
-    Begin interactive rectangle-AOI drawing.
-
-    On completion the drawn box is written as a shapefile into the selected
-    download folder, loaded, and selected in ``target_combo`` (a
-    QgsMapLayerComboBox).  While drawing, a persistent message-bar banner is
-    shown and ``button`` (the page's Draw button) is given an "armed" amber
-    style; both are cleared when the tool finishes.  Returns the active tool;
-    the caller MUST keep a reference so it is not garbage-collected.
-    """
+    """Begin interactive rectangle-AOI drawing"""
     canvas = interface.mapCanvas()
-    bar = interface.messageBar()
+    message_bar = interface.messageBar()
 
-    # Persistent "draw mode" banner — stays until the tool finishes, unlike a
-    # transient pushMessage, so the active mode is unmistakable.
-    banner = bar.createMessage(
+    banner = message_bar.createMessage(
         _tr("Draw AOI mode"),
         _tr("Drag on the map to draw a box. Hold Shift for a square, Esc to cancel."),
     )
-    bar.pushWidget(banner, Qgis.Info)
+    message_bar.pushWidget(banner, Qgis.Info)
 
     if button is not None:
         button.setStyleSheet(STYLE_BTN_DRAW_ACTIVE)
 
     def on_created(layer):
         if layer is None:
-            bar.pushMessage(
+            message_bar.pushMessage(
                 "AGLgis",
                 _tr("Failed to save AOI shapefile to the download folder."),
                 level=Qgis.Warning,
@@ -263,18 +247,16 @@ def start_draw_aoi(interface, target_combo, button=None):
             return
         if target_combo is not None:
             target_combo.setLayer(layer)
-        bar.pushMessage(
+        message_bar.pushMessage(
             "AGLgis",
             _tr("AOI saved to '{}' and selected.").format(layer.source()),
             level=Qgis.Success,
         )
 
-    # Tool active before drawing (typically pan), so we can hand control back
-    # to it when done — unsetMapTool alone would leave the canvas with no tool.
     previous_tool = canvas.mapTool()
 
     def on_finished():
-        bar.popWidget(banner)
+        message_bar.popWidget(banner)
         if button is not None:
             button.setStyleSheet(STYLE_BTN_SECONDARY)
         if previous_tool is not None and previous_tool is not tool:

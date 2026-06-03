@@ -1,28 +1,25 @@
+import os
+import tempfile
+import pandas as pd
+from datetime import datetime
+
+from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
+from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtWidgets import QFileDialog, QProgressDialog
+from qgis.core import QgsProject, QgsCoordinateTransform
+
 from ..services.aoi_service import AOIService
 from ..services.sar_service import SARService
-from ..services.sar_renderer import SARRenderer
-from ..services.sar_worker import (
+from ..renderers.sar_renderer import SARRenderer
+from ..workers.sar_worker import (
     SARWorker,
     SARPreviewWorker,
     SARBatchDownloadWorker,
     SARCompositeWorker,
 )
-from ..services.settings_manager import SettingsManager
-from ..services.aoi_draw_tool import start_draw_aoi
+from ..managers.settings_manager import SettingsManager
+from ..tools.aoi_draw_tool import start_draw_aoi
 from ..view.sar_plot import render_chart_html
-
-from qgis.PyQt.QtCore import Qt, QCoreApplication, QUrl
-from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import (
-    QApplication,
-    QFileDialog,
-    QProgressDialog,
-)
-from qgis.core import QgsProject, QgsCoordinateTransform
-import os
-import tempfile
-import pandas as pd
-from datetime import datetime
 
 try:
     WAIT_CURSOR = Qt.CursorShape.WaitCursor
@@ -43,27 +40,45 @@ border-top-color:#1b6b39;border-radius:50%;animation:spin 0.9s linear infinite}
 </style></head><body><div class="box"><div class="spinner"></div>
 <div>Fetching SAR time series…</div></div></body></html>"""
 
+_CANVAS_SCALE_FACTOR = 1.5
+
 
 class SARCtrl:
     def __init__(self, dialog, interface=None, gee_service=None):
-        self.dlg = dialog
+        self.dialog = dialog
         self.interface = interface
         self.gee_service = gee_service
+
         self.collection = None
         self.aoi = None
         self.dataframe = None
-        self._worker = None
-        self._preview_worker = None
+
+        self._sar_worker: SARWorker | None = None
+        self._preview_worker: SARPreviewWorker | None = None
+        self._batch_worker: SARBatchDownloadWorker | None = None
+        self._composite_worker: SARCompositeWorker | None = None
+
         self._active_dates = None
         self._filter_dialog = None
-        self._batch_worker = None
         self._batch_dialog = None
-        self._zoom_enabled = True
         self._current_index = "VV/VH Ratio"
-        self._composite_worker = None
+        self._plot_path: str | None = None
+        self._draw_tool = None
+
+        self._run_btn_text: str | None = None
+        self._preview_btn_texts: tuple | None = None
+        self._composite_btn_texts: tuple | None = None
+
+    def _release_worker(self, attr: str):
+
+        worker = getattr(self, attr, None)
+        setattr(self, attr, None)
+
+        if worker is not None:
+            worker.deleteLater()
 
     def _show_auth_required_message(self):
-        self.dlg.pop_message(
+        self.dialog.pop_message(
             _tr(
                 "Authentication is required to download SAR data. "
                 "Please go to the Auth page and validate your Google Cloud project ID."
@@ -71,131 +86,127 @@ class SARCtrl:
             "warning",
         )
 
-    def handle_draw_aoi(self):
-        """Toggle rectangular AOI drawing on the canvas.
+    def _requires_results(self) -> bool:
+        """Show a warning and return True when no SAR results are available yet"""
 
-        Clicking the button while draw mode is already armed turns it off
-        (restoring the previous map tool) instead of re-arming it.
-        """
+        if self.collection is None or self.aoi is None:
+            self.dialog.pop_message(_tr("Run SAR processing first."), "warning")
+            return True
+        return False
+
+    def _get_active_filtered_dataframe(self):
+
+        if self._active_dates is not None:
+            return self.dataframe[self.dataframe["dates"].isin(self._active_dates)]
+        return self.dataframe
+
+    def _selected_composite_dates(self) -> list:
+        dates = self.dataframe["dates"].tolist()
+        if self._active_dates is not None:
+            dates = [d for d in dates if d in self._active_dates]
+        return dates
+
+    def _index_meta(self) -> dict:
+        return SARService.INDEX_REGISTRY[self._current_index]
+
+    def handle_draw_aoi(self):
+        """Toggle rectangular AOI drawing on the canvas."""
+
         canvas = self.interface.mapCanvas()
-        tool = getattr(self, "_draw_tool", None)
-        if tool is not None and canvas.mapTool() is tool:
-            canvas.unsetMapTool(tool)
+
+        if self._draw_tool is not None and canvas.mapTool() is self._draw_tool:
+            canvas.unsetMapTool(self._draw_tool)
             self._draw_tool = None
             return
         self._draw_tool = start_draw_aoi(
-            self.interface, self.dlg.sar_layer_combo, self.dlg.sar_btn_draw_aoi
+            self.interface, self.dialog.sar_layer_combo, self.dialog.sar_btn_draw_aoi
         )
 
-    def handle_layer_changed(self):
+    def handle_layer_changed(self, layer=None):
         """Zoom to the selected AOI layer."""
-        if not self._zoom_enabled:
+
+        if layer is None:
+            layer = self.dialog.sar_layer_combo.currentLayer()
+
+        if not layer or not layer.isValid() or not self.interface:
             return
 
-        layer = self.dlg.sar_layer_combo.currentLayer()
-        if not layer or not layer.isValid():
-            return
-
-        if not self.interface:
-            return
-
-        try:
-            canvas = self.interface.mapCanvas()
-            transform = QgsCoordinateTransform(
-                layer.crs(),
-                canvas.mapSettings().destinationCrs(),
-                QgsProject.instance(),
-            )
-            extent = transform.transformBoundingBox(layer.extent())
-            extent.scale(1.5)
-            canvas.setExtent(extent)
-            canvas.refresh()
-        except Exception:
-            pass
+        canvas = self.interface.mapCanvas()
+        transform = QgsCoordinateTransform(
+            layer.crs(),
+            canvas.mapSettings().destinationCrs(),
+            QgsProject.instance(),
+        )
+        extent = transform.transformBoundingBox(layer.extent())
+        extent.scale(_CANVAS_SCALE_FACTOR)
+        canvas.setExtent(extent)
+        canvas.refresh()
 
     def handle_sar_run(self):
-        if self._worker is not None and self._worker.isRunning():
-            return  # a run is already in flight
+        if self._sar_worker is not None and self._sar_worker.isRunning():
+            return
 
         if self.gee_service and not self.gee_service.is_authenticated:
             self._show_auth_required_message()
             return
 
-        layer = self.dlg.sar_layer_combo.currentLayer()
+        layer = self.dialog.sar_layer_combo.currentLayer()
         if not layer:
-            self.dlg.pop_message(_tr("Select an AOI layer."), "warning")
+            self.dialog.pop_message(_tr("Select an AOI layer."), "warning")
             return
 
-        start_qdate = self.dlg.sar_date_start.date()
-        end_qdate = self.dlg.sar_date_end.date()
+        start_qdate = self.dialog.sar_date_start.date()
+        end_qdate = self.dialog.sar_date_end.date()
         if start_qdate >= end_qdate:
-            self.dlg.pop_message("End date must be after start date.", "warning")
+            self.dialog.pop_message("End date must be after start date.", "warning")
             return
 
-        # Extract the AOI on the UI thread — QGIS layers are not thread-safe.
         try:
-            aoi, _bbox = AOIService.get_aoi_from_layer(
+            aoi, _bbox = AOIService.get_ee_feature_colection_from_layer(
                 layer, use_selected_features=False
             )
         except Exception as e:
-            self.dlg.pop_message(str(e), "warning")
+            self.dialog.pop_message(str(e), "warning")
             return
 
         self.aoi = aoi
         params = {
             "start_date": start_qdate.toString("yyyy-MM-dd"),
             "end_date": end_qdate.toString("yyyy-MM-dd"),
-            "polarization": self.dlg.sar_pol_combo.currentText(),
-            "output_format": self.dlg.sar_format_combo.currentText(),
-            "border_noise": self.dlg.sar_chk_border_noise.isChecked(),
-            "terrain": self.dlg.sar_chk_terrain.isChecked(),
-            "speckle": self.dlg.sar_chk_speckle.isChecked(),
-            "index": self.dlg.sar_index_combo.currentText(),
+            "polarization": self.dialog.sar_pol_combo.currentText(),
+            "output_format": self.dialog.sar_format_combo.currentText(),
+            "border_noise": self.dialog.sar_chk_border_noise.isChecked(),
+            "terrain": self.dialog.sar_chk_terrain.isChecked(),
+            "speckle": self.dialog.sar_chk_speckle.isChecked(),
+            "index": self.dialog.sar_index_combo.currentText(),
         }
 
-        # Show progress without blocking: spinner in the Results tab + busy button.
-        self._set_running(True)
-        self.dlg.sar_web_view.setHtml(_LOADING_HTML)
-        self.dlg.sar_set_tab(2)
+        self._set_run_busy(True)
+        self.dialog.sar_web_view.setHtml(_LOADING_HTML)
+        self.dialog.sar_set_tab(2)
 
-        self._worker = SARWorker(aoi, params)
-        self._worker.finished_ok.connect(self._on_sar_done)
-        self._worker.failed.connect(self._on_sar_failed)
-        self._worker.start()
+        self._sar_worker = SARWorker(aoi, params)
+        self._sar_worker.finished.connect(self._on_sar_done)
+        self._sar_worker.failed.connect(self._on_sar_failed)
+        self._sar_worker.start()
 
-    def _set_running(self, running):
-        self.dlg.sar_btn_next.setEnabled(not running)
-        self.dlg.sar_btn_next.setText(_tr("Running…") if running else _tr("Run"))
-
-    def _set_preview_running(self, running):
-        self.dlg.sar_btn_preview.setEnabled(not running)
-        self.dlg.sar_btn_download_preview.setEnabled(not running)
-        if running:
-            self._preview_btn_text = (
-                self.dlg.sar_btn_preview.text(),
-                self.dlg.sar_btn_download_preview.text(),
-            )
-            self.dlg.sar_btn_preview.setText(_tr("Loading…"))
-            self.dlg.sar_btn_download_preview.setText(_tr("Loading…"))
+    def _set_run_busy(self, busy: bool):
+        btn = self.dialog.sar_btn_next
+        if busy:
+            self._run_btn_text = self._run_btn_text or btn.text()
+            btn.setText(_tr("Running…"))
         else:
-            if hasattr(self, "_preview_btn_text"):
-                self.dlg.sar_btn_preview.setText(self._preview_btn_text[0])
-                self.dlg.sar_btn_download_preview.setText(self._preview_btn_text[1])
-
-    def _clear_worker(self):
-        worker = self._worker
-        self._worker = None
-        if worker is not None:
-            worker.deleteLater()
+            btn.setText(self._run_btn_text or btn.text())
+        btn.setEnabled(not busy)
 
     def _on_sar_done(self, collection, data, index):
-        self._set_running(False)
-        self._clear_worker()
+        self._set_run_busy(False)
+        self._release_worker("_sar_worker")
 
         if not data:
-            self.dlg.sar_web_view.setHtml("")
-            self.dlg.sar_set_tab(1)
-            self.dlg.pop_message(
+            self.dialog.sar_web_view.setHtml("")
+            self.dialog.sar_set_tab(1)
+            self.dialog.pop_message(
                 "No SAR images found for this date range.", "warning"
             )
             return
@@ -205,109 +216,91 @@ class SARCtrl:
         self._active_dates = None
         self._current_index = index
 
-        self.dlg.sar_result_date_combo.clear()
-        self.dlg.sar_result_date_combo.addItems(self.dataframe["dates"].tolist())
+        self.dialog.sar_result_date_combo.clear()
+        self.dialog.sar_result_date_combo.addItems(self.dataframe["dates"].tolist())
         self._render_timeseries()
-        self.dlg.sar_set_tab(2)
+        self.dialog.sar_set_tab(2)
 
     def _on_sar_failed(self, message):
-        self._set_running(False)
-        self._clear_worker()
-        self.dlg.sar_web_view.setHtml("")
-        self.dlg.sar_set_tab(1)
-        self.dlg.pop_message(message, "warning")
-
-    def _clear_preview_worker(self):
-        worker = self._preview_worker
-        self._preview_worker = None
-        if worker is not None:
-            worker.deleteLater()
-
-    def _on_preview_done(self, output_path, label):
-        self._set_preview_running(False)
-        self._clear_preview_worker()
-        render_mode = self.dlg.sar_render_combo.currentText()
-        SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
-        if self.interface:
-            self.interface.messageBar().pushMessage(
-                "AGLgis", f"SAR preview '{output_path.split('/')[-1]}' loaded into QGIS."
-            )
-
-    def _on_download_preview_done(self, output_path, label):
-        self._set_preview_running(False)
-        self._clear_preview_worker()
-        render_mode = self.dlg.sar_render_combo.currentText()
-        SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
-        if self.interface:
-            self.interface.messageBar().pushMessage(
-                "AGLgis",
-                f"SAR image '{output_path.split('/')[-1]}' downloaded and loaded successfully.",
-            )
-
-    def _on_preview_failed(self, message):
-        self._set_preview_running(False)
-        self._clear_preview_worker()
-        self.dlg.pop_message(message, "warning")
+        self._set_run_busy(False)
+        self._release_worker("_sar_worker")
+        self.dialog.sar_web_view.setHtml("")
+        self.dialog.sar_set_tab(1)
+        self.dialog.pop_message(message, "warning")
 
     def handle_preview_image(self):
-        if self._preview_worker is not None and self._preview_worker.isRunning():
-            return  # a preview operation is already in flight
-
-        if self.collection is None or self.aoi is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
-            return
-
-        selected_date = self.dlg.sar_result_date_combo.currentText()
-        self._set_preview_running(True)
-        meta = SARService.INDEX_REGISTRY[self._current_index]
-        self._preview_worker = SARPreviewWorker(
-            self.collection,
-            self.aoi,
-            selected_date,
-            tempfile.gettempdir(),
-            f"SAR_Preview_{selected_date}",
-            index_band=meta["band"],
-            index_label=meta["band_label"],
-        )
-        self._preview_worker.finished_ok.connect(self._on_preview_done)
-        self._preview_worker.failed.connect(self._on_preview_failed)
-        self._preview_worker.start()
+        self._run_preview(to_folder=False)
 
     def handle_download_preview(self):
-        if self._preview_worker is not None and self._preview_worker.isRunning():
-            return  # a preview operation is already in flight
+        self._run_preview(to_folder=True)
 
-        if self.collection is None or self.aoi is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+    def _run_preview(self, to_folder: bool):
+
+        if self._preview_worker is not None and self._preview_worker.isRunning():
             return
 
-        selected_date = self.dlg.sar_result_date_combo.currentText()
-        output_folder = SettingsManager.load_download_folder()
-        self._set_preview_running(True)
-        meta = SARService.INDEX_REGISTRY[self._current_index]
+        if self._requires_results():
+            return
+
+        selected_date = self.dialog.sar_result_date_combo.currentText()
+        meta = self._index_meta()
+        output_folder = (
+            SettingsManager.load_download_folder()
+            if to_folder
+            else tempfile.gettempdir()
+        )
+        label = f"SAR_{selected_date}" if to_folder else f"SAR_Preview_{selected_date}"
+
+        self._set_preview_busy(True)
         self._preview_worker = SARPreviewWorker(
             self.collection,
             self.aoi,
             selected_date,
             output_folder,
-            f"SAR_{selected_date}",
+            label,
             index_band=meta["band"],
             index_label=meta["band_label"],
         )
-        self._preview_worker.finished_ok.connect(
-            lambda path, label: self._on_download_preview_done(path, label)
+        self._preview_worker.finished.connect(
+            lambda path, label: self._on_preview_done(path, label, to_folder)
         )
         self._preview_worker.failed.connect(self._on_preview_failed)
         self._preview_worker.start()
 
+    def _set_preview_busy(self, busy: bool):
+        btns = (self.dialog.sar_btn_preview, self.dialog.sar_btn_download_preview)
+
+        if busy:
+            self._preview_btn_texts = tuple(b.text() for b in btns)
+            for b in btns:
+                b.setText(_tr("Loading..."))
+        elif self._preview_btn_texts:
+            for b, txt in zip(btns, self._preview_btn_texts):
+                b.setText(txt)
+        for b in btns:
+            b.setEnabled(not busy)
+
+    def _on_preview_done(self, output_path: str, label: str, to_folder: bool):
+        self._set_preview_busy(False)
+        self._release_worker("_preview_worker")
+        render_mode = self.dialog.sar_layer_combo.currentText()
+        SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
+
+        if self.interface:
+            filename = os.path.basename(output_path)
+            action_msg = _tr("downloaded and loaded") if to_folder else _tr("loaded")
+            self.interface.messageBar().pushMessage(
+                "AGLgis", _tr("SAR image '%s' %s into QGIS.") % (filename, action_msg)
+            )
+
+    def _on_preview_failed(self, message: str):
+        self._set_preview_busy(False)
+        self._release_worker("_preview_worker")
+        self.dialog.pop_message(message, "warning")
+
     # ------------------------------------------------------------------
     # Synthetic image (composite of the selected index over selected dates)
     # ------------------------------------------------------------------
-    def _selected_composite_dates(self):
-        dates = self.dataframe["dates"].tolist()
-        if self._active_dates is not None:
-            dates = [d for d in dates if d in self._active_dates]
-        return dates
 
     def handle_composite_preview(self):
         self._run_composite(to_folder=False)
@@ -317,147 +310,136 @@ class SARCtrl:
 
     def _run_composite(self, to_folder):
         if self._composite_worker is not None and self._composite_worker.isRunning():
-            return  # a composite operation is already in flight
+            return
 
-        if self.collection is None or self.aoi is None or self.dataframe is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+        if self._requires_results():
             return
 
         dates = self._selected_composite_dates()
         if not dates:
-            self.dlg.pop_message(_tr("No dates selected for the composite."), "warning")
+            self.dialog.pop_message(
+                _tr("No dates selected for the composite."), "warning"
+            )
             return
 
-        metric = self.dlg.sar_composite_metric_combo.currentText()
-        meta = SARService.INDEX_REGISTRY[self._current_index]
-        start_date = min(dates)  # AUC needs a reference start date
+        meta = self._index_meta()
         output_folder = (
             SettingsManager.load_download_folder()
             if to_folder
             else tempfile.gettempdir()
         )
-        label = f"{meta['band_label']} {metric}"
 
-        self._set_composite_running(True)
+        self._set_composite_busy(True)
         self._composite_worker = SARCompositeWorker(
             self.collection,
             self.aoi,
             meta["band"],
             meta["band_label"],
-            metric,
+            self.dialog.sar_composite_metric_combo.currentText(),
             dates,
-            start_date,
+            min(dates),
             output_folder,
-            label,
+            f"{meta['band_label']} {self.dialog.sar_composite_metric_combo.currentText()}",
         )
-        self._composite_worker.finished_ok.connect(
-            lambda path, lbl, tf=to_folder: self._on_composite_done(path, lbl, tf)
+        self._composite_worker.finished.connect(
+            lambda path, label: self._on_composite_done(path, label, to_folder)
         )
         self._composite_worker.failed.connect(self._on_composite_failed)
         self._composite_worker.start()
 
-    def _set_composite_running(self, running):
-        self.dlg.sar_btn_composite_preview.setEnabled(not running)
-        self.dlg.sar_btn_composite_download.setEnabled(not running)
-        if running:
-            self._composite_btn_text = (
-                self.dlg.sar_btn_composite_preview.text(),
-                self.dlg.sar_btn_composite_download.text(),
-            )
-            self.dlg.sar_btn_composite_preview.setText(_tr("Working…"))
-            self.dlg.sar_btn_composite_download.setText(_tr("Working…"))
-        elif hasattr(self, "_composite_btn_text"):
-            self.dlg.sar_btn_composite_preview.setText(self._composite_btn_text[0])
-            self.dlg.sar_btn_composite_download.setText(self._composite_btn_text[1])
+    def _set_composite_busy(self, busy: bool):
+        btns = (
+            self.dialog.sar_btn_composite_preview,
+            self.dialog.sar_btn_composite_download,
+        )
 
-    def _clear_composite_worker(self):
-        worker = self._composite_worker
-        self._composite_worker = None
-        if worker is not None:
-            worker.deleteLater()
+        if busy:
+            self._composite_btn_texts = tuple(b.text() for b in btns)
+            for b in btns:
+                b.setText(_tr("Working..."))
+        elif self._composite_btn_texts:
+            for b, txt in zip(btns, self._composite_btn_texts):
+                b.setText(txt)
+        for b in btns:
+            b.setEnabled(not busy)
 
-    def _on_composite_done(self, output_path, label, to_folder):
-        self._set_composite_running(False)
-        self._clear_composite_worker()
-        ramp = self.dlg.sar_composite_ramp_combo.currentText()
+    def _on_composite_done(self, output_path: str, label: str, to_folder: bool):
+        self._set_composite_busy(False)
+        self._release_worker("_composite_worker")
+        ramp = self.dialog.sar_composite_ramp_combo.currentText()
         SARRenderer.load_composite_to_qgis(output_path, label, color_ramp_name=ramp)
         if self.interface:
-            verb = _tr("downloaded and loaded") if to_folder else _tr("loaded")
+            filename = os.path.basename(output_path)
+            action_msg = _tr("downloaded and loaded") if to_folder else _tr("loaded")
             self.interface.messageBar().pushMessage(
                 "AGLgis",
-                f"Composite '{os.path.basename(output_path)}' {verb} into QGIS.",
+                _tr("Composite '%s' %s into QGIS.") % (filename, action_msg),
             )
 
     def _on_composite_failed(self, message):
-        self._set_composite_running(False)
-        self._clear_composite_worker()
-        self.dlg.pop_message(message, "warning")
+        self._set_composite_busy(False)
+        self._release_worker("_composite_worker")
+        self.dialog.pop_message(message, "warning")
 
     def handle_batch_download(self):
-        if self.collection is None or self.aoi is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+        if self._requires_results():
             return
 
-        dates = self.dataframe["dates"].tolist()
-        if self._active_dates is not None:
-            dates = [d for d in dates if d in self._active_dates]
-
+        dates = self._get_active_filtered_dataframe()["dates"].tolist()
         if not dates:
-            self.dlg.pop_message(_tr("No dates selected to download."), "warning")
+            self.dialog.pop_message(_tr("No dates selected to download."), "warning")
             return
-
-        output_folder = SettingsManager.load_download_folder()
 
         self._batch_dialog = QProgressDialog(
             _tr("Preparing batch download..."),
             _tr("Cancel"),
             0,
             len(dates),
-            self.dlg,
+            self.dialog,
         )
         self._batch_dialog.setWindowTitle(_tr("Batch Download Progress"))
         self._batch_dialog.setModal(True)
         self._batch_dialog.show()
 
-        meta = SARService.INDEX_REGISTRY[self._current_index]
+        meta = self._index_meta()
         self._batch_worker = SARBatchDownloadWorker(
-            self.collection, self.aoi, dates, output_folder,
+            self.collection,
+            self.aoi,
+            dates,
+            SettingsManager.load_download_folder(),
             index_band=meta["band"],
             index_label=meta["band_label"],
         )
         self._batch_worker.progress.connect(self._on_batch_progress)
-        self._batch_worker.finished_ok.connect(self._on_batch_done)
+        self._batch_worker.finished.connect(self._on_batch_done)
         self._batch_worker.failed.connect(self._on_batch_failed)
-        self._batch_worker.cancelled.connect(
-            lambda success, total, paths: self._on_batch_cancelled(success, total, paths)
-        )
+        self._batch_worker.cancelled.connect(self._on_batch_cancelled)
         self._batch_dialog.canceled.connect(self._batch_worker.request_cancel)
         self._batch_worker.start()
 
-    def _on_batch_progress(self, current, total, date_str):
+    def _on_batch_progress(self, current: int, total: int, date_str: str):
         self._batch_dialog.setMaximum(total)
         self._batch_dialog.setValue(current)
         self._batch_dialog.setLabelText(
-            _tr(f"Downloading {current} of {total}: {date_str}")
+            _tr("Downloading %d of %d: %s") % (current, total, date_str)
         )
 
-    def _on_batch_done(self, successful, total, downloaded_paths):
+    def _on_batch_done(self, successful: int, total: int, downloaded_paths: list):
         self._batch_dialog.close()
         self._load_downloaded_images(downloaded_paths)
 
         failed = total - successful
-        msg = _tr(f"Batch download complete: {successful}/{total} successful")
+        msg = _tr("Batch download complete: %d/%d successful") % (successful, total)
         if failed > 0:
-            msg += _tr(f" ({failed} failed)")
-        msg_type = "warning" if failed > 0 else "info"
-        self.dlg.pop_message(msg, msg_type)
+            msg += _tr(" (%d failed)") % failed
+        self.dialog.pop_message(msg, "warning" if failed > 0 else "info")
 
     def _on_batch_failed(self, message):
         if self._batch_dialog:
             self._batch_dialog.close()
-        self.dlg.pop_message(_tr(f"Batch download failed: {message}"), "warning")
+        self.dialog.pop_message(_tr("Batch download failed: %s") % message, "warning")
 
-    def _on_batch_cancelled(self, successful, total, downloaded_paths):
+    def _on_batch_cancelled(self, successful: int, total: int, downloaded_paths: list):
         self._batch_dialog.close()
         self._load_downloaded_images(downloaded_paths)
 
@@ -465,16 +447,19 @@ class SARCtrl:
             msg = _tr(
                 f"Batch download cancelled. {successful}/{total} images downloaded and loaded."
             )
-            self.dlg.pop_message(msg, "info")
+            self.dialog.pop_message(msg, "info")
         else:
-            self.dlg.pop_message(_tr("Batch download cancelled by user."), "info")
+            self.dialog.pop_message(_tr("Batch download cancelled by user."), "info")
 
-    def _load_downloaded_images(self, paths):
-        render_mode = self.dlg.sar_render_combo.currentText()
+    def _load_downloaded_images(self, paths: list):
+        render_mode = self.dialog.sar_render_combo.currentText()
         for path in paths:
             try:
-                filename = os.path.basename(path)
-                date_str = filename.replace("Sentinel1_", "").replace(".tiff", "")
+                date_str = (
+                    os.path.basename(path)
+                    .replace("Sentinel1_", "")
+                    .replace(".tiff", "")
+                )
                 label = f"SAR_{date_str}"
                 SARRenderer.load_sar_to_qgis(path, label, render_mode=render_mode)
             except Exception:
@@ -482,18 +467,19 @@ class SARCtrl:
 
     def handle_filter_dates(self):
         if self.dataframe is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            self.dialog.pop_message(_tr("Run SAR processing first."), "warning")
             return
-        from ..view.sar_date_filter_dialog import SARDateFilterDialog
 
         if self._filter_dialog is not None:
             self._filter_dialog.raise_()
             self._filter_dialog.activateWindow()
             return
 
+        from ..view.sar_date_filter_dialog import SARDateFilterDialog
+
         dates = self.dataframe["dates"].tolist()
         self._filter_dialog = SARDateFilterDialog(
-            dates, self._active_dates, parent=self.dlg
+            dates, self._active_dates, parent=self.dialog
         )
         self._filter_dialog.filter_changed.connect(self._on_filter_changed)
         self._filter_dialog.finished.connect(self._on_filter_dialog_closed)
@@ -511,13 +497,16 @@ class SARCtrl:
 
     def handle_open_browser(self):
         if self.dataframe is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            self.dialog.pop_message(_tr("Run SAR processing first."), "warning")
             return
-        df = self.dataframe
-        if self._active_dates is not None:
-            df = df[df["dates"].isin(self._active_dates)]
-        meta = SARService.INDEX_REGISTRY[self._current_index]
-        html = render_chart_html(df, hide_toolbar=False, title=meta["title"], ylabel=meta["ylabel"])
+
+        meta = self._index_meta()
+        html = render_chart_html(
+            self._get_active_filtered_dataframe(),
+            hide_toolbar=False,
+            title=meta["title"],
+            ylabel=meta["ylabel"],
+        )
         with tempfile.NamedTemporaryFile(
             suffix=".html", delete=False, mode="w", encoding="utf-8"
         ) as f:
@@ -527,14 +516,14 @@ class SARCtrl:
 
     def handle_export_csv(self):
         if self.dataframe is None:
-            self.dlg.pop_message(_tr("Run SAR processing first."), "warning")
+            self.dialog.pop_message(_tr("Run SAR processing first."), "warning")
             return
 
         date_str = datetime.now().strftime("%Y%m%d")
         default_filename = f"SAR_timeseries_{date_str}.csv"
 
         file_path, _ = QFileDialog.getSaveFileName(
-            self.dlg,
+            self.dialog,
             _tr("Export SAR Time Series as CSV"),
             default_filename,
             _tr("CSV Files (*.csv);;All Files (*)"),
@@ -543,36 +532,30 @@ class SARCtrl:
         if not file_path:
             return
 
-        df = self.dataframe
-        if self._active_dates is not None:
-            df = df[df["dates"].isin(self._active_dates)]
-
         try:
-            df.to_csv(file_path, index=False)
-            self.dlg.pop_message(
-                _tr(f"CSV exported successfully to {file_path}"), "info"
+            self._get_active_filtered_dataframe().to_csv(file_path, index=False)
+            self.dialog.pop_message(
+                _tr("CSV exported successfully to %s") % file_path, "info"
             )
         except Exception as e:
-            self.dlg.pop_message(_tr(f"Failed to export CSV: {str(e)}"), "warning")
+            self.dialog.pop_message(_tr("Failed to export CSV: %s") % str(e), "warning")
 
     def _render_timeseries(self):
-        df = self.dataframe
-        if self._active_dates is not None:
-            df = df[df["dates"].isin(self._active_dates)]
-        meta = SARService.INDEX_REGISTRY[self._current_index]
-        html = render_chart_html(df, title=meta["title"], ylabel=meta["ylabel"])
-        # Write to a fresh temp file and load it: QtWebKit renders large embedded
-        # Plotly content reliably from a file:// URL, unlike setContent/setHtml.
+        meta = self._index_meta()
+        html = render_chart_html(
+            self._get_active_filtered_dataframe(),
+            title=meta["title"],
+            ylabel=meta["ylabel"],
+        )
+
         fd, path = tempfile.mkstemp(suffix=".html", prefix="aglgis_sar_")
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(html)
-        self.dlg.sar_web_view.load(QUrl.fromLocalFile(path))
+        self.dialog.sar_web_view.load(QUrl.fromLocalFile(path))
 
-        # Drop the previous render's file (the view has moved off it by now).
-        prev = getattr(self, "_plot_path", None)
-        if prev and os.path.exists(prev):
+        if self._plot_path and os.path.exists(self._plot_path):
             try:
-                os.remove(prev)
+                os.remove(self._plot_path)
             except OSError:
                 pass
         self._plot_path = path

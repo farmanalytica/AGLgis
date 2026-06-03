@@ -84,16 +84,21 @@ class SARService:
 
     @staticmethod
     def add_rvi_band(image):
-        rvi = image.select("VH").multiply(4).divide(
-            image.select("VV").add(image.select("VH"))
-        ).rename("RVI")
+        rvi = (
+            image.select("VH")
+            .multiply(4)
+            .divide(image.select("VV").add(image.select("VH")))
+            .rename("RVI")
+        )
         return image.addBands(rvi)
 
     @staticmethod
     def add_dprvi_band(image):
-        dprvi = image.select("VH").divide(
-            image.select("VH").add(image.select("VV"))
-        ).rename("DpRVI")
+        dprvi = (
+            image.select("VH")
+            .divide(image.select("VH").add(image.select("VV")))
+            .rename("DpRVI")
+        )
         return image.addBands(dprvi)
 
     @staticmethod
@@ -122,10 +127,7 @@ class SARService:
         for feature in result["features"]:
             properties = feature.get("properties", {})
             value = properties.get(f"{band_name}_mean")
-            # reduceRegion returns null when an acquisition has no unmasked
-            # pixels over the AOI (e.g. a swath that only clips the AOI edge).
-            # Drop those dates at the source so the plot, CSV export, and batch
-            # download all work from the same valid-only series.
+
             if value is None:
                 continue
             data.append(
@@ -168,11 +170,9 @@ class SARService:
             "Amplitude": lambda: index_collection.max().subtract(
                 index_collection.min()
             ),
-            "Standard Deviation": lambda: index_collection.reduce(
-                ee.Reducer.stdDev()
-            ),
+            "Standard Deviation": lambda: index_collection.reduce(ee.Reducer.stdDev()),
             "Sum": lambda: index_collection.sum(),
-            "Area Under Curve (AUC)": lambda: SARService._calculate_auc(
+            "Area Under Curve (AUC)": lambda: SARService._calculate_area_under_curve(
                 index_collection, start_date
             ),
         }
@@ -183,14 +183,15 @@ class SARService:
                 )
             )
         result_image = metric_functions[metric]()
-        # Keep the spatial alignment of the source imagery.
+
         return result_image.setDefaultProjection(first_image.projection())
 
     @staticmethod
-    def _calculate_auc(index_collection, start_date):
-        """Trapezoidal Area-Under-Curve of a single-band index over time."""
+    def _calculate_area_under_curve(index_collection, start_date):
+
         if start_date is None:
             raise ValueError("AUC requires a start date.")
+
         first_image = index_collection.first()
         index_stack = index_collection.toBands()
         valid_mask = index_stack.mask().reduce(ee.Reducer.min())
@@ -218,39 +219,35 @@ class SARService:
             .arrayReduce(ee.Reducer.sum(), [0])
         )
         auc_image = auc.arrayGet([0]).updateMask(valid_mask)
+
         return first_image.select(0).multiply(0).add(auc_image)
 
     @staticmethod
-    def get_index_composite(
+    def build_band_composite(
         collection, aoi, band_name, metric, dates=None, start_date=None
     ):
-        """
-        Build a single-band composite image of ``band_name`` reduced by
-        ``metric`` over the given ``dates`` (all images if dates is None),
-        masked to the AOI.
-        """
-        coll = collection.map(
+        """Build a composite mosaic of unique band reduced by metric masked to the AOI"""
+        date_collection = collection.map(
             lambda img: img.set("comp_date", img.date().format("YYYY-MM-dd"))
         )
         if dates:
-            coll = coll.filter(ee.Filter.inList("comp_date", ee.List(list(dates))))
+            date_collection = date_collection.filter(
+                ee.Filter.inList("comp_date", ee.List(list(dates)))
+            )
 
-        index_collection = coll.select(band_name)
-        composite = SARService.aggregate_index_collection(
-            index_collection, metric, start_date
+        single_band_collection = date_collection.select(band_name)
+        reduced_image = SARService.aggregate_index_collection(
+            single_band_collection, metric, start_date
         )
-        composite = composite.rename(band_name).toFloat()
+        composite_image = reduced_image.rename(band_name).toFloat()
 
-        # Mask precisely to the AOI shape (download region stays a bbox).
-        mask = ee.Image(1).clip(aoi.geometry()).mask()
-        return composite.updateMask(mask)
+        geometry_mask = ee.Image(1).clip(aoi.geometry()).mask()
+        return composite_image.updateMask(geometry_mask)
 
     @staticmethod
-    def download_composite(
-        image, aoi, metric, index_label, output_folder=None
-    ):
-        """Download a single-band composite GeoTIFF and name its band."""
-        url = image.getDownloadURL(
+    def download_band_composite(image, aoi, metric, index_label, output_folder=None):
+
+        download_url = image.getDownloadURL(
             {
                 "scale": 10,
                 "region": aoi.geometry().bounds().getInfo(),
@@ -258,7 +255,7 @@ class SARService:
                 "crs": "EPSG:4326",
             }
         )
-        response = requests.get(url, timeout=300)
+        response = requests.get(download_url, timeout=300)
         if not response.ok:
             raise RuntimeError(
                 "SAR composite download failed (HTTP {}): {}".format(
@@ -266,21 +263,23 @@ class SARService:
                 )
             )
 
-        def _safe(text):
+        def _sanitize(text):
             return re.sub(r"[^A-Za-z0-9_-]+", "_", text).strip("_")
 
-        filename = "SAR_{}_{}.tiff".format(_safe(index_label), _safe(metric))
-        base_dir = (
+        filename = "SAR_{}_{}.tiff".format(_sanitize(index_label), _sanitize(metric))
+        target_dir = (
             output_folder
             if (output_folder and os.path.isdir(output_folder))
             else tempfile.gettempdir()
         )
-        output_path = SARService._resolve_path(base_dir, filename)
+        output_path = SARService._get_unique_path(target_dir, filename)
 
         with open(output_path, "wb") as f:
             f.write(response.content)
 
-        SARService._set_single_band_name(output_path, "{} {}".format(index_label, metric))
+        SARService._set_single_band_name(
+            output_path, "{} {}".format(index_label, metric)
+        )
         return output_path
 
     @staticmethod
@@ -299,7 +298,7 @@ class SARService:
             pass
 
     @staticmethod
-    def get_image_for_date(collection, aoi, date, index_band="VVVH_ratio"):
+    def get_dataset_image_for_date(collection, aoi, date):
         next_date = (datetime.strptime(date, "%Y-%m-%d") + timedelta(days=1)).strftime(
             "%Y-%m-%d"
         )
@@ -326,7 +325,12 @@ class SARService:
         )
 
     @staticmethod
-    def download_image(image, aoi, date, output_folder=None, index_band="VVVH_ratio", index_label="VV/VH Ratio"):
+    def download_image(
+        image,
+        aoi,
+        date,
+        output_folder=None,
+    ):
         url = image.getDownloadURL(
             {
                 "scale": 10,
@@ -348,16 +352,16 @@ class SARService:
             if (output_folder and os.path.isdir(output_folder))
             else tempfile.gettempdir()
         )
-        output_path = SARService._resolve_path(base_dir, filename)
+        output_path = SARService._get_unique_path(base_dir, filename)
 
         with open(output_path, "wb") as f:
             f.write(response.content)
 
-        SARService._set_band_names(output_path, index_label)
+        SARService._set_band_names(output_path)
         return output_path
 
     @staticmethod
-    def _set_band_names(file_path, index_label="VV/VH Ratio"):
+    def _set_band_names(file_path):
         if gdal is None:
             return
 
@@ -377,15 +381,16 @@ class SARService:
             pass
 
     @staticmethod
-    def _resolve_path(folder, filename):
-        candidate = os.path.join(folder, filename)
-        if not os.path.exists(candidate):
-            return candidate
+    def _get_unique_path(folder, filename):
+        candidate_path = os.path.join(folder, filename)
+        if not os.path.exists(candidate_path):
+            return candidate_path
 
-        name, ext = os.path.splitext(filename)
+        basename, extension = os.path.splitext(filename)
         counter = 1
+
         while True:
-            candidate = os.path.join(folder, f"{name}_{counter}{ext}")
-            if not os.path.exists(candidate):
-                return candidate
+            candidate_path = os.path.join(folder, f"{basename}_{counter}{extension}")
+            if not os.path.exists(candidate_path):
+                return candidate_path
             counter += 1
