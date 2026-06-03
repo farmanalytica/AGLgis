@@ -167,5 +167,285 @@
         <source>Get in touch for exclusive and personalized commercial solutions.</source>
         <translation>Contáctenos para soluciones comerciales exclusivas y personalizadas.</translation>
     </message>
+    <message>
+        <source>Continue</source>
+        <translation>Continuar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Starting authentication…</source>
+        <translation>Iniciando autenticación…</translation>
+    </message>
+    <message>
+        <source>Checking sign-in status…</source>
+        <translation>Verificando estado de sesión…</translation>
+    </message>
+    <message>
+        <source>Not signed in</source>
+        <translation>No conectado</translation>
+    </message>
+    <message>
+        <source>Credentials found — validate to finish</source>
+        <translation>Credenciales encontradas — valida para finalizar</translation>
+    </message>
+    <message>
+        <source>●  Signed in &amp; ready</source>
+        <translation>Conectado y listo</translation>
+    </message>
+    <message>
+        <source>Reopen the sign-in page</source>
+        <translation>Reabrir la página de inicio de sesión</translation>
+    </message>
+    <message>
+        <source>Intro</source>
+        <translation>Introducción</translation>
+    </message>
+    <message>
+        <source>Inputs</source>
+        <translation>Parámetros</translation>
+    </message>
+    <message>
+        <source>Results</source>
+        <translation>Resultados</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Atrás</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>Siguiente</translation>
+    </message>
+    <message>
+        <source>Run</source>
+        <translation>Ejecutar</translation>
+    </message>
+    <message>
+        <source>Running…</source>
+        <translation>Ejecutando…</translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation>Cargando…</translation>
+    </message>
+    <message>
+        <source>Working…</source>
+        <translation>Procesando…</translation>
+    </message>
+    <message>
+        <source>START DATE</source>
+        <translation>FECHA INICIO</translation>
+    </message>
+    <message>
+        <source>END DATE</source>
+        <translation>FECHA FIN</translation>
+    </message>
+    <message>
+        <source>POLARIZATION</source>
+        <translation>POLARIZACIÓN</translation>
+    </message>
+    <message>
+        <source>OUTPUT FORMAT</source>
+        <translation>FORMATO DE SALIDA</translation>
+    </message>
+    <message>
+        <source>SPECTRAL INDEX</source>
+        <translation>ÍNDICE ESPECTRAL</translation>
+    </message>
+    <message>
+        <source>PROCESSING OPTIONS</source>
+        <translation>OPCIONES DE PROCESAMIENTO</translation>
+    </message>
+    <message>
+        <source>SINGLE-DATE IMAGE</source>
+        <translation>IMAGEN DE FECHA ÚNICA</translation>
+    </message>
+    <message>
+        <source>SYNTHETIC IMAGE (COMPOSITE)</source>
+        <translation>IMAGEN SINTÉTICA (COMPUESTA)</translation>
+    </message>
+    <message>
+        <source>TIME SERIES</source>
+        <translation>SERIE TEMPORAL</translation>
+    </message>
+    <message>
+        <source>Render Mode</source>
+        <translation>Modo de Renderización</translation>
+    </message>
+    <message>
+        <source>Color Ramp</source>
+        <translation>Rampa de Colores</translation>
+    </message>
+    <message>
+        <source>Metric</source>
+        <translation>Métrica</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Border noise correction</source>
+        <translation>Corrección de ruido de borde</translation>
+    </message>
+    <message>
+        <source>Terrain flattening</source>
+        <translation>Aplanamiento del terreno</translation>
+    </message>
+    <message>
+        <source>Speckle filtering</source>
+        <translation>Filtrado de ruido</translation>
+    </message>
+    <message>
+        <source>Draw AOI</source>
+        <translation>Dibujar AOI</translation>
+    </message>
+    <message>
+        <source>Preview</source>
+        <translation>Vista Previa</translation>
+    </message>
+    <message>
+        <source>Download &amp; Preview</source>
+        <translation>Descargar y Vista Previa</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation>Abrir en el Navegador</translation>
+    </message>
+    <message>
+        <source>Export CSV</source>
+        <translation>Exportar CSV</translation>
+    </message>
+    <message>
+        <source>Batch Download (All Dates)</source>
+        <translation>Descarga por Lotes (Todas las Fechas)</translation>
+    </message>
+    <message>
+        <source>Filter dates</source>
+        <translation>Filtrar fechas</translation>
+    </message>
+    <message>
+        <source>Preview Composite</source>
+        <translation>Vista Previa Compuesta</translation>
+    </message>
+    <message>
+        <source>Band: VV</source>
+        <translation>Banda: VV</translation>
+    </message>
+    <message>
+        <source>Band: VH</source>
+        <translation>Banda: VH</translation>
+    </message>
+    <message>
+        <source>Band: VV/VH Ratio</source>
+        <translation>Banda: Razón VV/VH</translation>
+    </message>
+    <message>
+        <source>Band: RVI</source>
+        <translation>Banda: RVI</translation>
+    </message>
+    <message>
+        <source>Band: DpRVI</source>
+        <translation>Banda: DpRVI</translation>
+    </message>
+    <message>
+        <source>Amplitude</source>
+        <translation>Amplitud</translation>
+    </message>
+    <message>
+        <source>Mean</source>
+        <translation>Media</translation>
+    </message>
+    <message>
+        <source>Median</source>
+        <translation>Mediana</translation>
+    </message>
+    <message>
+        <source>Min</source>
+        <translation>Mínimo</translation>
+    </message>
+    <message>
+        <source>Max</source>
+        <translation>Máximo</translation>
+    </message>
+    <message>
+        <source>Standard Deviation</source>
+        <translation>Desviación Estándar</translation>
+    </message>
+    <message>
+        <source>Sum</source>
+        <translation>Suma</translation>
+    </message>
+    <message>
+        <source>Area Under Curve (AUC)</source>
+        <translation>Área Bajo la Curva (AUC)</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, VV/VH Ratio</source>
+        <translation>RGB: VV, VH, Razón VV/VH</translation>
+    </message>
+    <message>
+        <source>RGB: VV, RVI, DpRVI</source>
+        <translation>RGB: VV, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV/VH Ratio, RVI, DpRVI</source>
+        <translation>RGB: Razón VV/VH, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>Composite the selected index over the selected dates.</source>
+        <translation>Componer el índice seleccionado sobre las fechas seleccionadas.</translation>
+    </message>
+    <message>
+        <source>No dates selected for the composite.</source>
+        <translation>No hay fechas seleccionadas para la compuesta.</translation>
+    </message>
+    <message>
+        <source>No dates selected to download.</source>
+        <translation>No hay fechas seleccionadas para descargar.</translation>
+    </message>
+    <message>
+        <source>Select an AOI layer.</source>
+        <translation>Seleccione una capa AOI.</translation>
+    </message>
+    <message>
+        <source>Run SAR processing first.</source>
+        <translation>Ejecute el procesamiento SAR primero.</translation>
+    </message>
+    <message>
+        <source>Preparing batch download...</source>
+        <translation>Preparando descarga por lotes...</translation>
+    </message>
+    <message>
+        <source>Batch Download Progress</source>
+        <translation>Progreso de Descarga por Lotes</translation>
+    </message>
+    <message>
+        <source>Batch download cancelled by user.</source>
+        <translation>Descarga por lotes cancelada por el usuario.</translation>
+    </message>
+    <message>
+        <source>Export SAR Time Series as CSV</source>
+        <translation>Exportar Serie Temporal SAR como CSV</translation>
+    </message>
+    <message>
+        <source>CSV Files (*.csv);;All Files (*)</source>
+        <translation>Archivos CSV (*.csv);;Todos los Archivos (*)</translation>
+    </message>
+    <message>
+        <source>Drag on the map to draw a box (Shift = square, Esc = cancel)</source>
+        <translation>Arrastra en el mapa para dibujar un rectángulo (Shift = cuadrado, Esc = cancelar)</translation>
+    </message>
+    <message>
+        <source>loaded</source>
+        <translation>cargado</translation>
+    </message>
+    <message>
+        <source>downloaded and loaded</source>
+        <translation>descargado y cargado</translation>
+    </message>
 </context>
 </TS>

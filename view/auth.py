@@ -149,10 +149,9 @@ def setup_auth_page(dialog, page):
     dialog.auth_status_badge.setStyleSheet(
         """
         QPushButton {
-            background-color: #f0f0f0;
+            background-color: transparent;
             color: #757575;
-            border: 1px solid #e0e0e0;
-            border-radius: 11px;
+            border: none;
             font-size: 11px;
             font-weight: bold;
             padding: 0 10px;

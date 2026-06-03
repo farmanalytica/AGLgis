@@ -83,7 +83,7 @@
     </div>
 
     <script>
-    const translations = {
+    var translations = {
         pt: {
             title: "🛰️ Módulo SAR - AGLgis",
             desc: 'O módulo SAR do AGLgis fornece uma interface gráfica para processar dados Sentinel-1 usando o <a href="https://www.mdpi.com/2072-4292/13/10/1954" target="_blank">Sentinel-1 SAR Backscatter Analysis Ready Data</a> no Google Earth Engine, sem necessidade de programação.',
@@ -304,13 +304,14 @@
     };
 
     function applyLanguage(lang) {
-        const i18n = translations[lang] || translations.en;
-        const langMap = { pt: "pt-BR", en: "en", fr: "fr", it: "it", es: "es", hi: "hi", zh: "zh-Hans" };
+        var i18n = translations[lang] || translations.en;
+        var langMap = { pt: "pt-BR", en: "en", fr: "fr", it: "it", es: "es", hi: "hi", zh: "zh-Hans" };
         document.documentElement.lang = langMap[lang] || "en";
-        document.querySelectorAll("[data-i18n]").forEach(function (el) {
-            const key = el.getAttribute("data-i18n");
-            if (i18n[key]) el.innerHTML = i18n[key];
-        });
+        var els = document.querySelectorAll("[data-i18n]");
+        for (var i = 0; i < els.length; i++) {
+            var key = els[i].getAttribute("data-i18n");
+            if (i18n[key]) els[i].innerHTML = i18n[key];
+        }
     }
 
     function detectLang() {
