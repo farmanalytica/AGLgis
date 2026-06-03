@@ -25,10 +25,10 @@ class DatasetManager:
 
     @staticmethod
     def load_available_datasets(
-        dem_combobox, current_aoi, current_aoi_bbox, on_error=None
+        dem_combo, current_aoi, current_aoi_bbox, on_error=None
     ):
         registry = DEMRegistry()
-        dem_combobox.clear()
+        dem_combo.clear()
 
         if not current_aoi:
             return
@@ -44,7 +44,7 @@ class DatasetManager:
                 if registry.has_coverage(
                     dataset.name, geometry, aoi_bbox=current_aoi_bbox
                 ):
-                    dem_combobox.addItem(dataset.name, dataset.name)
+                    dem_combo.addItem(dataset.name, dataset.name)
         except Exception as e:
             if on_error:
                 on_error(str(e))
@@ -54,9 +54,9 @@ class DatasetManager:
             QApplication.restoreOverrideCursor()
 
     @staticmethod
-    def update_dataset_info(dem_combobox, dem_info_widget):
+    def update_dataset_info(dem_combo, dem_info_widget):
 
-        dataset_name = dem_combobox.currentData()
+        dataset_name = dem_combo.currentData()
         if not dataset_name:
             dem_info_widget.clear()
             return

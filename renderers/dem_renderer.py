@@ -17,7 +17,7 @@ class DEMRenderer:
     def load_dem_to_qgis(path: str, dataset_name: str) -> QgsRasterLayer:
 
         raster_layer = RasterRendererUtils.load_pseudocolor_raster(
-            path, dataset_name, band_idx=1, color_ramp_name="Magma", at_top=True
+            path, dataset_name, band_index=1, color_ramp_name="Magma", at_top=True
         )
 
         if raster_layer is None:

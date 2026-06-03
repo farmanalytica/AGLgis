@@ -82,14 +82,12 @@ class SARPreviewWorker(QThread):
                 self._collection,
                 self._aoi,
                 self._selected_date,
-                index_band=self._index_band,
             )
             output_path = SARService.download_image(
                 selected_image,
                 self._aoi,
                 self._selected_date,
                 output_folder=self._output_folder,
-                index_band=self._index_band,
             )
             self.finished.emit(output_path, self._label)
         except Exception as e:
@@ -127,7 +125,7 @@ class SARCompositeWorker(QThread):
 
     def run(self):
         try:
-            composite = SARService.get_index_composite(
+            composite = SARService.build_band_composite(
                 self._collection,
                 self._aoi,
                 self._band_name,
@@ -135,7 +133,7 @@ class SARCompositeWorker(QThread):
                 dates=self._dates,
                 start_date=self._start_date,
             )
-            output_path = SARService.download_composite(
+            output_path = SARService.download_band_composite(
                 composite,
                 self._aoi,
                 self._metric,
@@ -184,7 +182,7 @@ class SARBatchDownloadWorker(QThread):
         total = len(self._dates)
         downloaded_paths = []
 
-        for idx, date in enumerate(self._dates, start=1):
+        for index, date in enumerate(self._dates, start=1):
             self._mutex.lock()
             if self._cancel_requested:
                 self._mutex.unlock()
@@ -192,21 +190,19 @@ class SARBatchDownloadWorker(QThread):
                 return
             self._mutex.unlock()
 
-            self.progress.emit(idx, total, str(date))
+            self.progress.emit(index, total, str(date))
 
             try:
                 selected_image = SARService.get_dataset_image_for_date(
                     self._collection,
                     self._aoi,
                     date,
-                    index_band=self._index_band,
                 )
                 output_path = SARService.download_image(
                     selected_image,
                     self._aoi,
                     date,
                     output_folder=self._output_folder,
-                    index_band=self._index_band,
                 )
                 downloaded_paths.append(output_path)
                 successful += 1
