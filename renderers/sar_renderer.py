@@ -17,6 +17,12 @@ BAND_INDEX_MAP = {
     "VV/VH Ratio": 3,
     "RVI": 4,
     "DpRVI": 5,
+    "CR": 6,
+    "NDPI": 7,
+    "PD": 8,
+    "DPSVIm": 9,
+    "PRVI": 10,
+    "mRVI": 11,
 }
 
 
@@ -114,24 +120,17 @@ class SARRenderer:
         color_ramp_name="Viridis",
     ):
 
-        if render_mode == "RGB: VV, VH, VV/VH Ratio":
-            return SARRenderer._create_rgb_composite(
-                path, layer_name, ["VV", "VH", "VV/VH Ratio"]
-            )
-        elif render_mode == "RGB: VV, RVI, DpRVI":
-            return SARRenderer._create_rgb_composite(
-                path, layer_name, ["VV", "RVI", "DpRVI"]
-            )
-        elif render_mode == "RGB: VV/VH Ratio, RVI, DpRVI":
-            return SARRenderer._create_rgb_composite(
-                path, layer_name, ["VV/VH Ratio", "RVI", "DpRVI"]
-            )
+        if render_mode.startswith("RGB: "):
+            names = [n.strip() for n in render_mode[len("RGB: "):].split(",")]
+            if len(names) == 3 and all(n in BAND_INDEX_MAP for n in names):
+                return SARRenderer._create_rgb_composite(path, layer_name, names)
         elif render_mode.startswith("Band: "):
             band_name = render_mode.replace("Band: ", "")
-            return SARRenderer._create_single_band_layer(
-                path, layer_name, band_name, color_ramp_name=color_ramp_name
-            )
-        else:
-            return SARRenderer._create_rgb_composite(
-                path, layer_name, ["VV", "VH", "VV/VH Ratio"]
-            )
+            if band_name in BAND_INDEX_MAP:
+                return SARRenderer._create_single_band_layer(
+                    path, layer_name, band_name, color_ramp_name=color_ramp_name
+                )
+
+        return SARRenderer._create_rgb_composite(
+            path, layer_name, ["VV", "VH", "VV/VH Ratio"]
+        )

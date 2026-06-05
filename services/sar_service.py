@@ -49,6 +49,48 @@ class SARService:
             "ylabel": "DpRVI Mean",
             "band_label": "DpRVI",
         },
+        "Cross Ratio (VH/VV)": {
+            "band": "CR",
+            "add_fn": "add_cr_band",
+            "title": "Cross Ratio (VH/VV) Time Series",
+            "ylabel": "Cross Ratio Mean",
+            "band_label": "CR",
+        },
+        "NDPI": {
+            "band": "NDPI",
+            "add_fn": "add_ndpi_band",
+            "title": "Normalized Difference Polarization Index (NDPI) Time Series",
+            "ylabel": "NDPI Mean",
+            "band_label": "NDPI",
+        },
+        "Pol Difference (VV-VH)": {
+            "band": "PD",
+            "add_fn": "add_pd_band",
+            "title": "Polarization Difference (VV-VH) Time Series",
+            "ylabel": "Pol Difference Mean",
+            "band_label": "PD",
+        },
+        "DPSVIm": {
+            "band": "DPSVIm",
+            "add_fn": "add_dpsvim_band",
+            "title": "Modified Dual-pol SAR Vegetation Index (DPSVIm) Time Series",
+            "ylabel": "DPSVIm Mean",
+            "band_label": "DPSVIm",
+        },
+        "PRVI": {
+            "band": "PRVI",
+            "add_fn": "add_prvi_band",
+            "title": "Polarimetric Radar Vegetation Index (PRVI) Time Series",
+            "ylabel": "PRVI Mean",
+            "band_label": "PRVI",
+        },
+        "mRVI": {
+            "band": "mRVI",
+            "add_fn": "add_mrvi_band",
+            "title": "Modified Radar Vegetation Index (mRVI) Time Series",
+            "ylabel": "mRVI Mean",
+            "band_label": "mRVI",
+        },
     }
 
     @staticmethod
@@ -100,6 +142,63 @@ class SARService:
             .rename("DpRVI")
         )
         return image.addBands(dprvi)
+
+    @staticmethod
+    def add_cr_band(image):
+        cr = image.select("VH").divide(image.select("VV")).rename("CR")
+        return image.addBands(cr)
+
+    @staticmethod
+    def add_ndpi_band(image):
+        vv = image.select("VV")
+        vh = image.select("VH")
+        ndpi = vv.subtract(vh).divide(vv.add(vh)).rename("NDPI")
+        return image.addBands(ndpi)
+
+    @staticmethod
+    def add_pd_band(image):
+        pd = image.select("VV").subtract(image.select("VH")).rename("PD")
+        return image.addBands(pd)
+
+    @staticmethod
+    def add_dpsvim_band(image):
+        vv = image.select("VV")
+        vh = image.select("VH")
+        dpsvim = vv.multiply(vv.add(vh)).divide(2 ** 0.5).rename("DPSVIm")
+        return image.addBands(dpsvim)
+
+    @staticmethod
+    def add_prvi_band(image):
+        vv = image.select("VV")
+        vh = image.select("VH")
+        prvi = vh.multiply(ee.Image(1).subtract(vh.divide(vv))).rename("PRVI")
+        return image.addBands(prvi)
+
+    @staticmethod
+    def add_mrvi_band(image):
+        vv = image.select("VV")
+        vh = image.select("VH")
+        denom = vv.add(vh)
+        mrvi = (
+            vv.divide(denom)
+            .sqrt()
+            .multiply(vh.multiply(4).divide(denom))
+            .rename("mRVI")
+        )
+        return image.addBands(mrvi)
+
+    @staticmethod
+    def add_all_index_bands(image):
+        image = SARService.add_vvvh_ratio_band(image)
+        image = SARService.add_rvi_band(image)
+        image = SARService.add_dprvi_band(image)
+        image = SARService.add_cr_band(image)
+        image = SARService.add_ndpi_band(image)
+        image = SARService.add_pd_band(image)
+        image = SARService.add_dpsvim_band(image)
+        image = SARService.add_prvi_band(image)
+        image = SARService.add_mrvi_band(image)
+        return image
 
     @staticmethod
     def get_index_timeseries(collection, aoi, band_name):
@@ -302,7 +401,10 @@ class SARService:
         return (
             collection.filterDate(date, next_date)
             .first()
-            .select(["VV", "VH", "VVVH_ratio", "RVI", "DpRVI"])
+            .select([
+                "VV", "VH", "VVVH_ratio", "RVI", "DpRVI",
+                "CR", "NDPI", "PD", "DPSVIm", "PRVI", "mRVI",
+            ])
             .clip(aoi)
         )
 
@@ -366,7 +468,10 @@ class SARService:
             if dataset is None:
                 return
 
-            band_names = ["VV", "VH", "VV/VH Ratio", "RVI", "DpRVI"]
+            band_names = [
+                "VV", "VH", "VV/VH Ratio", "RVI", "DpRVI",
+                "CR", "NDPI", "PD", "DPSVIm", "PRVI", "mRVI",
+            ]
             for i in range(1, min(dataset.RasterCount + 1, len(band_names) + 1)):
                 band = dataset.GetRasterBand(i)
                 if band is not None:

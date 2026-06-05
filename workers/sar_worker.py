@@ -41,9 +41,7 @@ class SARWorker(QThread):
             index_name = parameters.get("index", "VV/VH Ratio")
             meta = SARService.INDEX_REGISTRY[index_name]
 
-            collection = collection.map(SARService.add_vvvh_ratio_band)
-            collection = collection.map(SARService.add_rvi_band)
-            collection = collection.map(SARService.add_dprvi_band)
+            collection = collection.map(SARService.add_all_index_bands)
 
             data = SARService.get_index_timeseries(collection, self._aoi, meta["band"])
             self.finished.emit(collection, data, index_name)

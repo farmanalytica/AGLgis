@@ -621,7 +621,11 @@ def _build_inputs_tab(dialog, parent):
     _prepare_field(dialog.sar_format_combo)
     dialog.sar_format_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
     dialog.sar_index_combo = QComboBox()
-    dialog.sar_index_combo.addItems(["VV/VH Ratio", "RVI", "DpRVI"])
+    dialog.sar_index_combo.addItems([
+        "VV/VH Ratio", "RVI", "DpRVI",
+        "Cross Ratio (VH/VV)", "NDPI", "Pol Difference (VV-VH)",
+        "DPSVIm", "PRVI", "mRVI",
+    ])
     dialog.sar_index_combo.setCurrentText("VV/VH Ratio")
     _prepare_field(dialog.sar_index_combo)
     dialog.sar_index_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
@@ -661,6 +665,49 @@ def _build_inputs_tab(dialog, parent):
             "<br><i>Use for:</i> crop "
             "biophysical parameter retrieval, soil-moisture vs. vegetation "
             "separation, detailed phenology."
+        ),
+        "Cross Ratio (VH/VV)": _tr(
+            "<b>Cross Ratio (CR)</b> — cross- over co-polarized backscatter. "
+            "Rises strongly with green biomass and canopy volume; one of the "
+            "most widely used Sentinel-1 crop indicators.<br><i>Formula:</i> "
+            "VH / VV"
+            "<br><i>Use for:</i> crop growth and biomass, phenology, "
+            "vegetation density."
+        ),
+        "NDPI": _tr(
+            "<b>NDPI (Normalized Difference Polarization Index)</b> — normalized "
+            "contrast between co- and cross-pol backscatter (also used as RFDI "
+            "for forest degradation).<br><i>Formula:</i> (VV − VH) / (VV + VH)"
+            "<br><i>Use for:</i> vegetation vs. soil/water separation, forest "
+            "disturbance, land-cover discrimination."
+        ),
+        "Pol Difference (VV-VH)": _tr(
+            "<b>Polarization Difference (PD)</b> — absolute gap between co- and "
+            "cross-pol backscatter; a simple proxy for scattering "
+            "structure.<br><i>Formula:</i> VV − VH"
+            "<br><i>Use for:</i> biomass/structure trends, surface vs. volume "
+            "scattering, quick change detection."
+        ),
+        "DPSVIm": _tr(
+            "<b>DPSVIm (Modified Dual-pol SAR Vegetation Index)</b> — practical "
+            "successor to DPSVI; no per-scene maximum needed, sensitive across "
+            "the crop cycle.<br><i>Formula:</i> VV × (VV + VH) / √2"
+            "<br><i>Use for:</i> crop biomass and LAI, soil-moisture-robust "
+            "vegetation monitoring. Use LINEAR output format."
+        ),
+        "PRVI": _tr(
+            "<b>PRVI (Polarimetric Radar Vegetation Index)</b> — weights cross-"
+            "pol backscatter by the degree of depolarization.<br><i>Formula:</i> "
+            "(1 − VH / VV) × VH"
+            "<br><i>Use for:</i> vegetation cover and biomass, canopy density "
+            "estimation."
+        ),
+        "mRVI": _tr(
+            "<b>mRVI (Modified Radar Vegetation Index)</b> — bounded RVI variant "
+            "scaled by the co-pol fraction for steadier dynamic "
+            "range.<br><i>Formula:</i> √(VV / (VV + VH)) × (4 × VH / (VV + VH))"
+            "<br><i>Use for:</i> vegetation cover and biomass, phenology "
+            "tracking."
         ),
     }
     dialog.sar_index_info = QLabel()
@@ -813,13 +860,27 @@ def _build_results_tab(dialog, parent):
     # keeps working under translated UI labels.
     for _label, _key in (
         (_tr("RGB: VV, VH, VV/VH Ratio"), "RGB: VV, VH, VV/VH Ratio"),
+        (_tr("RGB: VV, VH, CR"), "RGB: VV, VH, CR"),
+        (_tr("RGB: VV, VH, RVI"), "RGB: VV, VH, RVI"),
+        (_tr("RGB: VV, VH, NDPI"), "RGB: VV, VH, NDPI"),
+        (_tr("RGB: VV, VH, PD"), "RGB: VV, VH, PD"),
         (_tr("RGB: VV, RVI, DpRVI"), "RGB: VV, RVI, DpRVI"),
+        (_tr("RGB: VV, VV/VH Ratio, RVI"), "RGB: VV, VV/VH Ratio, RVI"),
         (_tr("RGB: VV/VH Ratio, RVI, DpRVI"), "RGB: VV/VH Ratio, RVI, DpRVI"),
+        (_tr("RGB: CR, RVI, DpRVI"), "RGB: CR, RVI, DpRVI"),
+        (_tr("RGB: RVI, DpRVI, mRVI"), "RGB: RVI, DpRVI, mRVI"),
+        (_tr("RGB: NDPI, RVI, DPSVIm"), "RGB: NDPI, RVI, DPSVIm"),
         (_tr("Band: VV"), "Band: VV"),
         (_tr("Band: VH"), "Band: VH"),
         (_tr("Band: VV/VH Ratio"), "Band: VV/VH Ratio"),
         (_tr("Band: RVI"), "Band: RVI"),
         (_tr("Band: DpRVI"), "Band: DpRVI"),
+        (_tr("Band: CR"), "Band: CR"),
+        (_tr("Band: NDPI"), "Band: NDPI"),
+        (_tr("Band: PD"), "Band: PD"),
+        (_tr("Band: DPSVIm"), "Band: DPSVIm"),
+        (_tr("Band: PRVI"), "Band: PRVI"),
+        (_tr("Band: mRVI"), "Band: mRVI"),
     ):
         dialog.sar_render_combo.addItem(_label, _key)
     dialog.sar_render_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)

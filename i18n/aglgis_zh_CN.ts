@@ -467,5 +467,221 @@
         <source>Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges. Applies to every downloaded and previewed SAR output (single date, batch, composite).</source>
         <translation>使用正缓冲区可纳入区域外侧的地形，使用负缓冲区可裁剪边缘。适用于每个下载和预览的 SAR 输出（单日期、批量、合成）。</translation>
     </message>
+    <message>
+        <source>&lt;b&gt;Cross Ratio (CR)&lt;/b&gt; — cross- over co-polarized backscatter. Rises strongly with green biomass and canopy volume; one of the most widely used Sentinel-1 crop indicators.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / VV&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop growth and biomass, phenology, vegetation density.</source>
+        <translation>&lt;b&gt;交叉比 (CR)&lt;/b&gt; — 交叉极化与同极化后向散射之比。随绿色生物量和冠层体积显著增大；最常用的 Sentinel-1 作物指标之一。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt; VH / VV&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 作物生长与生物量、物候、植被密度。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;NDPI (Normalized Difference Polarization Index)&lt;/b&gt; — normalized contrast between co- and cross-pol backscatter (also used as RFDI for forest degradation).&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (VV − VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation vs. soil/water separation, forest disturbance, land-cover discrimination.</source>
+        <translation>&lt;b&gt;NDPI（归一化差值极化指数）&lt;/b&gt; — 同极化与交叉极化后向散射的归一化对比（也用作森林退化的 RFDI）。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt;(VV − VH) / (VV + VH)&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 植被与土壤/水体分离、森林扰动、土地覆盖区分。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Polarization Difference (PD)&lt;/b&gt; — absolute gap between co- and cross-pol backscatter; a simple proxy for scattering structure.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV − VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; biomass/structure trends, surface vs. volume scattering, quick change detection.</source>
+        <translation>&lt;b&gt;极化差 (PD)&lt;/b&gt; — 同极化与交叉极化后向散射的绝对差；散射结构的简单代理。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt; VV − VH&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 生物量/结构趋势、面散射与体散射、快速变化检测。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;DPSVIm (Modified Dual-pol SAR Vegetation Index)&lt;/b&gt; — practical successor to DPSVI; no per-scene maximum needed, sensitive across the crop cycle.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV × (VV + VH) / √2&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop biomass and LAI, soil-moisture-robust vegetation monitoring. Use LINEAR output format.</source>
+        <translation>&lt;b&gt;DPSVIm（改进双极化 SAR 植被指数）&lt;/b&gt; — DPSVI 的实用后继；无需逐场景最大值，在整个作物周期内敏感。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt; VV × (VV + VH) / √2&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 作物生物量与 LAI、对土壤湿度稳健的植被监测。请使用 LINEAR 输出格式。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;PRVI (Polarimetric Radar Vegetation Index)&lt;/b&gt; — weights cross-pol backscatter by the degree of depolarization.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (1 − VH / VV) × VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass, canopy density estimation.</source>
+        <translation>&lt;b&gt;PRVI（极化雷达植被指数）&lt;/b&gt; — 按去极化程度对交叉极化后向散射加权。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt;(1 − VH / VV) × VH&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 植被覆盖与生物量、冠层密度估算。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;mRVI (Modified Radar Vegetation Index)&lt;/b&gt; — bounded RVI variant scaled by the co-pol fraction for steadier dynamic range.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; √(VV / (VV + VH)) × (4 × VH / (VV + VH))&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass, phenology tracking.</source>
+        <translation>&lt;b&gt;mRVI（改进雷达植被指数）&lt;/b&gt; — 由同极化分量比例缩放的有界 RVI 变体，动态范围更稳定。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt; √(VV / (VV + VH)) × (4 × VH / (VV + VH))&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 植被覆盖与生物量、物候跟踪。</translation>
+    </message>
+    <message>
+        <source>Band: CR</source>
+        <translation>波段：CR</translation>
+    </message>
+    <message>
+        <source>Band: NDPI</source>
+        <translation>波段：NDPI</translation>
+    </message>
+    <message>
+        <source>Band: PD</source>
+        <translation>波段：PD</translation>
+    </message>
+    <message>
+        <source>Band: DPSVIm</source>
+        <translation>波段：DPSVIm</translation>
+    </message>
+    <message>
+        <source>Band: PRVI</source>
+        <translation>波段：PRVI</translation>
+    </message>
+    <message>
+        <source>Band: mRVI</source>
+        <translation>波段：mRVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, CR</source>
+        <translation>RGB: VV, VH, CR</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, RVI</source>
+        <translation>RGB: VV, VH, RVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, NDPI</source>
+        <translation>RGB: VV, VH, NDPI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, PD</source>
+        <translation>RGB: VV, VH, PD</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VV/VH Ratio, RVI</source>
+        <translation>RGB: VV, VV/VH Ratio, RVI</translation>
+    </message>
+    <message>
+        <source>RGB: CR, RVI, DpRVI</source>
+        <translation>RGB: CR, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>RGB: RVI, DpRVI, mRVI</source>
+        <translation>RGB: RVI, DpRVI, mRVI</translation>
+    </message>
+    <message>
+        <source>RGB: NDPI, RVI, DPSVIm</source>
+        <translation>RGB: NDPI, RVI, DPSVIm</translation>
+    </message>
+    <message>
+        <source>AOI saved to '{}' and selected.</source>
+        <translation>AOI 已保存至 '{}' 并选中。</translation>
+    </message>
+    <message>
+        <source>Batch download complete: %d/%d successful</source>
+        <translation>批量下载完成：%d/%d 成功</translation>
+    </message>
+    <message>
+        <source>Batch download failed: %s</source>
+        <translation>批量下载失败：%s</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>浏览</translation>
+    </message>
+    <message>
+        <source>CSV exported successfully to %s</source>
+        <translation>CSV 已成功导出到 %s</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>正在取消…</translation>
+    </message>
+    <message>
+        <source>Checking available datasets…</source>
+        <translation>正在检查可用数据集…</translation>
+    </message>
+    <message>
+        <source>Clear download folder</source>
+        <translation>清除下载文件夹</translation>
+    </message>
+    <message>
+        <source>Click to re-check your Earth Engine sign-in status</source>
+        <translation>点击重新检查您的 Earth Engine 登录状态</translation>
+    </message>
+    <message>
+        <source>Composite '%s' %s into QGIS.</source>
+        <translation>合成 '%s' %s 到 QGIS。</translation>
+    </message>
+    <message>
+        <source>Deselect All</source>
+        <translation>取消全选</translation>
+    </message>
+    <message>
+        <source>Download folder</source>
+        <translation>下载文件夹</translation>
+    </message>
+    <message>
+        <source>Downloading %d of %d: %s</source>
+        <translation>正在下载第 %d / %d 个：%s</translation>
+    </message>
+    <message>
+        <source>Downloading dependencies. This only happens on first use.</source>
+        <translation>正在下载依赖项。仅在首次使用时发生。</translation>
+    </message>
+    <message>
+        <source>Downloading…</source>
+        <translation>正在下载…</translation>
+    </message>
+    <message>
+        <source>Drag on the map to draw a box. Hold Shift for a square, Esc to cancel.</source>
+        <translation>在地图上拖动以绘制框。按住 Shift 绘制正方形，Esc 取消。</translation>
+    </message>
+    <message>
+        <source>Draw AOI mode</source>
+        <translation>绘制 AOI 模式</translation>
+    </message>
+    <message>
+        <source>Failed to export CSV: %s</source>
+        <translation>导出 CSV 失败：%s</translation>
+    </message>
+    <message>
+        <source>Failed to save AOI shapefile to the download folder.</source>
+        <translation>无法将 AOI shapefile 保存到下载文件夹。</translation>
+    </message>
+    <message>
+        <source>Filter Dates</source>
+        <translation>筛选日期</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>正在加载...</translation>
+    </message>
+    <message>
+        <source>Radar (SAR) Data</source>
+        <translation>雷达 (SAR) 数据</translation>
+    </message>
+    <message>
+        <source>Radar (SAR) data</source>
+        <translation>雷达 (SAR) 数据</translation>
+    </message>
+    <message>
+        <source>SAR image '%s' %s into QGIS.</source>
+        <translation>SAR 影像 '%s' %s 到 QGIS。</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>全选</translation>
+    </message>
+    <message>
+        <source>Select all in this year</source>
+        <translation>选择本年度全部</translation>
+    </message>
+    <message>
+        <source>Select download folder</source>
+        <translation>选择下载文件夹</translation>
+    </message>
+    <message>
+        <source>Setting up AGLgis…</source>
+        <translation>正在设置 AGLgis…</translation>
+    </message>
+    <message>
+        <source>Setting up…</source>
+        <translation>正在设置…</translation>
+    </message>
+    <message>
+        <source>Sign-in timed out. Please try again.</source>
+        <translation>登录超时。请重试。</translation>
+    </message>
+    <message>
+        <source>System temp (default)</source>
+        <translation>系统临时目录（默认）</translation>
+    </message>
+    <message>
+        <source>Waiting for sign-in in your browser…</source>
+        <translation>正在等待您在浏览器中登录…</translation>
+    </message>
+    <message>
+        <source>Working...</source>
+        <translation>处理中...</translation>
+    </message>
+    <message>
+        <source> (%d failed)</source>
+        <translation> （%d 个失败）</translation>
+    </message>
 </context>
 </TS>

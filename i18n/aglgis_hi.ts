@@ -467,5 +467,221 @@
         <source>Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges. Applies to every downloaded and previewed SAR output (single date, batch, composite).</source>
         <translation>अपने क्षेत्र के ठीक बाहर का भूभाग शामिल करने के लिए धनात्मक बफ़र का उपयोग करें, या किनारों को काटने के लिए ऋणात्मक बफ़र का। प्रत्येक डाउनलोड और पूर्वावलोकन किए गए SAR आउटपुट (एकल तिथि, बैच, संयुक्त) पर लागू होता है।</translation>
     </message>
+    <message>
+        <source>&lt;b&gt;Cross Ratio (CR)&lt;/b&gt; — cross- over co-polarized backscatter. Rises strongly with green biomass and canopy volume; one of the most widely used Sentinel-1 crop indicators.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / VV&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop growth and biomass, phenology, vegetation density.</source>
+        <translation>&lt;b&gt;क्रॉस अनुपात (CR)&lt;/b&gt; — सह-ध्रुवीकृत पर प्रति-ध्रुवीकृत बैकस्कैटर। हरी बायोमास और कैनोपी आयतन के साथ तेज़ी से बढ़ता है; सबसे अधिक उपयोग किए जाने वाले Sentinel-1 फसल संकेतकों में से एक।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; VH / VV&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; फसल वृद्धि और बायोमास, फेनोलॉजी, वनस्पति घनत्व।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;NDPI (Normalized Difference Polarization Index)&lt;/b&gt; — normalized contrast between co- and cross-pol backscatter (also used as RFDI for forest degradation).&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (VV − VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation vs. soil/water separation, forest disturbance, land-cover discrimination.</source>
+        <translation>&lt;b&gt;NDPI (सामान्यीकृत अंतर ध्रुवीकरण सूचकांक)&lt;/b&gt; — सह और प्रति-ध्रुवीकृत बैकस्कैटर के बीच सामान्यीकृत कंट्रास्ट (वन क्षरण के लिए RFDI के रूप में भी)।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; (VV − VH) / (VV + VH)&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; वनस्पति बनाम मृदा/जल पृथक्करण, वन व्यवधान, भूमि-आवरण विभेदन।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Polarization Difference (PD)&lt;/b&gt; — absolute gap between co- and cross-pol backscatter; a simple proxy for scattering structure.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV − VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; biomass/structure trends, surface vs. volume scattering, quick change detection.</source>
+        <translation>&lt;b&gt;ध्रुवीकरण अंतर (PD)&lt;/b&gt; — सह और प्रति-ध्रुवीकृत बैकस्कैटर के बीच निरपेक्ष अंतर; प्रकीर्णन संरचना का सरल सूचक।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; VV − VH&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; बायोमास/संरचना प्रवृत्तियाँ, सतह बनाम आयतन प्रकीर्णन, त्वरित परिवर्तन पहचान।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;DPSVIm (Modified Dual-pol SAR Vegetation Index)&lt;/b&gt; — practical successor to DPSVI; no per-scene maximum needed, sensitive across the crop cycle.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV × (VV + VH) / √2&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop biomass and LAI, soil-moisture-robust vegetation monitoring. Use LINEAR output format.</source>
+        <translation>&lt;b&gt;DPSVIm (संशोधित दोहरे-ध्रुवीकरण SAR वनस्पति सूचकांक)&lt;/b&gt; — DPSVI का व्यावहारिक उत्तराधिकारी; प्रति-दृश्य अधिकतम की आवश्यकता नहीं, फसल चक्र भर संवेदनशील।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; VV × (VV + VH) / √2&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; फसल बायोमास और LAI, मृदा-नमी के प्रति प्रबल वनस्पति निगरानी। LINEAR आउटपुट प्रारूप उपयोग करें।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;PRVI (Polarimetric Radar Vegetation Index)&lt;/b&gt; — weights cross-pol backscatter by the degree of depolarization.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (1 − VH / VV) × VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass, canopy density estimation.</source>
+        <translation>&lt;b&gt;PRVI (ध्रुवणमितीय रडार वनस्पति सूचकांक)&lt;/b&gt; — विध्रुवण की डिग्री के अनुसार प्रति-ध्रुवीकृत बैकस्कैटर को भारित करता है।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; (1 − VH / VV) × VH&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; वनस्पति आवरण और बायोमास, कैनोपी घनत्व अनुमान।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;mRVI (Modified Radar Vegetation Index)&lt;/b&gt; — bounded RVI variant scaled by the co-pol fraction for steadier dynamic range.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; √(VV / (VV + VH)) × (4 × VH / (VV + VH))&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass, phenology tracking.</source>
+        <translation>&lt;b&gt;mRVI (संशोधित रडार वनस्पति सूचकांक)&lt;/b&gt; — अधिक स्थिर डायनेमिक रेंज हेतु सह-ध्रुवीकृत अंश से स्केल किया गया परिबद्ध RVI संस्करण।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; √(VV / (VV + VH)) × (4 × VH / (VV + VH))&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; वनस्पति आवरण और बायोमास, फेनोलॉजी ट्रैकिंग।</translation>
+    </message>
+    <message>
+        <source>Band: CR</source>
+        <translation>बैंड: CR</translation>
+    </message>
+    <message>
+        <source>Band: NDPI</source>
+        <translation>बैंड: NDPI</translation>
+    </message>
+    <message>
+        <source>Band: PD</source>
+        <translation>बैंड: PD</translation>
+    </message>
+    <message>
+        <source>Band: DPSVIm</source>
+        <translation>बैंड: DPSVIm</translation>
+    </message>
+    <message>
+        <source>Band: PRVI</source>
+        <translation>बैंड: PRVI</translation>
+    </message>
+    <message>
+        <source>Band: mRVI</source>
+        <translation>बैंड: mRVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, CR</source>
+        <translation>RGB: VV, VH, CR</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, RVI</source>
+        <translation>RGB: VV, VH, RVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, NDPI</source>
+        <translation>RGB: VV, VH, NDPI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, PD</source>
+        <translation>RGB: VV, VH, PD</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VV/VH Ratio, RVI</source>
+        <translation>RGB: VV, VV/VH Ratio, RVI</translation>
+    </message>
+    <message>
+        <source>RGB: CR, RVI, DpRVI</source>
+        <translation>RGB: CR, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>RGB: RVI, DpRVI, mRVI</source>
+        <translation>RGB: RVI, DpRVI, mRVI</translation>
+    </message>
+    <message>
+        <source>RGB: NDPI, RVI, DPSVIm</source>
+        <translation>RGB: NDPI, RVI, DPSVIm</translation>
+    </message>
+    <message>
+        <source>AOI saved to '{}' and selected.</source>
+        <translation>AOI '{}' में सहेजी गई और चयनित।</translation>
+    </message>
+    <message>
+        <source>Batch download complete: %d/%d successful</source>
+        <translation>बैच डाउनलोड पूर्ण: %d/%d सफल</translation>
+    </message>
+    <message>
+        <source>Batch download failed: %s</source>
+        <translation>बैच डाउनलोड विफल: %s</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>ब्राउज़ करें</translation>
+    </message>
+    <message>
+        <source>CSV exported successfully to %s</source>
+        <translation>CSV सफलतापूर्वक %s में निर्यात किया गया</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>रद्द किया जा रहा है…</translation>
+    </message>
+    <message>
+        <source>Checking available datasets…</source>
+        <translation>उपलब्ध डेटासेट जाँचे जा रहे हैं…</translation>
+    </message>
+    <message>
+        <source>Clear download folder</source>
+        <translation>डाउनलोड फ़ोल्डर साफ़ करें</translation>
+    </message>
+    <message>
+        <source>Click to re-check your Earth Engine sign-in status</source>
+        <translation>अपनी Earth Engine साइन-इन स्थिति पुनः जाँचने के लिए क्लिक करें</translation>
+    </message>
+    <message>
+        <source>Composite '%s' %s into QGIS.</source>
+        <translation>संयुक्त '%s' %s QGIS में।</translation>
+    </message>
+    <message>
+        <source>Deselect All</source>
+        <translation>सभी अचयनित करें</translation>
+    </message>
+    <message>
+        <source>Download folder</source>
+        <translation>डाउनलोड फ़ोल्डर</translation>
+    </message>
+    <message>
+        <source>Downloading %d of %d: %s</source>
+        <translation>%d में से %d डाउनलोड हो रहा है: %s</translation>
+    </message>
+    <message>
+        <source>Downloading dependencies. This only happens on first use.</source>
+        <translation>निर्भरताएँ डाउनलोड हो रही हैं। यह केवल पहली बार होता है।</translation>
+    </message>
+    <message>
+        <source>Downloading…</source>
+        <translation>डाउनलोड हो रहा है…</translation>
+    </message>
+    <message>
+        <source>Drag on the map to draw a box. Hold Shift for a square, Esc to cancel.</source>
+        <translation>बॉक्स बनाने के लिए मानचित्र पर खींचें। वर्ग के लिए Shift दबाए रखें, रद्द करने के लिए Esc।</translation>
+    </message>
+    <message>
+        <source>Draw AOI mode</source>
+        <translation>AOI ड्रॉ मोड</translation>
+    </message>
+    <message>
+        <source>Failed to export CSV: %s</source>
+        <translation>CSV निर्यात विफल: %s</translation>
+    </message>
+    <message>
+        <source>Failed to save AOI shapefile to the download folder.</source>
+        <translation>AOI शेपफ़ाइल डाउनलोड फ़ोल्डर में सहेजने में विफल।</translation>
+    </message>
+    <message>
+        <source>Filter Dates</source>
+        <translation>तिथियाँ फ़िल्टर करें</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>लोड हो रहा है...</translation>
+    </message>
+    <message>
+        <source>Radar (SAR) Data</source>
+        <translation>रडार (SAR) डेटा</translation>
+    </message>
+    <message>
+        <source>Radar (SAR) data</source>
+        <translation>रडार (SAR) डेटा</translation>
+    </message>
+    <message>
+        <source>SAR image '%s' %s into QGIS.</source>
+        <translation>SAR छवि '%s' %s QGIS में।</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>सभी चुनें</translation>
+    </message>
+    <message>
+        <source>Select all in this year</source>
+        <translation>इस वर्ष में सभी चुनें</translation>
+    </message>
+    <message>
+        <source>Select download folder</source>
+        <translation>डाउनलोड फ़ोल्डर चुनें</translation>
+    </message>
+    <message>
+        <source>Setting up AGLgis…</source>
+        <translation>AGLgis सेट किया जा रहा है…</translation>
+    </message>
+    <message>
+        <source>Setting up…</source>
+        <translation>सेट किया जा रहा है…</translation>
+    </message>
+    <message>
+        <source>Sign-in timed out. Please try again.</source>
+        <translation>साइन-इन का समय समाप्त। कृपया पुनः प्रयास करें।</translation>
+    </message>
+    <message>
+        <source>System temp (default)</source>
+        <translation>सिस्टम temp (डिफ़ॉल्ट)</translation>
+    </message>
+    <message>
+        <source>Waiting for sign-in in your browser…</source>
+        <translation>आपके ब्राउज़र में साइन-इन की प्रतीक्षा…</translation>
+    </message>
+    <message>
+        <source>Working...</source>
+        <translation>कार्य हो रहा है...</translation>
+    </message>
+    <message>
+        <source> (%d failed)</source>
+        <translation> (%d विफल)</translation>
+    </message>
 </context>
 </TS>

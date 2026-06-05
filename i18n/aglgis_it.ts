@@ -467,5 +467,221 @@
         <source>Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges. Applies to every downloaded and previewed SAR output (single date, batch, composite).</source>
         <translation>Usa un buffer positivo per includere il terreno appena fuori dalla tua area, o un buffer negativo per ritagliare i bordi. Si applica a ogni output SAR scaricato e in anteprima (data singola, batch, composito).</translation>
     </message>
+    <message>
+        <source>&lt;b&gt;Cross Ratio (CR)&lt;/b&gt; — cross- over co-polarized backscatter. Rises strongly with green biomass and canopy volume; one of the most widely used Sentinel-1 crop indicators.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / VV&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop growth and biomass, phenology, vegetation density.</source>
+        <translation>&lt;b&gt;Rapporto Incrociato (CR)&lt;/b&gt; — backscatter a polarizzazione incrociata sul copolarizzato. Aumenta fortemente con la biomassa verde e il volume della chioma; uno degli indicatori per le colture Sentinel-1 più usati.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / VV&lt;br&gt;&lt;i&gt;Usare per:&lt;/i&gt; crescita e biomassa delle colture, fenologia, densità della vegetazione.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;NDPI (Normalized Difference Polarization Index)&lt;/b&gt; — normalized contrast between co- and cross-pol backscatter (also used as RFDI for forest degradation).&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (VV − VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation vs. soil/water separation, forest disturbance, land-cover discrimination.</source>
+        <translation>&lt;b&gt;NDPI (Indice di Polarizzazione a Differenza Normalizzata)&lt;/b&gt; — contrasto normalizzato tra il backscatter co e a polarizzazione incrociata (usato anche come RFDI per il degrado forestale).&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (VV − VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Usare per:&lt;/i&gt; separazione vegetazione vs. suolo/acqua, disturbo forestale, discriminazione della copertura del suolo.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Polarization Difference (PD)&lt;/b&gt; — absolute gap between co- and cross-pol backscatter; a simple proxy for scattering structure.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV − VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; biomass/structure trends, surface vs. volume scattering, quick change detection.</source>
+        <translation>&lt;b&gt;Differenza di Polarizzazione (PD)&lt;/b&gt; — divario assoluto tra il backscatter co e a polarizzazione incrociata; un indicatore semplice della struttura di scattering.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV − VH&lt;br&gt;&lt;i&gt;Usare per:&lt;/i&gt; tendenze di biomassa/struttura, scattering di superficie vs. volume, rilevamento rapido dei cambiamenti.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;DPSVIm (Modified Dual-pol SAR Vegetation Index)&lt;/b&gt; — practical successor to DPSVI; no per-scene maximum needed, sensitive across the crop cycle.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV × (VV + VH) / √2&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop biomass and LAI, soil-moisture-robust vegetation monitoring. Use LINEAR output format.</source>
+        <translation>&lt;b&gt;DPSVIm (Indice di Vegetazione SAR Dual-pol Modificato)&lt;/b&gt; — successore pratico del DPSVI; non richiede il massimo per scena, sensibile lungo il ciclo colturale.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV × (VV + VH) / √2&lt;br&gt;&lt;i&gt;Usare per:&lt;/i&gt; biomassa e LAI delle colture, monitoraggio della vegetazione robusto all'umidità del suolo. Usare il formato di output LINEAR.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;PRVI (Polarimetric Radar Vegetation Index)&lt;/b&gt; — weights cross-pol backscatter by the degree of depolarization.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (1 − VH / VV) × VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass, canopy density estimation.</source>
+        <translation>&lt;b&gt;PRVI (Indice di Vegetazione Radar Polarimetrico)&lt;/b&gt; — pesa il backscatter a polarizzazione incrociata in base al grado di depolarizzazione.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (1 − VH / VV) × VH&lt;br&gt;&lt;i&gt;Usare per:&lt;/i&gt; copertura vegetale e biomassa, stima della densità della chioma.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;mRVI (Modified Radar Vegetation Index)&lt;/b&gt; — bounded RVI variant scaled by the co-pol fraction for steadier dynamic range.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; √(VV / (VV + VH)) × (4 × VH / (VV + VH))&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass, phenology tracking.</source>
+        <translation>&lt;b&gt;mRVI (Indice di Vegetazione Radar Modificato)&lt;/b&gt; — variante limitata dell'RVI scalata dalla frazione copolarizzata per una dinamica più stabile.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; √(VV / (VV + VH)) × (4 × VH / (VV + VH))&lt;br&gt;&lt;i&gt;Usare per:&lt;/i&gt; copertura vegetale e biomassa, monitoraggio della fenologia.</translation>
+    </message>
+    <message>
+        <source>Band: CR</source>
+        <translation>Banda: CR</translation>
+    </message>
+    <message>
+        <source>Band: NDPI</source>
+        <translation>Banda: NDPI</translation>
+    </message>
+    <message>
+        <source>Band: PD</source>
+        <translation>Banda: PD</translation>
+    </message>
+    <message>
+        <source>Band: DPSVIm</source>
+        <translation>Banda: DPSVIm</translation>
+    </message>
+    <message>
+        <source>Band: PRVI</source>
+        <translation>Banda: PRVI</translation>
+    </message>
+    <message>
+        <source>Band: mRVI</source>
+        <translation>Banda: mRVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, CR</source>
+        <translation>RGB: VV, VH, CR</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, RVI</source>
+        <translation>RGB: VV, VH, RVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, NDPI</source>
+        <translation>RGB: VV, VH, NDPI</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, PD</source>
+        <translation>RGB: VV, VH, PD</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VV/VH Ratio, RVI</source>
+        <translation>RGB: VV, VV/VH Ratio, RVI</translation>
+    </message>
+    <message>
+        <source>RGB: CR, RVI, DpRVI</source>
+        <translation>RGB: CR, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>RGB: RVI, DpRVI, mRVI</source>
+        <translation>RGB: RVI, DpRVI, mRVI</translation>
+    </message>
+    <message>
+        <source>RGB: NDPI, RVI, DPSVIm</source>
+        <translation>RGB: NDPI, RVI, DPSVIm</translation>
+    </message>
+    <message>
+        <source>AOI saved to '{}' and selected.</source>
+        <translation>AOI salvata in '{}' e selezionata.</translation>
+    </message>
+    <message>
+        <source>Batch download complete: %d/%d successful</source>
+        <translation>Download in batch completato: %d/%d riusciti</translation>
+    </message>
+    <message>
+        <source>Batch download failed: %s</source>
+        <translation>Download in batch non riuscito: %s</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>Sfoglia</translation>
+    </message>
+    <message>
+        <source>CSV exported successfully to %s</source>
+        <translation>CSV esportato correttamente in %s</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>Annullamento…</translation>
+    </message>
+    <message>
+        <source>Checking available datasets…</source>
+        <translation>Controllo dei set di dati disponibili…</translation>
+    </message>
+    <message>
+        <source>Clear download folder</source>
+        <translation>Svuota la cartella di download</translation>
+    </message>
+    <message>
+        <source>Click to re-check your Earth Engine sign-in status</source>
+        <translation>Fai clic per ricontrollare lo stato di accesso a Earth Engine</translation>
+    </message>
+    <message>
+        <source>Composite '%s' %s into QGIS.</source>
+        <translation>Composito '%s' %s in QGIS.</translation>
+    </message>
+    <message>
+        <source>Deselect All</source>
+        <translation>Deseleziona tutto</translation>
+    </message>
+    <message>
+        <source>Download folder</source>
+        <translation>Cartella di download</translation>
+    </message>
+    <message>
+        <source>Downloading %d of %d: %s</source>
+        <translation>Download %d di %d: %s</translation>
+    </message>
+    <message>
+        <source>Downloading dependencies. This only happens on first use.</source>
+        <translation>Download delle dipendenze. Avviene solo al primo utilizzo.</translation>
+    </message>
+    <message>
+        <source>Downloading…</source>
+        <translation>Download in corso…</translation>
+    </message>
+    <message>
+        <source>Drag on the map to draw a box. Hold Shift for a square, Esc to cancel.</source>
+        <translation>Trascina sulla mappa per disegnare un riquadro. Tieni premuto Shift per un quadrato, Esc per annullare.</translation>
+    </message>
+    <message>
+        <source>Draw AOI mode</source>
+        <translation>Modalità disegno AOI</translation>
+    </message>
+    <message>
+        <source>Failed to export CSV: %s</source>
+        <translation>Esportazione CSV non riuscita: %s</translation>
+    </message>
+    <message>
+        <source>Failed to save AOI shapefile to the download folder.</source>
+        <translation>Impossibile salvare lo shapefile AOI nella cartella di download.</translation>
+    </message>
+    <message>
+        <source>Filter Dates</source>
+        <translation>Filtra date</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>Caricamento...</translation>
+    </message>
+    <message>
+        <source>Radar (SAR) Data</source>
+        <translation>Dati radar (SAR)</translation>
+    </message>
+    <message>
+        <source>Radar (SAR) data</source>
+        <translation>Dati radar (SAR)</translation>
+    </message>
+    <message>
+        <source>SAR image '%s' %s into QGIS.</source>
+        <translation>Immagine SAR '%s' %s in QGIS.</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>Seleziona tutto</translation>
+    </message>
+    <message>
+        <source>Select all in this year</source>
+        <translation>Seleziona tutto in quest'anno</translation>
+    </message>
+    <message>
+        <source>Select download folder</source>
+        <translation>Seleziona la cartella di download</translation>
+    </message>
+    <message>
+        <source>Setting up AGLgis…</source>
+        <translation>Configurazione di AGLgis…</translation>
+    </message>
+    <message>
+        <source>Setting up…</source>
+        <translation>Configurazione…</translation>
+    </message>
+    <message>
+        <source>Sign-in timed out. Please try again.</source>
+        <translation>Accesso scaduto. Riprova.</translation>
+    </message>
+    <message>
+        <source>System temp (default)</source>
+        <translation>Temp di sistema (predefinito)</translation>
+    </message>
+    <message>
+        <source>Waiting for sign-in in your browser…</source>
+        <translation>In attesa dell'accesso nel browser…</translation>
+    </message>
+    <message>
+        <source>Working...</source>
+        <translation>Elaborazione...</translation>
+    </message>
+    <message>
+        <source> (%d failed)</source>
+        <translation> (%d non riusciti)</translation>
+    </message>
 </context>
 </TS>
