@@ -14,8 +14,8 @@ email=caio.arantes@farmanalytica.com.br
 
 about=This plugin allows users to configure and run Sentinel-1 SAR data processing without the need to write code.
 
-tracker=https://github.com/caioarantes/aglgis/issues
-repository=https://github.com/caioarantes/aglgis
+tracker=https://github.com/farmanalytica/aglgis/issues
+repository=https://github.com/farmanalytica/aglgis
 # End of mandatory metadata
 
 # Recommended items:
@@ -45,7 +45,7 @@ changelog=
 # Tags are comma separated with spaces allowed
 tags=python,sentinel,radar,sar,google earth engine,remote sensing,raster
 
-homepage=https://caioarantes.github.io/AGLgis/
+homepage=https://farmanalytica.github.io/AGLgis/
 category=Raster
 icon=icon.png
 # experimental flag
