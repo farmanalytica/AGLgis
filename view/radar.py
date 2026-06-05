@@ -809,17 +809,37 @@ def _build_results_tab(dialog, parent):
     dialog.sar_render_combo.setSizeAdjustPolicy(
         QComboBox.SizeAdjustPolicy.AdjustToContents
     )
-    dialog.sar_render_combo.addItems([
-        _tr("RGB: VV, VH, VV/VH Ratio"),
-        _tr("RGB: VV, RVI, DpRVI"),
-        _tr("RGB: VV/VH Ratio, RVI, DpRVI"),
-        _tr("Band: VV"),
-        _tr("Band: VH"),
-        _tr("Band: VV/VH Ratio"),
-        _tr("Band: RVI"),
-        _tr("Band: DpRVI"),
-    ])
+    # Canonical English key in itemData drives the renderer, so the selection
+    # keeps working under translated UI labels.
+    for _label, _key in (
+        (_tr("RGB: VV, VH, VV/VH Ratio"), "RGB: VV, VH, VV/VH Ratio"),
+        (_tr("RGB: VV, RVI, DpRVI"), "RGB: VV, RVI, DpRVI"),
+        (_tr("RGB: VV/VH Ratio, RVI, DpRVI"), "RGB: VV/VH Ratio, RVI, DpRVI"),
+        (_tr("Band: VV"), "Band: VV"),
+        (_tr("Band: VH"), "Band: VH"),
+        (_tr("Band: VV/VH Ratio"), "Band: VV/VH Ratio"),
+        (_tr("Band: RVI"), "Band: RVI"),
+        (_tr("Band: DpRVI"), "Band: DpRVI"),
+    ):
+        dialog.sar_render_combo.addItem(_label, _key)
     dialog.sar_render_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
+
+    dialog.sar_render_ramp_combo = QComboBox()
+    _prepare_field(dialog.sar_render_ramp_combo, 30)
+    dialog.sar_render_ramp_combo.setMinimumWidth(140)
+    dialog.sar_render_ramp_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToContents
+    )
+    dialog.sar_render_ramp_combo.addItems([
+        "Viridis", "Magma", "Plasma", "Inferno", "RdYlGn", "Greys",
+    ])
+    # Explicit disabled look — the page stylesheet keeps QComboBox white, so the
+    # plain enabled/disabled state is not visible without this override.
+    dialog.sar_render_ramp_combo.setStyleSheet(
+        "QComboBox:disabled { color: #bdbdbd; background: #f2f2f2;"
+        " border-color: #e6e6e6; }"
+    )
+    dialog.sar_render_ramp_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
 
     dialog.sar_btn_preview = QPushButton(_tr("Preview"))
     dialog.sar_btn_preview.setFixedHeight(30)
@@ -830,17 +850,48 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_download_preview.setFixedHeight(30)
     dialog.sar_btn_download_preview.setStyleSheet(STYLE_BTN_SECONDARY)
 
+    # The color ramp only applies to single-band ("Band: …") renders. Build the
+    # caption manually (not via _labeled) so it can be dimmed in lockstep with
+    # the disabled combo for the RGB composites where the ramp has no effect.
+    ramp_label = QLabel(_tr("Color Ramp"))
+    ramp_label.setMinimumWidth(80)
+    _RAMP_LBL_ON = (
+        "color: #616161; font-size: 12px; background: transparent; border: none;"
+    )
+    _RAMP_LBL_OFF = (
+        "color: #bdbdbd; font-size: 12px; background: transparent; border: none;"
+    )
+    ramp_group = QWidget()
+    ramp_group.setStyleSheet("background: transparent;")
+    ramp_row = QHBoxLayout(ramp_group)
+    ramp_row.setContentsMargins(0, 0, 0, 0)
+    ramp_row.setSpacing(8)
+    ramp_row.addWidget(ramp_label)
+    ramp_row.addWidget(dialog.sar_render_ramp_combo)
+
+    def _sync_render_ramp():
+        is_band = str(dialog.sar_render_combo.currentData()).startswith("Band: ")
+        dialog.sar_render_ramp_combo.setEnabled(is_band)
+        ramp_label.setStyleSheet(_RAMP_LBL_ON if is_band else _RAMP_LBL_OFF)
+
+    dialog.sar_render_combo.currentIndexChanged.connect(
+        lambda _i: _sync_render_ramp()
+    )
+    _sync_render_ramp()
+
+    # Each control is its own flow item (date+filter kept as one tight cluster)
+    # so the row wraps onto new lines when the panel is narrow — the section
+    # grows taller instead of clipping the buttons.
     controls_lay.addWidget(_flow([
         _group([
             _labeled(_tr("Date"), dialog.sar_result_date_combo, 34),
             dialog.sar_btn_filter_dates,
         ]),
-        _group([
-            _labeled(_tr("Render Mode"), dialog.sar_render_combo, 80),
-            dialog.sar_btn_preview,
-            dialog.sar_btn_download_preview,
-        ]),
-    ], spacing=18))
+        _labeled(_tr("Render Mode"), dialog.sar_render_combo, 80),
+        ramp_group,
+        dialog.sar_btn_preview,
+        dialog.sar_btn_download_preview,
+    ], spacing=12))
     lay.addWidget(controls_panel)
 
     composite_panel = _section_panel()
@@ -906,16 +957,14 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_composite_download.setFixedHeight(30)
     dialog.sar_btn_composite_download.setStyleSheet(STYLE_BTN_SECONDARY)
 
+    # Flat flow so each control wraps onto a new line when the panel is narrow,
+    # growing the section vertically instead of clipping the buttons.
     composite_lay.addWidget(_flow([
-        _group([
-            _labeled(_tr("Metric"), dialog.sar_composite_metric_combo, 80),
-            _labeled(_tr("Color Ramp"), dialog.sar_composite_ramp_combo, 80),
-        ]),
-        _group([
-            dialog.sar_btn_composite_preview,
-            dialog.sar_btn_composite_download,
-        ]),
-    ], spacing=18))
+        _labeled(_tr("Metric"), dialog.sar_composite_metric_combo, 80),
+        _labeled(_tr("Color Ramp"), dialog.sar_composite_ramp_combo, 80),
+        dialog.sar_btn_composite_preview,
+        dialog.sar_btn_composite_download,
+    ], spacing=12))
 
     lay.addWidget(composite_panel)
 
@@ -986,6 +1035,12 @@ def _build_results_tab(dialog, parent):
 
     lay.addWidget(buffer_panel)
     lay.addStretch(1)
+
+    # Disabling the clicked button (during a worker run) otherwise hands keyboard
+    # focus to the next button, which then shows a focus ring as if selected.
+    # These are mouse-driven actions, so drop them from the focus chain.
+    for _btn in scroll_w.findChildren(QPushButton):
+        _btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
     scroll.setWidget(scroll_w)
     dialog.sar_results_splitter.addWidget(scroll)

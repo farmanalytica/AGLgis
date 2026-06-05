@@ -76,14 +76,14 @@ class SARRenderer:
         return layer
 
     @staticmethod
-    def _create_single_band_layer(path, layer_name, band_name):
-        """Create a single-band pseudocolor layer with Viridis palette."""
+    def _create_single_band_layer(path, layer_name, band_name, color_ramp_name="Viridis"):
+        """Create a single-band pseudocolor layer with the given palette."""
         band_index = BAND_INDEX_MAP.get(band_name, 1)
         layer = RasterRendererUtils.load_pseudocolor_raster(
             path,
             f"{layer_name} [{band_name}]",
             band_index=band_index,
-            color_ramp_name="Viridis",
+            color_ramp_name=color_ramp_name,
             at_top=True,
         )
 
@@ -107,7 +107,12 @@ class SARRenderer:
         return layer
 
     @staticmethod
-    def load_sar_to_qgis(path, layer_name, render_mode="RGB: VV, VH, VV/VH Ratio"):
+    def load_sar_to_qgis(
+        path,
+        layer_name,
+        render_mode="RGB: VV, VH, VV/VH Ratio",
+        color_ramp_name="Viridis",
+    ):
 
         if render_mode == "RGB: VV, VH, VV/VH Ratio":
             return SARRenderer._create_rgb_composite(
@@ -123,7 +128,9 @@ class SARRenderer:
             )
         elif render_mode.startswith("Band: "):
             band_name = render_mode.replace("Band: ", "")
-            return SARRenderer._create_single_band_layer(path, layer_name, band_name)
+            return SARRenderer._create_single_band_layer(
+                path, layer_name, band_name, color_ramp_name=color_ramp_name
+            )
         else:
             return SARRenderer._create_rgb_composite(
                 path, layer_name, ["VV", "VH", "VV/VH Ratio"]

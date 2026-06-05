@@ -295,8 +295,12 @@ class SARCtrl:
     def _on_preview_done(self, output_path: str, label: str, to_folder: bool):
         self._set_preview_busy(False)
         self._release_worker("_preview_worker")
-        render_mode = self.dialog.sar_layer_combo.currentText()
-        SARRenderer.load_sar_to_qgis(output_path, label, render_mode=render_mode)
+        SARRenderer.load_sar_to_qgis(
+            output_path,
+            label,
+            render_mode=self._render_mode(),
+            color_ramp_name=self.dialog.sar_render_ramp_combo.currentText(),
+        )
 
         if self.interface:
             filename = os.path.basename(output_path)
@@ -460,8 +464,13 @@ class SARCtrl:
         else:
             self.dialog.pop_message(_tr("Batch download cancelled by user."), "info")
 
+    def _render_mode(self) -> str:
+        data = self.dialog.sar_render_combo.currentData()
+        return data or self.dialog.sar_render_combo.currentText()
+
     def _load_downloaded_images(self, paths: list):
-        render_mode = self.dialog.sar_render_combo.currentText()
+        render_mode = self._render_mode()
+        color_ramp_name = self.dialog.sar_render_ramp_combo.currentText()
         for path in paths:
             try:
                 date_str = (
@@ -470,7 +479,12 @@ class SARCtrl:
                     .replace(".tiff", "")
                 )
                 label = f"SAR_{date_str}"
-                SARRenderer.load_sar_to_qgis(path, label, render_mode=render_mode)
+                SARRenderer.load_sar_to_qgis(
+                    path,
+                    label,
+                    render_mode=render_mode,
+                    color_ramp_name=color_ramp_name,
+                )
             except Exception:
                 continue
 
