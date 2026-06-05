@@ -23,6 +23,14 @@ repository=https://github.com/caioarantes/aglgis
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+    2.0 - Spectral indices time series and synthetic composites
+    - Added 6 spectral indices and additional RGB band combinations
+    - Selectable render modes and color ramps with adaptive controls
+    - Resizable plugin window with scalable pages and draggable plot splitter
+    - Per-AOI output subfolders and download buffer
+    - GEE sign-in status display and smarter re-authentication
+    - Complete Portuguese translation and localized intro page
+
     1.1 - Portuguese translation
 
     1.0 - Updated documentation
