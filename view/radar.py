@@ -960,16 +960,17 @@ def _build_results_tab(dialog, parent):
     dialog.sar_composite_metric_combo.setSizeAdjustPolicy(
         QComboBox.SizeAdjustPolicy.AdjustToContents
     )
-    dialog.sar_composite_metric_combo.addItems([
-        _tr("Mean"),
-        _tr("Median"),
-        _tr("Min"),
-        _tr("Max"),
-        _tr("Amplitude"),
-        _tr("Standard Deviation"),
-        _tr("Sum"),
-        _tr("Area Under Curve (AUC)"),
-    ])
+    for _metric_key in (
+        "Mean",
+        "Median",
+        "Min",
+        "Max",
+        "Amplitude",
+        "Standard Deviation",
+        "Sum",
+        "Area Under Curve (AUC)",
+    ):
+        dialog.sar_composite_metric_combo.addItem(_tr(_metric_key), _metric_key)
     dialog.sar_composite_metric_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
 
     dialog.sar_composite_ramp_combo = QComboBox()

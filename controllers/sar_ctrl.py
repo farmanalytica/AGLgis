@@ -348,7 +348,7 @@ class SARCtrl:
             self._download_aoi(),
             meta["band"],
             meta["band_label"],
-            self.dialog.sar_composite_metric_combo.currentText(),
+            self.dialog.sar_composite_metric_combo.currentData(),
             dates,
             min(dates),
             output_folder,
