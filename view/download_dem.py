@@ -34,9 +34,16 @@ def _tr(text):
     return QCoreApplication.translate("AGLgis", text)
 
 
-# ---------------------------------------------------------------------------
-# Custom widget
-# ---------------------------------------------------------------------------
+_SLIDER_STYLE = """
+QSlider::groove:horizontal { height: 4px; background: #d6d6d6; border-radius: 2px; }
+QSlider::sub-page:horizontal { background: #d6d6d6; border-radius: 2px; }
+QSlider::add-page:horizontal { background: #d6d6d6; border-radius: 2px; }
+QSlider::handle:horizontal {
+    background: #1b6b39; width: 14px; height: 14px;
+    margin: -6px 0; border-radius: 7px;
+}
+QSlider::handle:horizontal:hover { background: #15532d; }
+"""
 
 
 class LimitedPopupComboBox(QComboBox):
@@ -58,7 +65,6 @@ class LimitedPopupComboBox(QComboBox):
         view = self.view()
         popup = view.window()
 
-        # Estimate item height and cap the total popup height to the configured limit.
         row_height = max(view.sizeHintForRow(0), self.fontMetrics().height() + 4)
         visible_rows = min(self.maxVisibleItems(), self.count())
         popup_height = min(
@@ -67,7 +73,6 @@ class LimitedPopupComboBox(QComboBox):
         )
         popup_width = self.width()
 
-        # Shrink the popup if there is not enough space below the combo box.
         top_left = self.mapToGlobal(self.rect().bottomLeft())
         parent_window = self.window()
         if parent_window:
@@ -81,11 +86,6 @@ class LimitedPopupComboBox(QComboBox):
         popup.setFixedSize(popup_width, popup_height)
         popup.move(top_left)
         view.setGeometry(0, 0, popup_width, popup_height)
-
-
-# ---------------------------------------------------------------------------
-# STEP 2 — AOI and DEM inputs
-# ---------------------------------------------------------------------------
 
 
 def setup_download_dem_page(dialog, page):
@@ -116,7 +116,6 @@ def setup_download_dem_page(dialog, page):
     panel_lay.setContentsMargins(16, 12, 16, 10)
     panel_lay.setSpacing(0)
 
-    # ── Scrollable content ────────────────────────────────────────────────
     scroll_area = QScrollArea()
     scroll_area.setWidgetResizable(True)
     scroll_area.setFrameShape(QFrame.Shape.NoFrame)
@@ -131,7 +130,6 @@ def setup_download_dem_page(dialog, page):
     scroll_lay.setContentsMargins(0, 0, 6, 0)
     scroll_lay.setSpacing(6)
 
-    # Title and subtitle.
     title_lbl = QLabel(_tr("AOI and DEM inputs"))
     title_lbl.setObjectName("aoiTitle")
     scroll_lay.addWidget(title_lbl)
@@ -142,7 +140,6 @@ def setup_download_dem_page(dialog, page):
 
     scroll_lay.addSpacing(4)
 
-    # AOI polygon layer selector.
     layer_lbl = QLabel(_tr("AOI LAYER"))
     layer_lbl.setObjectName("aoiFieldLabel")
     scroll_lay.addWidget(layer_lbl)
@@ -182,7 +179,6 @@ def setup_download_dem_page(dialog, page):
 
     scroll_lay.addSpacing(6)
 
-    # DEM dataset selector.
     dem_lbl = QLabel(_tr("DEM DATASET"))
     dem_lbl.setObjectName("aoiFieldLabel")
     scroll_lay.addWidget(dem_lbl)
@@ -204,7 +200,6 @@ def setup_download_dem_page(dialog, page):
 
     scroll_lay.addSpacing(2)
 
-    # Dataset metadata browser.
     dialog.dem_info = QTextBrowser()
     dialog.dem_info.setObjectName("demInfo")
     dialog.dem_info.setOpenExternalLinks(True)
@@ -217,7 +212,6 @@ def setup_download_dem_page(dialog, page):
 
     scroll_lay.addSpacing(6)
 
-    # AOI buffer — separator line.
     separator = QFrame()
     separator.setFrameShape(QFrame.Shape.HLine)
     separator.setStyleSheet("color: #e0e0e0;")
@@ -225,7 +219,6 @@ def setup_download_dem_page(dialog, page):
 
     scroll_lay.addSpacing(4)
 
-    # AOI buffer label and description.
     buffer_lbl = QLabel(_tr("AOI BUFFER"))
     buffer_lbl.setObjectName("aoiFieldLabel")
     scroll_lay.addWidget(buffer_lbl)
@@ -241,7 +234,6 @@ def setup_download_dem_page(dialog, page):
 
     scroll_lay.addSpacing(4)
 
-    # Buffer slider row.
     buffer_row = QHBoxLayout()
     buffer_row.setContentsMargins(0, 0, 0, 0)
     buffer_row.setSpacing(8)
@@ -258,6 +250,7 @@ def setup_download_dem_page(dialog, page):
     dialog.buffer_slider.setValue(0)
     dialog.buffer_slider.setTickInterval(100)
     dialog.buffer_slider.setTickPosition(QSlider.TickPosition.NoTicks)
+    dialog.buffer_slider.setStyleSheet(_SLIDER_STYLE)
     buffer_row.addWidget(dialog.buffer_slider, 1)
 
     plus_lbl = QLabel("+300 m")
@@ -287,7 +280,6 @@ def setup_download_dem_page(dialog, page):
     scroll_area.setWidget(scroll_content)
     panel_lay.addWidget(scroll_area, 1)
 
-    # ── Fixed footer (always visible) ─────────────────────────────────────
     footer_separator = QFrame()
     footer_separator.setFrameShape(QFrame.Shape.HLine)
     footer_separator.setStyleSheet("color: #e8e8e8;")
@@ -295,7 +287,6 @@ def setup_download_dem_page(dialog, page):
 
     panel_lay.addSpacing(6)
 
-    # Action buttons row — download centred, sidebar handles back navigation.
     action_row = QHBoxLayout()
     action_row.setContentsMargins(0, 0, 0, 0)
     action_row.setSpacing(8)

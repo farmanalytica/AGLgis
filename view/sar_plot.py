@@ -13,8 +13,6 @@ import os
 import plotly.express as px
 
 
-# QtWebKit (the only web engine in this QGIS) can't run plotly 6.x's plotly.js
-# (v3). We vendor the last v1 release, which does run there, and inline it.
 _PLOTLY_JS_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "assets",
@@ -67,14 +65,7 @@ def render_chart_html(dataframe, hide_toolbar=True, title="VV/VH Ratio Mean Time
     """
     fig = _build_figure(dataframe, title=title, ylabel=ylabel)
     fig.update_layout(template="none")
-    # plotly 6.x encodes numeric arrays as base64 typed-arrays ("bdata"), even in
-    # to_dict(); plotly.js v1.58 can't decode that, so the y values render as
-    # garbage. Rebuild the single trace's coordinates as plain lists from the
-    # source dataframe and serialize with the stdlib json encoder.
     fig_dict = fig.to_dict()
-    # Empty-AOI dates are already dropped at the source (get_index_timeseries),
-    # so the series is valid-only here. The collection is sorted newest-first,
-    # so sort chronologically to draw the line in date order.
     pairs = sorted(
         zip(dataframe["dates"].tolist(), dataframe["AOI_average"].tolist()),
         key=lambda p: p[0],

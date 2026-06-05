@@ -148,10 +148,10 @@ class SARCompositeWorker(QThread):
 class SARBatchDownloadWorker(QThread):
     """Downloads multiple SAR images sequentially with progress tracking."""
 
-    progress = pyqtSignal(int, int, str)  # (current, total, current_date)
-    finished = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
+    progress = pyqtSignal(int, int, str)
+    finished = pyqtSignal(int, int, list)
     failed = pyqtSignal(str)
-    cancelled = pyqtSignal(int, int, list)  # (successful, total, downloaded_paths)
+    cancelled = pyqtSignal(int, int, list)
 
     def __init__(
         self,

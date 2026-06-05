@@ -97,28 +97,24 @@ class AGLgisDialog(QDialog):
         self.setSizeGripEnabled(True)
         self.setStyleSheet(STYLE_DIALOG)
 
-        # 1. Main layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
         main_layout.addWidget(self._build_header())
 
-        # 2. Central Body Area
         body_container = QWidget()
         body_container.setStyleSheet("background-color: #f5f5f5;")
         body_layout = QHBoxLayout(body_container)
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(2)
 
-        # Sidebar
         self.sidebar = Sidebar()
         self.sidebar.auth_requested.connect(self._nav_to_auth)
         self.sidebar.radar_requested.connect(self._nav_to_radar)
         self.sidebar.dem_requested.connect(self._nav_to_dem)
         body_layout.addWidget(self.sidebar)
 
-        # Main Content Column (Stack + Footer)
         content_container = QWidget()
         content_container.setStyleSheet("background-color: #f5f5f5;")
         content_layout = QVBoxLayout(content_container)
@@ -136,7 +132,6 @@ class AGLgisDialog(QDialog):
 
         body_layout.addWidget(content_container, 1)
 
-        # 4. Pages Initialization
         self.loading_page = self._build_loading_page()
         self.auth_page = QWidget()
         self.radar_page = QWidget()
@@ -146,22 +141,17 @@ class AGLgisDialog(QDialog):
         setup_radar_page(self, self.radar_page)
         setup_download_dem_page(self, self.dem_page)
 
-        # Add to stack
         self.stack.addWidget(self.loading_page)
         self.stack.addWidget(self.auth_page)
         self.stack.addWidget(self.radar_page)
         self.stack.addWidget(self.dem_page)
         self.stack.currentChanged.connect(self._sync_page_state)
 
-        # Initial state
         self.stack.setCurrentWidget(self.auth_page)
         self._sync_page_state(self.stack.currentIndex())
 
         main_layout.addWidget(body_container, 1)
 
-    # -----------------------------------------------------------------------
-    # LOADING PAGE
-    # -----------------------------------------------------------------------
 
     def _build_loading_page(self):
         loading_page = QWidget()
@@ -196,9 +186,6 @@ class AGLgisDialog(QDialog):
         loading_layout.addStretch()
         return loading_page
 
-    # -----------------------------------------------------------------------
-    # HEADER
-    # -----------------------------------------------------------------------
 
     def _build_header(self):
         """
@@ -219,19 +206,16 @@ class AGLgisDialog(QDialog):
         header_layout.setContentsMargins(28, 0, 20, 0)
         header_layout.setSpacing(0)
 
-        # Brand name
         brand = QLabel("AGLgis")
         brand.setStyleSheet(
             "color: #1b6b39; font-size: 13px; font-weight: bold; letter-spacing: 0.5px;"
         )
         header_layout.addWidget(brand)
 
-        # Divider between brand and page title
         separator = QLabel("  |")
         separator.setStyleSheet("color: #d0d0d0; font-size: 16px;")
         header_layout.addWidget(separator)
 
-        # Dynamic title updated by opened current page
         self._header_title = QLabel(_tr("GEE Configuration"))
         self._header_title.setStyleSheet(
             "color: #616161; font-size: 13px; margin-left: 4px;"
@@ -240,7 +224,6 @@ class AGLgisDialog(QDialog):
 
         header_layout.addStretch()
 
-        # Help button — opens the plugin documentation in the default browser.
         self.browser = QPushButton("?")
         self.browser.setFixedSize(28, 28)
         self.browser.setToolTip(_tr("Learn more"))
@@ -254,9 +237,6 @@ class AGLgisDialog(QDialog):
 
         return header
 
-    # -----------------------------------------------------------------------
-    # FOOTER
-    # -----------------------------------------------------------------------
 
     def _build_footer(self):
         """
@@ -277,7 +257,6 @@ class AGLgisDialog(QDialog):
         footer_layout.setContentsMargins(28, 4, 28, 4)
         footer_layout.setSpacing(8)
 
-        # FARM Analytica logo — falls back to plain text if SVG is missing.
         farm_icon = QLabel()
         farm_icon.setFixedHeight(16)
         farm_icon.setStyleSheet("background: transparent;")
@@ -302,7 +281,6 @@ class AGLgisDialog(QDialog):
         )
         footer_layout.addWidget(farm_icon)
 
-        # Attribution copy with an external link to the FARM Analytica website.
         farm_text = QLabel()
         farm_text.setTextFormat(Qt.TextFormat.RichText)
         farm_text.setOpenExternalLinks(True)
@@ -321,9 +299,6 @@ class AGLgisDialog(QDialog):
 
         return footer
 
-    # -----------------------------------------------------------------------
-    # PUBLIC METHODS
-    # -----------------------------------------------------------------------
 
     def show_loading_page(self):
         """Switch the stacked widget to the loading/download page."""
@@ -383,9 +358,6 @@ class AGLgisDialog(QDialog):
             self.sidebar.set_active_page("download")
             self.footer.setVisible(False)
 
-    # -----------------------------------------------------------------------
-    # AUTHENTICATION UI STATE
-    # -----------------------------------------------------------------------
 
     def set_auth_busy(self, busy):
         """
@@ -404,7 +376,6 @@ class AGLgisDialog(QDialog):
             self.btn_authenticate.setText(_tr("Cancel"))
             self.set_auth_status(_tr("Starting authentication…"))
         else:
-            # Restore the label appropriate to the last known sign-in state.
             if getattr(self, "_auth_state", None) == "authenticated":
                 self.btn_authenticate.setText(_tr("Continue"))
             else:
@@ -412,7 +383,6 @@ class AGLgisDialog(QDialog):
             self.auth_status_lbl.hide()
             self.auth_status_lbl.clear()
 
-    # Pill styles per state: (text, text colour, background, border colour).
     _AUTH_STATE_STYLES = {
         "checking": ("Checking sign-in status…", "#757575", "#f0f0f0", "#e0e0e0"),
         "none": ("Not signed in", "#b71c1c", "#fdecea", "#f5c6c2"),
@@ -437,8 +407,6 @@ class AGLgisDialog(QDialog):
         )
         self._auth_state = state
 
-        # When already signed in, the primary button just continues to the
-        # workflow — no point re-running authentication
         if not getattr(self, "_auth_busy", False):
             if state == "authenticated":
                 self.btn_authenticate.setText(_tr("Continue"))
@@ -478,7 +446,6 @@ class AGLgisDialog(QDialog):
         """
         QApplication.restoreOverrideCursor()
 
-        # Map semantic severity to QMessageBox configuration.
         config = {
             "info": (_tr("Information"), QMessageBox.Icon.Information),
             "warning": (_tr("Warning"), QMessageBox.Icon.Warning),

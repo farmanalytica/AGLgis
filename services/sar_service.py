@@ -143,10 +143,6 @@ class SARService:
     def get_vvvh_ratio_timeseries(collection, aoi):
         return SARService.get_index_timeseries(collection, aoi, "VVVH_ratio")
 
-    # ------------------------------------------------------------------
-    # Synthetic (composite) image of one index over the selected dates
-    # ------------------------------------------------------------------
-    # Same metric set as the EasyDEM/RAVI Sentinel-2 composite tool.
     COMPOSITE_METRICS = [
         "Mean",
         "Median",

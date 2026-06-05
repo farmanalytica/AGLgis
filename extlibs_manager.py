@@ -22,10 +22,6 @@ def is_ready():
 def ensure_on_path():
     if EXTLIBS_PATH not in sys.path:
         sys.path.insert(0, EXTLIBS_PATH)
-    # __init__.py may have inserted EXTLIBS_PATH while the dir was still empty
-    # (pre-download), poisoning Python's path-finder cache for that directory.
-    # Drop the cached finders so freshly extracted packages become importable
-    # without a QGIS restart.
     importlib.invalidate_caches()
 
 
@@ -43,14 +39,14 @@ def start_download():
 
 
 class ExtlibsDownloader(QThread):
-    download_done = pyqtSignal(bool, str)  # success, error_msg
+    download_done = pyqtSignal(bool, str)
 
     def run(self):
         zip_path = os.path.join(_PLUGIN_DIR, "extlibs.zip")
         try:
             if not EXTLIBS_URL.startswith("https://"):
                 raise ValueError(f"Unexpected URL scheme: {EXTLIBS_URL}")
-            with urllib.request.urlopen(EXTLIBS_URL) as resp, open(zip_path, "wb") as f:  # nosec B310
+            with urllib.request.urlopen(EXTLIBS_URL) as resp, open(zip_path, "wb") as f:
                 f.write(resp.read())
             with zipfile.ZipFile(zip_path, "r") as zf:
                 names = zf.namelist()

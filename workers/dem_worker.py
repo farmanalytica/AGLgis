@@ -41,7 +41,7 @@ class DemDownloadWorker(QThread):
     """Downloads the selected DEM off the UI thread. Loading the result into
     QGIS stays on the main thread (the caller handles that on completion)."""
 
-    finished = pyqtSignal(str, str)  # dem_path, dataset_name
+    finished = pyqtSignal(str, str)
     failed = pyqtSignal(str)
 
     def __init__(self, aoi, dataset_name, output_folder):

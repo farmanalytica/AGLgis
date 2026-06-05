@@ -67,7 +67,7 @@ class DEMCtrl:
 
         if buffer_distance == 0:
             return aoi
-        return aoi.map(lambda feature: feature.buffer(buffer_distance))
+        return aoi.map(lambda feature: feature.buffer(buffer_distance).bounds())
 
     def handle_dem_service(self, interface):
         """Download the selected DEM and load it into QGIS."""
@@ -190,9 +190,6 @@ class DEMCtrl:
         if not self.current_aoi:
             return
 
-        # if self._dataset_worker is not None and self._dataset_worker.isRunning():
-        #     self._dataset_worker.finished.disconnect()
-        #     self._dataset_worker.failed.disconnect()
 
         combobox.blockSignals(True)
         combobox.addItem(_tr("Checking available datasets…"))

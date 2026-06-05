@@ -148,7 +148,6 @@ class RectangleAoiTool(QgsMapTool):
         self._band.setWidth(2)
         self.setCursor(Qt.CursorShape.CrossCursor)
 
-    # -- mouse ----------------------------------------------------------------
     def canvasPressEvent(self, event):
         if event.button() != Qt.MouseButton.LeftButton:
             return
@@ -173,16 +172,13 @@ class RectangleAoiTool(QgsMapTool):
         if rect.width() <= 0 or rect.height() <= 0:
             return
         self._emit_layer(rect)
-        # One box per activation: restore the previous tool after the event.
         QTimer.singleShot(0, lambda: self.canvas.unsetMapTool(self))
 
-    # -- keyboard -------------------------------------------------------------
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self._clear()
             QTimer.singleShot(0, lambda: self.canvas.unsetMapTool(self))
 
-    # -- helpers --------------------------------------------------------------
     def _corner(self, event):
         """End corner in map CRS, squared off when Shift is held."""
         point = self.toMapCoordinates(event.pos())

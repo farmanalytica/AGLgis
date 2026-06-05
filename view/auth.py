@@ -28,11 +28,6 @@ def _tr(text):
     return QCoreApplication.translate("AGLgis", text)
 
 
-# ---------------------------------------------------------------------------
-# STEP 1 — Authentication
-# ---------------------------------------------------------------------------
-
-
 def setup_auth_page(dialog, page):
     """
     Populate the authentication page.
@@ -58,7 +53,6 @@ def setup_auth_page(dialog, page):
     row.setContentsMargins(28, 0, 28, 0)
     row.setSpacing(34)
 
-    # ── Left column ───────────────────────────────────────────────────────
     left = QWidget()
     left.setFixedWidth(230)
     left.setStyleSheet("background: transparent;")
@@ -68,12 +62,10 @@ def setup_auth_page(dialog, page):
 
     left_lay.addStretch(1)
 
-    # Page title.
     title_lbl = QLabel(_tr("GEE Authentication"))
     title_lbl.setStyleSheet("color: #1a1a1a; font-size: 18px; font-weight: bold;")
     left_lay.addWidget(title_lbl)
 
-    # Short explanation of why authentication is required.
     desc_lbl = QLabel(
         _tr(
             "AGLgis uses <b>Google Earth Engine</b> for processing. "
@@ -85,7 +77,6 @@ def setup_auth_page(dialog, page):
     desc_lbl.setStyleSheet("color: #616161; font-size: 13px;")
     left_lay.addWidget(desc_lbl)
 
-    # Info box — green left border highlights the prerequisite note.
     info_frame = QFrame()
     info_frame.setStyleSheet("""
         QFrame {
@@ -120,7 +111,6 @@ def setup_auth_page(dialog, page):
     row.addStretch(1)
     row.addWidget(left)
 
-    # ── Right card ────────────────────────────────────────────────────────
     card = QFrame()
     card.setFixedWidth(258)
     card.setFixedHeight(250)
@@ -136,16 +126,12 @@ def setup_auth_page(dialog, page):
     card_lay.setContentsMargins(20, 18, 20, 14)
     card_lay.setSpacing(7)
 
-    # Sign-in status pill — auto-checked on entry, click to re-check. Colour
-    # and text are driven by ``dialog.set_auth_state``.
     dialog.auth_status_badge = QPushButton(_tr("Checking sign-in status…"))
     dialog.auth_status_badge.setCursor(Qt.CursorShape.PointingHandCursor)
     dialog.auth_status_badge.setToolTip(
         _tr("Click to re-check your Earth Engine sign-in status")
     )
     dialog.auth_status_badge.setFixedHeight(22)
-    # Base pill style so it always renders as a styled pill, even before the
-    # async status check resolves and recolours it via set_auth_state.
     dialog.auth_status_badge.setStyleSheet(
         """
         QPushButton {
@@ -162,7 +148,6 @@ def setup_auth_page(dialog, page):
     card_lay.addWidget(dialog.auth_status_badge)
     card_lay.addSpacing(4)
 
-    # Field label.
     pid_lbl = QLabel(_tr("PROJECT ID (GOOGLE CLOUD)"))
     pid_lbl.setStyleSheet(
         "color: #9e9e9e; font-size: 11px; letter-spacing: 1px; font-weight: bold;"
@@ -170,7 +155,6 @@ def setup_auth_page(dialog, page):
     card_lay.addWidget(pid_lbl)
     card_lay.addSpacing(18)
 
-    # Project ID input — underline style with password-toggle via QGIS widget.
     dialog.project_id_input = QgsPasswordLineEdit()
     dialog.project_id_input.setEchoMode(QLineEdit.EchoMode.Normal)
     dialog.project_id_input.setPlaceholderText(_tr("e.g. my-geospatial-project-42"))
@@ -193,7 +177,6 @@ def setup_auth_page(dialog, page):
 
     card_lay.addSpacing(3)
 
-    # Primary action — validates the ID and initiates GEE authentication.
     dialog.btn_authenticate = QPushButton(_tr("🔑   Validate ID"))
     dialog.btn_authenticate.setFixedHeight(34)
     dialog.btn_authenticate.setStyleSheet(STYLE_BTN_PRIMARY)
@@ -201,7 +184,6 @@ def setup_auth_page(dialog, page):
 
     card_lay.addSpacing(2)
 
-    # Reset link — small and discrete; clears stored GEE credentials.
     dialog.btn_reset_auth = QPushButton(_tr("Reset authentication"))
     dialog.btn_reset_auth.setFixedHeight(20)
     dialog.btn_reset_auth.setStyleSheet("""
@@ -220,8 +202,6 @@ def setup_auth_page(dialog, page):
     row.addStretch(1)
     outer.addLayout(row)
 
-    # Inline, non-blocking status line shown while authentication is running
-    # (and used to surface a "reopen sign-in page" link). Hidden when idle.
     outer.addSpacing(6)
     dialog.auth_status_lbl = QLabel("")
     dialog.auth_status_lbl.setWordWrap(True)
@@ -232,15 +212,10 @@ def setup_auth_page(dialog, page):
     dialog.auth_status_lbl.hide()
     outer.addWidget(dialog.auth_status_lbl)
 
-    # Hidden navigation hook used by the sidebar and controller to load
-    # datasets before showing the AOI page.
     dialog.btn_go_to_aoi = QPushButton(page)
     dialog.btn_go_to_aoi.hide()
     dialog.btn_go_to_aoi.clicked.connect(dialog.show_dem_page)
 
-    # ── Download folder picker ────────────────────────────────────────────
-    # Anchored toward the bottom of the page as a self-contained settings bar,
-    # visually separated from the auth card above it.
     outer.addStretch(2)
 
     folder_frame = QFrame()
@@ -261,7 +236,6 @@ def setup_auth_page(dialog, page):
     folder_lbl.setStyleSheet("color: #616161; font-size: 11px; font-weight: bold;")
     folder_lay.addWidget(folder_lbl)
 
-    # Read-only path field; stretches to fill so long paths stay visible.
     dialog.folder_input = QLineEdit()
     dialog.folder_input.setReadOnly(True)
     dialog.folder_input.setPlaceholderText(_tr("System temp (default)"))
@@ -278,7 +252,6 @@ def setup_auth_page(dialog, page):
     """)
     folder_lay.addWidget(dialog.folder_input, 1)
 
-    # Quick-clear: resets to the system-temp default. Disabled when empty.
     dialog.btn_clear_folder = QPushButton("✕")
     dialog.btn_clear_folder.setFixedSize(28, 28)
     dialog.btn_clear_folder.setToolTip(_tr("Clear download folder"))
@@ -303,7 +276,6 @@ def setup_auth_page(dialog, page):
     dialog.btn_browse_folder.setStyleSheet(STYLE_BTN_SECONDARY)
     folder_lay.addWidget(dialog.btn_browse_folder)
 
-    # Keep the clear button enabled only when a folder is actually selected.
     def _sync_clear_enabled(text):
         dialog.btn_clear_folder.setEnabled(bool(text))
 

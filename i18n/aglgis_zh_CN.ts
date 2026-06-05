@@ -252,8 +252,8 @@
         <translation>输出格式</translation>
     </message>
     <message>
-        <source>SPECTRAL INDEX</source>
-        <translation>光谱指数</translation>
+        <source>SPECTRAL INDEX TIME SERIES</source>
+        <translation>光谱指数时间序列</translation>
     </message>
     <message>
         <source>PROCESSING OPTIONS</source>
@@ -446,6 +446,26 @@
     <message>
         <source>downloaded and loaded</source>
         <translation>已下载并加载</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;VV/VH Ratio&lt;/b&gt; — ratio between co-polarized (VV) and cross-polarized (VH) backscatter. Cross-pol rises with volume scattering from vegetation, so the ratio tracks canopy structure and biomass.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV / VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop growth monitoring, vegetation vs. bare-soil discrimination, flood/water mapping.</source>
+        <translation>&lt;b&gt;VV/VH 比值&lt;/b&gt; — 同极化 (VV) 与交叉极化 (VH) 后向散射之比。交叉极化随植被体散射增强，因此该比值可反映冠层结构与生物量。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt; VV / VH&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 作物生长监测、植被与裸土区分、洪水/水体制图。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;RVI (Radar Vegetation Index)&lt;/b&gt; — normalized dual-pol index (≈0 over smooth bare soil, →1 over dense randomly-oriented canopy), robust to incidence angle.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (4 × VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass estimation, crop phenology tracking, drought stress detection.</source>
+        <translation>&lt;b&gt;RVI（雷达植被指数）&lt;/b&gt; — 归一化双极化指数（光滑裸土处 ≈0，随机取向的茂密冠层处 →1），对入射角稳健。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt;(4 × VH) / (VV + VH)&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 植被覆盖与生物量估算、作物物候跟踪、干旱胁迫检测。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;DpRVI (Dual-pol Radar Vegetation Index)&lt;/b&gt; — derived from the degree of polarization and eigenvalue decomposition of the dual-pol covariance matrix; physically-based and more sensitive across the growth cycle than RVI.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop biophysical parameter retrieval, soil-moisture vs. vegetation separation, detailed phenology.</source>
+        <translation>&lt;b&gt;DpRVI（双极化雷达植被指数）&lt;/b&gt; — 由双极化协方差矩阵的极化度与特征值分解导出；基于物理机理，在整个生长周期内比 RVI 更敏感。&lt;br&gt;&lt;i&gt;公式：&lt;/i&gt; VH / (VV + VH)&lt;br&gt;&lt;i&gt;用途：&lt;/i&gt; 作物生物物理参数反演、土壤湿度与植被分离、精细物候。</translation>
+    </message>
+    <message>
+        <source>DOWNLOAD BUFFER</source>
+        <translation>下载缓冲区</translation>
+    </message>
+    <message>
+        <source>Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges. Applies to every downloaded and previewed SAR output (single date, batch, composite).</source>
+        <translation>使用正缓冲区可纳入区域外侧的地形，使用负缓冲区可裁剪边缘。适用于每个下载和预览的 SAR 输出（单日期、批量、合成）。</translation>
     </message>
 </context>
 </TS>

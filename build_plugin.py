@@ -36,7 +36,6 @@ INCLUDE_DIRS = ["view", "services", "controllers", "assets"]
 
 SKIP = {"__pycache__", ".git", ".github", "dist", ".mypy_cache", ".pytest_cache"}
 
-# Files excluded from the zip (GitHub pages / docs only, not needed at runtime)
 SKIP_FILES = {"assets/screenshot.png"}
 
 
@@ -71,7 +70,6 @@ def clean_extlibs() -> None:
     except PermissionError:
         pass
 
-    # Fallback: Windows native rd bypasses some Python-level locks
     if sys.platform == "win32":
         result = subprocess.run(
             ["cmd", "/c", "rd", "/s", "/q", str(target)],

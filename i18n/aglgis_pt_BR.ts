@@ -252,8 +252,8 @@
         <translation>FORMATO DE SAÍDA</translation>
     </message>
     <message>
-        <source>SPECTRAL INDEX</source>
-        <translation>ÍNDICE ESPECTRAL</translation>
+        <source>SPECTRAL INDEX TIME SERIES</source>
+        <translation>SÉRIE TEMPORAL DO ÍNDICE ESPECTRAL</translation>
     </message>
     <message>
         <source>PROCESSING OPTIONS</source>
@@ -446,6 +446,26 @@
     <message>
         <source>downloaded and loaded</source>
         <translation>baixado e carregado</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;VV/VH Ratio&lt;/b&gt; — ratio between co-polarized (VV) and cross-polarized (VH) backscatter. Cross-pol rises with volume scattering from vegetation, so the ratio tracks canopy structure and biomass.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV / VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop growth monitoring, vegetation vs. bare-soil discrimination, flood/water mapping.</source>
+        <translation>&lt;b&gt;Razão VV/VH&lt;/b&gt; — razão entre o retroespalhamento copolarizado (VV) e o de polarização cruzada (VH). A polarização cruzada aumenta com o espalhamento volumétrico da vegetação, então a razão acompanha a estrutura do dossel e a biomassa.&lt;br&gt;&lt;i&gt;Fórmula:&lt;/i&gt; VV / VH&lt;br&gt;&lt;i&gt;Usar para:&lt;/i&gt; monitoramento do crescimento de culturas, distinção entre vegetação e solo exposto, mapeamento de enchentes/água.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;RVI (Radar Vegetation Index)&lt;/b&gt; — normalized dual-pol index (≈0 over smooth bare soil, →1 over dense randomly-oriented canopy), robust to incidence angle.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (4 × VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass estimation, crop phenology tracking, drought stress detection.</source>
+        <translation>&lt;b&gt;RVI (Índice de Vegetação por Radar)&lt;/b&gt; — índice dual-pol normalizado (≈0 sobre solo nu liso, →1 sobre dossel denso de orientação aleatória), robusto ao ângulo de incidência.&lt;br&gt;&lt;i&gt;Fórmula:&lt;/i&gt; (4 × VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Usar para:&lt;/i&gt; estimativa de cobertura vegetal e biomassa, acompanhamento da fenologia das culturas, detecção de estresse hídrico.</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;DpRVI (Dual-pol Radar Vegetation Index)&lt;/b&gt; — derived from the degree of polarization and eigenvalue decomposition of the dual-pol covariance matrix; physically-based and more sensitive across the growth cycle than RVI.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop biophysical parameter retrieval, soil-moisture vs. vegetation separation, detailed phenology.</source>
+        <translation>&lt;b&gt;DpRVI (Índice de Vegetação por Radar Dual-pol)&lt;/b&gt; — derivado do grau de polarização e da decomposição em autovalores da matriz de covariância dual-pol; baseado na física e mais sensível ao longo do ciclo de crescimento do que o RVI.&lt;br&gt;&lt;i&gt;Fórmula:&lt;/i&gt; VH / (VV + VH)&lt;br&gt;&lt;i&gt;Usar para:&lt;/i&gt; recuperação de parâmetros biofísicos de culturas, separação entre umidade do solo e vegetação, fenologia detalhada.</translation>
+    </message>
+    <message>
+        <source>DOWNLOAD BUFFER</source>
+        <translation>BUFFER DE DOWNLOAD</translation>
+    </message>
+    <message>
+        <source>Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges. Applies to every downloaded and previewed SAR output (single date, batch, composite).</source>
+        <translation>Use um buffer positivo para incluir terreno logo fora da sua área, ou um buffer negativo para recortar as bordas. Aplica-se a cada saída SAR baixada e pré-visualizada (data única, lote, composta).</translation>
     </message>
 </context>
 </TS>

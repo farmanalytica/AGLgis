@@ -144,8 +144,6 @@ class AGLgis:
             self.interface.removeToolBarIcon(action)
 
     def _finish_init(self):
-        # Imported here (not at module top) so they only load after extlibs/
-        # is on sys.path — gee_service imports `ee`, which lives in extlibs/.
         from .services.gee_service import GEEService
         from .controllers.dem_ctrl import DEMCtrl
         from .controllers.auth_ctrl import AuthCtrl
@@ -165,7 +163,6 @@ class AGLgis:
         if saved_folder:
             self.dialog.folder_input.setText(saved_folder)
 
-        # Auth page
         self.dialog.project_id_input.textChanged.connect(
             self.gee_service.save_project_id
         )
@@ -187,7 +184,6 @@ class AGLgis:
         self.dialog.btn_clear_folder.clicked.connect(self.auth_ctrl.handle_clear_folder)
         self.dialog.btn_go_to_aoi.clicked.connect(self.dem_ctrl.load_available_datasets)
 
-        # DEM page
         self.dialog.layer_combo.layerChanged.connect(self.dem_ctrl.handle_layer_changed)
         self.dialog.dem_combo.currentIndexChanged.connect(
             self.dem_ctrl.on_dataset_changed
@@ -198,7 +194,6 @@ class AGLgis:
         self.dialog.btn_hybrid_layer.clicked.connect(self.dem_ctrl.handle_hybrid_layer)
         self.dialog.btn_draw_aoi.clicked.connect(self.dem_ctrl.handle_draw_aoi)
 
-        # SAR page
         self.dialog.sar_btn_hybrid_layer.clicked.connect(
             self.dem_ctrl.handle_hybrid_layer
         )
@@ -230,7 +225,6 @@ class AGLgis:
             self.sar_ctrl.handle_layer_changed
         )
 
-        # Surface the current GEE sign-in status on the auth page right away.
         self.auth_ctrl.refresh_auth_status()
 
     def _on_extlibs_ready(self, success, error_msg):

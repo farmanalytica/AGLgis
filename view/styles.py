@@ -6,9 +6,6 @@ Stylesheet constants are defined here so individual page modules can reuse
 the same visual language without duplicating long Qt stylesheet strings.
 """
 
-# ---------------------------------------------------------------------------
-# Dialog base — light grey background, dark text, thin scrollbar
-# ---------------------------------------------------------------------------
 STYLE_DIALOG = """
 QDialog {
     background-color: #f5f5f5;
@@ -62,9 +59,6 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
 }
 """
 
-# ---------------------------------------------------------------------------
-# Primary button — solid green, used for the main call-to-action
-# ---------------------------------------------------------------------------
 STYLE_BTN_PRIMARY = """
 QPushButton {
     background-color: #1b6b39;
@@ -83,9 +77,6 @@ QPushButton:disabled {
 }
 """
 
-# ---------------------------------------------------------------------------
-# Secondary button — white with green border, used for navigation actions
-# ---------------------------------------------------------------------------
 STYLE_BTN_SECONDARY = """
 QPushButton {
     background-color: #ffffff;
@@ -117,9 +108,6 @@ QToolTip {
 }
 """
 
-# ---------------------------------------------------------------------------
-# Draw-active button — solid amber, signals an armed map-draw mode
-# ---------------------------------------------------------------------------
 STYLE_BTN_DRAW_ACTIVE = """
 QPushButton {
     background-color: #e8833a;
@@ -140,9 +128,6 @@ QToolTip {
 }
 """
 
-# ---------------------------------------------------------------------------
-# AOI page — white panel card, field labels, combo boxes, metadata browser
-# ---------------------------------------------------------------------------
 STYLE_AOI_PAGE = """
 QWidget#aoiPage {
     background-color: #f5f5f5;
@@ -204,9 +189,6 @@ QTextBrowser#demInfo:focus {
 }
 """
 
-# ---------------------------------------------------------------------------
-# Help button — circular "?" in the dialog header
-# ---------------------------------------------------------------------------
 STYLE_BTN_HELP = """
 QPushButton {
     background-color: transparent;

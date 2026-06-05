@@ -252,8 +252,8 @@
         <translation>आउटपुट स्वरूप</translation>
     </message>
     <message>
-        <source>SPECTRAL INDEX</source>
-        <translation>वर्णक्रमीय सूचकांक</translation>
+        <source>SPECTRAL INDEX TIME SERIES</source>
+        <translation>वर्णक्रमीय सूचकांक समय श्रृंखला</translation>
     </message>
     <message>
         <source>PROCESSING OPTIONS</source>
@@ -446,6 +446,26 @@
     <message>
         <source>downloaded and loaded</source>
         <translation>डाउनलोड और लोड किया</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;VV/VH Ratio&lt;/b&gt; — ratio between co-polarized (VV) and cross-polarized (VH) backscatter. Cross-pol rises with volume scattering from vegetation, so the ratio tracks canopy structure and biomass.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VV / VH&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop growth monitoring, vegetation vs. bare-soil discrimination, flood/water mapping.</source>
+        <translation>&lt;b&gt;VV/VH अनुपात&lt;/b&gt; — सह-ध्रुवीकृत (VV) और प्रति-ध्रुवीकृत (VH) बैकस्कैटर के बीच का अनुपात। प्रति-ध्रुवीकरण वनस्पति से आयतन प्रकीर्णन के साथ बढ़ता है, इसलिए अनुपात कैनोपी संरचना और बायोमास को दर्शाता है।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; VV / VH&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; फसल वृद्धि निगरानी, वनस्पति बनाम खुली मिट्टी की पहचान, बाढ़/जल मानचित्रण।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;RVI (Radar Vegetation Index)&lt;/b&gt; — normalized dual-pol index (≈0 over smooth bare soil, →1 over dense randomly-oriented canopy), robust to incidence angle.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; (4 × VH) / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; vegetation cover and biomass estimation, crop phenology tracking, drought stress detection.</source>
+        <translation>&lt;b&gt;RVI (रडार वनस्पति सूचकांक)&lt;/b&gt; — सामान्यीकृत दोहरे-ध्रुवीकरण सूचकांक (चिकनी खुली मिट्टी पर ≈0, घनी यादृच्छिक-उन्मुख कैनोपी पर →1), आपतन कोण के प्रति प्रबल।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; (4 × VH) / (VV + VH)&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; वनस्पति आवरण और बायोमास अनुमान, फसल फेनोलॉजी ट्रैकिंग, सूखा तनाव पहचान।</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;DpRVI (Dual-pol Radar Vegetation Index)&lt;/b&gt; — derived from the degree of polarization and eigenvalue decomposition of the dual-pol covariance matrix; physically-based and more sensitive across the growth cycle than RVI.&lt;br&gt;&lt;i&gt;Formula:&lt;/i&gt; VH / (VV + VH)&lt;br&gt;&lt;i&gt;Use for:&lt;/i&gt; crop biophysical parameter retrieval, soil-moisture vs. vegetation separation, detailed phenology.</source>
+        <translation>&lt;b&gt;DpRVI (दोहरे-ध्रुवीकरण रडार वनस्पति सूचकांक)&lt;/b&gt; — दोहरे-ध्रुवीकरण सहप्रसरण मैट्रिक्स के ध्रुवीकरण की डिग्री और आइगेनमान वियोजन से व्युत्पन्न; भौतिकी-आधारित और RVI की तुलना में वृद्धि चक्र भर में अधिक संवेदनशील।&lt;br&gt;&lt;i&gt;सूत्र:&lt;/i&gt; VH / (VV + VH)&lt;br&gt;&lt;i&gt;उपयोग:&lt;/i&gt; फसल जैवभौतिक पैरामीटर पुनर्प्राप्ति, मृदा-नमी बनाम वनस्पति पृथक्करण, विस्तृत फेनोलॉजी।</translation>
+    </message>
+    <message>
+        <source>DOWNLOAD BUFFER</source>
+        <translation>डाउनलोड बफ़र</translation>
+    </message>
+    <message>
+        <source>Use a positive buffer to include terrain just outside your area, or a negative buffer to crop the edges. Applies to every downloaded and previewed SAR output (single date, batch, composite).</source>
+        <translation>अपने क्षेत्र के ठीक बाहर का भूभाग शामिल करने के लिए धनात्मक बफ़र का उपयोग करें, या किनारों को काटने के लिए ऋणात्मक बफ़र का। प्रत्येक डाउनलोड और पूर्वावलोकन किए गए SAR आउटपुट (एकल तिथि, बैच, संयुक्त) पर लागू होता है।</translation>
     </message>
 </context>
 </TS>

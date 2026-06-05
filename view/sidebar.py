@@ -35,7 +35,6 @@ def _tr(text):
     return QCoreApplication.translate("AGLgis", text)
 
 
-# Visual tokens kept local because this component is self-contained.
 SIDEBAR_COLLAPSED_WIDTH = 64
 SIDEBAR_EXPANDED_WIDTH = 184
 SIDEBAR_GREEN = "#1F6B3A"
@@ -386,11 +385,9 @@ class Sidebar(QFrame):
             painter.setPen(Qt.PenStyle.NoPen)
         elif kind == "radar":
             painter.setPen(pen)
-            # Concentric arcs sweeping up-right from the origin (lower-left).
             painter.drawArc(QRectF(2, 2, 14, 14), 0 * 16, 90 * 16)
             painter.drawArc(QRectF(4, 4, 10, 10), 0 * 16, 90 * 16)
             painter.drawArc(QRectF(6, 6, 6, 6), 0 * 16, 90 * 16)
-            # Origin dot.
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(color))
             painter.drawEllipse(QPointF(9, 9), 1.4, 1.4)

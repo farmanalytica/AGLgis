@@ -109,6 +109,18 @@ class SARCtrl:
     def _index_meta(self) -> dict:
         return SARService.INDEX_REGISTRY[self._current_index]
 
+    def _download_aoi(self):
+        """AOI used for download/preview outputs, grown by the buffer slider.
+
+        The buffer expands the requested region (and clip) so every fetched
+        image shares the same margin. Returns the unbuffered AOI when the
+        slider is at 0 or no AOI is set yet."""
+        slider = getattr(self.dialog, "sar_buffer_slider", None)
+        meters = slider.value() if slider is not None else 0
+        if not meters or self.aoi is None:
+            return self.aoi
+        return self.aoi.map(lambda feature: feature.buffer(meters).bounds())
+
     def handle_draw_aoi(self):
         """Toggle rectangular AOI drawing on the canvas."""
 
@@ -254,7 +266,7 @@ class SARCtrl:
         self._set_preview_busy(True)
         self._preview_worker = SARPreviewWorker(
             self.collection,
-            self.aoi,
+            self._download_aoi(),
             selected_date,
             output_folder,
             label,
@@ -298,9 +310,6 @@ class SARCtrl:
         self._release_worker("_preview_worker")
         self.dialog.pop_message(message, "warning")
 
-    # ------------------------------------------------------------------
-    # Synthetic image (composite of the selected index over selected dates)
-    # ------------------------------------------------------------------
 
     def handle_composite_preview(self):
         self._run_composite(to_folder=False)
@@ -332,7 +341,7 @@ class SARCtrl:
         self._set_composite_busy(True)
         self._composite_worker = SARCompositeWorker(
             self.collection,
-            self.aoi,
+            self._download_aoi(),
             meta["band"],
             meta["band_label"],
             self.dialog.sar_composite_metric_combo.currentText(),
@@ -404,7 +413,7 @@ class SARCtrl:
         meta = self._index_meta()
         self._batch_worker = SARBatchDownloadWorker(
             self.collection,
-            self.aoi,
+            self._download_aoi(),
             dates,
             SettingsManager.load_download_folder(),
             index_band=meta["band"],

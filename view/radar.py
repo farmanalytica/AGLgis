@@ -30,6 +30,7 @@ from qgis.PyQt.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QSlider,
     QSplitter,
     QStackedWidget,
     QVBoxLayout,
@@ -78,6 +79,17 @@ _POPUP_VIEW_STYLE = (
     "background-color: #ffffff; color: #212121;"
     " selection-background-color: #e8f5e9; selection-color: #1a1a1a;"
 )
+
+_SLIDER_STYLE = """
+QSlider::groove:horizontal { height: 4px; background: #d6d6d6; border-radius: 2px; }
+QSlider::sub-page:horizontal { background: #d6d6d6; border-radius: 2px; }
+QSlider::add-page:horizontal { background: #d6d6d6; border-radius: 2px; }
+QSlider::handle:horizontal {
+    background: #1b6b39; width: 14px; height: 14px;
+    margin: -6px 0; border-radius: 7px;
+}
+QSlider::handle:horizontal:hover { background: #15532d; }
+"""
 
 _CALENDAR_STYLE = """
 QCalendarWidget QWidget {
@@ -264,7 +276,7 @@ def _labeled(text, widget, lbl_width=None):
         "color: #616161; font-size: 12px; background: transparent; border: none;"
     )
     if lbl_width:
-        lbl.setFixedWidth(lbl_width)
+        lbl.setMinimumWidth(lbl_width)
     row.addWidget(lbl)
     row.addWidget(widget)
     return group
@@ -449,12 +461,10 @@ def _build_intro_tab(_dialog, parent):
         line.setStyleSheet("color:#e6f2fa;")
         return line
 
-    # Title + description
     lay.addWidget(_h1(t["title"]))
     lay.addSpacing(2)
     lay.addWidget(_para(t["desc"]))
 
-    # Workflow
     lay.addWidget(_h2(t["workflow_h"]))
     lay.addWidget(_divider())
     wf_frame = QFrame()
@@ -468,18 +478,15 @@ def _build_intro_tab(_dialog, parent):
         wf_lay.addWidget(_para(f"{i}. {text}"))
     lay.addWidget(wf_frame)
 
-    # Features
     lay.addWidget(_h2(t["features_h"]))
     lay.addWidget(_divider())
     for text in t["features"]:
         lay.addWidget(_para(f"✓  {text}"))
 
-    # Time series
     lay.addWidget(_h2(t["ts_h"]))
     lay.addWidget(_divider())
     lay.addWidget(_para(t["ts_p"]))
 
-    # Bands
     lay.addWidget(_h2(t["bands_h"]))
     lay.addWidget(_divider())
     lay.addWidget(_para(t["bands_p"]))
@@ -487,12 +494,10 @@ def _build_intro_tab(_dialog, parent):
         lay.addWidget(_para(f"• {text}"))
     lay.addWidget(_para(t["bands_note"]))
 
-    # Setup
     lay.addWidget(_h2(t["setup_h"]))
     lay.addWidget(_divider())
     lay.addWidget(_para(t["setup_p"]))
 
-    # Citation
     lay.addWidget(_h2(t["cite_h"]))
     lay.addWidget(_divider())
     lay.addWidget(_para(t["cite_intro"]))
@@ -623,14 +628,58 @@ def _build_inputs_tab(dialog, parent):
 
     fields_grid.addWidget(_field_label(_tr("POLARIZATION")), 2, 0)
     fields_grid.addWidget(_field_label(_tr("OUTPUT FORMAT")), 2, 1)
-    fields_grid.addWidget(_field_label(_tr("SPECTRAL INDEX")), 4, 0)
+    fields_grid.addWidget(_field_label(_tr("SPECTRAL INDEX TIME SERIES")), 4, 0)
     fields_grid.addWidget(dialog.sar_pol_combo, 3, 0)
     fields_grid.addWidget(dialog.sar_format_combo, 3, 1)
     fields_grid.addWidget(dialog.sar_index_combo, 5, 0)
     inputs_lay.addLayout(fields_grid)
+
+    index_info = {
+        "VV/VH Ratio": _tr(
+            "<b>VV/VH Ratio</b> — ratio between co-polarized (VV) and "
+            "cross-polarized (VH) backscatter. Cross-pol rises with volume "
+            "scattering from vegetation, so the ratio tracks canopy structure "
+            "and biomass.<br><i>Formula:</i> VV / VH"
+            "<br><i>Use for:</i> crop growth monitoring, "
+            "vegetation vs. bare-soil discrimination, flood/water mapping."
+        ),
+        "RVI": _tr(
+            "<b>RVI (Radar Vegetation Index)</b> — normalized dual-pol index "
+            "(≈0 over smooth bare soil, →1 over dense randomly-oriented "
+            "canopy), robust to incidence angle.<br><i>Formula:</i> "
+            "(4 × VH) / (VV + VH)"
+            "<br><i>Use for:</i> vegetation "
+            "cover and biomass estimation, crop phenology tracking, drought "
+            "stress detection."
+        ),
+        "DpRVI": _tr(
+            "<b>DpRVI (Dual-pol Radar Vegetation Index)</b> — derived from the "
+            "degree of polarization and eigenvalue decomposition of the "
+            "dual-pol covariance matrix; physically-based and more sensitive "
+            "across the growth cycle than RVI.<br><i>Formula:</i> "
+            "VH / (VV + VH)"
+            "<br><i>Use for:</i> crop "
+            "biophysical parameter retrieval, soil-moisture vs. vegetation "
+            "separation, detailed phenology."
+        ),
+    }
+    dialog.sar_index_info = QLabel()
+    dialog.sar_index_info.setWordWrap(True)
+    dialog.sar_index_info.setTextFormat(Qt.TextFormat.RichText)
+    dialog.sar_index_info.setStyleSheet(
+        "color: #4a5650; font-size: 11px; background: #f0f8ff;"
+        " border: 1px solid #d6e4ef; border-radius: 6px; padding: 8px;"
+    )
+
+    def _update_index_info(name):
+        dialog.sar_index_info.setText(index_info.get(name, ""))
+
+    dialog.sar_index_combo.currentTextChanged.connect(_update_index_info)
+    _update_index_info(dialog.sar_index_combo.currentText())
+    inputs_lay.addWidget(dialog.sar_index_info)
+
     lay.addWidget(inputs_panel)
 
-    # Processing options
     options_panel = _section_panel()
     options_lay = QVBoxLayout(options_panel)
     options_lay.setContentsMargins(16, 12, 16, 14)
@@ -687,9 +736,6 @@ def _build_results_tab(dialog, parent):
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(0)
 
-    # Plot sits above the controls in a draggable vertical splitter: grab the
-    # handle to make the plot taller or shorter. Keeps a sane default height
-    # instead of the plot eating all the vertical space.
     dialog.sar_results_splitter = QSplitter(Qt.Orientation.Vertical)
     dialog.sar_results_splitter.setChildrenCollapsible(False)
     dialog.sar_results_splitter.setHandleWidth(4)
@@ -702,7 +748,6 @@ def _build_results_tab(dialog, parent):
         QSplitter::handle:hover { border-top-color: #1b6b39; }
     """)
 
-    # Plot
     dialog.sar_web_view = QWebView()
     dialog.sar_web_view.setStyleSheet(
         "border: 1px solid #dce6df; border-radius: 8px; background: #ffffff;"
@@ -728,7 +773,6 @@ def _build_results_tab(dialog, parent):
     controls_lay.setContentsMargins(16, 14, 16, 14)
     controls_lay.setSpacing(10)
 
-    # ── Time-series exports ───────────────────────────────────────────────
     controls_lay.addWidget(_caption(_tr("TIME SERIES")))
     dialog.sar_btn_open_browser = QPushButton(_tr("Open in Browser"))
     dialog.sar_btn_open_browser.setFixedHeight(30)
@@ -747,11 +791,13 @@ def _build_results_tab(dialog, parent):
 
     controls_lay.addWidget(_make_divider())
 
-    # ── Single-date image ─────────────────────────────────────────────────
     controls_lay.addWidget(_caption(_tr("SINGLE-DATE IMAGE")))
     dialog.sar_result_date_combo = QComboBox()
     _prepare_field(dialog.sar_result_date_combo, 30)
-    dialog.sar_result_date_combo.setFixedWidth(136)
+    dialog.sar_result_date_combo.setMinimumWidth(136)
+    dialog.sar_result_date_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToContents
+    )
     dialog.sar_result_date_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
     dialog.sar_btn_filter_dates = QPushButton(_tr("Filter dates"))
     dialog.sar_btn_filter_dates.setFixedHeight(30)
@@ -759,7 +805,10 @@ def _build_results_tab(dialog, parent):
 
     dialog.sar_render_combo = QComboBox()
     _prepare_field(dialog.sar_render_combo, 30)
-    dialog.sar_render_combo.setFixedWidth(240)
+    dialog.sar_render_combo.setMinimumWidth(240)
+    dialog.sar_render_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToContents
+    )
     dialog.sar_render_combo.addItems([
         _tr("RGB: VV, VH, VV/VH Ratio"),
         _tr("RGB: VV, RVI, DpRVI"),
@@ -781,8 +830,6 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_download_preview.setFixedHeight(30)
     dialog.sar_btn_download_preview.setStyleSheet(STYLE_BTN_SECONDARY)
 
-    # Two task clusters: choose-the-date, then render-and-preview. Tight within
-    # each cluster, wider gap between them.
     controls_lay.addWidget(_flow([
         _group([
             _labeled(_tr("Date"), dialog.sar_result_date_combo, 34),
@@ -796,9 +843,6 @@ def _build_results_tab(dialog, parent):
     ], spacing=18))
     lay.addWidget(controls_panel)
 
-    # ── Synthetic image (composite) ───────────────────────────────────────
-    # Reduce the currently selected index over the selected dates into a
-    # single composite image, with the same metrics as the Sentinel-2 tool.
     composite_panel = _section_panel()
     composite_lay = QVBoxLayout(composite_panel)
     composite_lay.setContentsMargins(16, 14, 16, 14)
@@ -819,10 +863,12 @@ def _build_results_tab(dialog, parent):
     )
     composite_lay.addWidget(composite_hint)
 
-    # Metric + color-ramp selectors and composite actions — one wrapping row.
     dialog.sar_composite_metric_combo = QComboBox()
     _prepare_field(dialog.sar_composite_metric_combo, 30)
-    dialog.sar_composite_metric_combo.setFixedWidth(240)
+    dialog.sar_composite_metric_combo.setMinimumWidth(240)
+    dialog.sar_composite_metric_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToContents
+    )
     dialog.sar_composite_metric_combo.addItems([
         _tr("Mean"),
         _tr("Median"),
@@ -837,7 +883,10 @@ def _build_results_tab(dialog, parent):
 
     dialog.sar_composite_ramp_combo = QComboBox()
     _prepare_field(dialog.sar_composite_ramp_combo, 30)
-    dialog.sar_composite_ramp_combo.setFixedWidth(240)
+    dialog.sar_composite_ramp_combo.setMinimumWidth(240)
+    dialog.sar_composite_ramp_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToContents
+    )
     dialog.sar_composite_ramp_combo.addItems([
         "Viridis",
         "Magma",
@@ -857,7 +906,6 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_composite_download.setFixedHeight(30)
     dialog.sar_btn_composite_download.setStyleSheet(STYLE_BTN_SECONDARY)
 
-    # Configure cluster (metric + ramp) separated from the action cluster.
     composite_lay.addWidget(_flow([
         _group([
             _labeled(_tr("Metric"), dialog.sar_composite_metric_combo, 80),
@@ -870,12 +918,77 @@ def _build_results_tab(dialog, parent):
     ], spacing=18))
 
     lay.addWidget(composite_panel)
+
+    buffer_panel = _section_panel()
+    buffer_lay = QVBoxLayout(buffer_panel)
+    buffer_lay.setContentsMargins(16, 14, 16, 14)
+    buffer_lay.setSpacing(10)
+
+    buffer_lay.addWidget(_caption(_tr("DOWNLOAD BUFFER")))
+    buffer_hint = QLabel(
+        _tr("Use a positive buffer to include terrain just outside your area, "
+            "or a negative buffer to crop the edges. Applies to every "
+            "downloaded and previewed SAR output (single date, batch, composite).")
+    )
+    buffer_hint.setWordWrap(True)
+    buffer_hint.setStyleSheet(
+        "color: #757575; font-size: 11px; background: transparent; border: none;"
+    )
+    buffer_lay.addWidget(buffer_hint)
+
+    buffer_row = QHBoxLayout()
+    buffer_row.setContentsMargins(0, 0, 0, 0)
+    buffer_row.setSpacing(8)
+
+    minus_lbl = QLabel("−300 m")
+    minus_lbl.setStyleSheet(
+        "color: #9e9e9e; font-size: 9px; background: transparent; border: none;"
+    )
+    buffer_row.addWidget(minus_lbl)
+
+    dialog.sar_buffer_slider = QSlider(Qt.Orientation.Horizontal)
+    dialog.sar_buffer_slider.setMinimum(-300)
+    dialog.sar_buffer_slider.setMaximum(300)
+    dialog.sar_buffer_slider.setSingleStep(1)
+    dialog.sar_buffer_slider.setPageStep(10)
+    dialog.sar_buffer_slider.setValue(0)
+    dialog.sar_buffer_slider.setTickInterval(100)
+    dialog.sar_buffer_slider.setTickPosition(QSlider.TickPosition.NoTicks)
+    dialog.sar_buffer_slider.setStyleSheet(_SLIDER_STYLE)
+    buffer_row.addWidget(dialog.sar_buffer_slider, 1)
+
+    plus_lbl = QLabel("+300 m")
+    plus_lbl.setStyleSheet(
+        "color: #9e9e9e; font-size: 9px; background: transparent; border: none;"
+    )
+    buffer_row.addWidget(plus_lbl)
+
+    buffer_lay.addLayout(buffer_row)
+
+    dialog.sar_buffer_value = QLabel(_tr("Buffer: 0 m"))
+    dialog.sar_buffer_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    dialog.sar_buffer_value.setStyleSheet(
+        "color: #616161; font-size: 10px; background: transparent; border: none;"
+    )
+    buffer_lay.addWidget(dialog.sar_buffer_value)
+
+    def _set_sar_buffer_value(value):
+        value = 0 if -3 <= value <= 3 else value
+        if dialog.sar_buffer_slider.value() != value:
+            dialog.sar_buffer_slider.blockSignals(True)
+            dialog.sar_buffer_slider.setValue(value)
+            dialog.sar_buffer_slider.blockSignals(False)
+        dialog.sar_buffer_value.setText(
+            _tr("Buffer: %+d m") % value if value != 0 else _tr("Buffer: 0 m")
+        )
+
+    dialog.sar_buffer_slider.valueChanged.connect(_set_sar_buffer_value)
+
+    lay.addWidget(buffer_panel)
     lay.addStretch(1)
 
     scroll.setWidget(scroll_w)
     dialog.sar_results_splitter.addWidget(scroll)
-    # Extra vertical space goes to the plot; the controls pane keeps its size
-    # and scrolls if cramped. The plot's minimum height sets the default.
     dialog.sar_results_splitter.setStretchFactor(0, 1)
     dialog.sar_results_splitter.setStretchFactor(1, 0)
     outer.addWidget(dialog.sar_results_splitter)
@@ -974,7 +1087,6 @@ def setup_radar_page(dialog, page):
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(0)
 
-    # -- Tab bar
     tab_bar = QFrame()
     tab_bar.setObjectName("sarTabBar")
     tab_bar.setFixedHeight(40)
@@ -1007,7 +1119,6 @@ def setup_radar_page(dialog, page):
 
     outer.addWidget(tab_bar)
 
-    # -- Stacked content
     stack = QStackedWidget()
     stack.setStyleSheet("QStackedWidget { background: transparent; border: none; }")
 
@@ -1026,7 +1137,6 @@ def setup_radar_page(dialog, page):
     outer.addWidget(stack, 1)
     dialog.sar_stack = stack
 
-    # -- Bottom nav bar
     nav_bar = QFrame()
     nav_bar.setObjectName("sarNavBar")
     nav_bar.setFixedHeight(46)
@@ -1054,7 +1164,6 @@ def setup_radar_page(dialog, page):
 
     nav_lay.addStretch(1)
 
-    # Forward control on the Intro tab — pure navigation to the Inputs step.
     btn_intro_next = QPushButton(_tr("Next"))
     btn_intro_next.setMinimumWidth(90)
     btn_intro_next.setFixedHeight(30)
@@ -1072,19 +1181,16 @@ def setup_radar_page(dialog, page):
     dialog.sar_btn_next = btn_next
     dialog.sar_step_lbl = step_lbl
 
-    # -- Tab switching logic (self-contained, no service dependencies)
-    # Three-step flow: 0 = Intro (docs), 1 = Inputs, 2 = Results.
     def _set_tab(index):
         stack.setCurrentIndex(index)
         btn_back.setEnabled(index > 0)
         step_lbl.setText(f"Step {index + 1} of 3")
-        btn_intro_next.setVisible(index == 0)  # "Next" advances Intro -> Inputs
-        btn_next.setVisible(index == 1)  # "Run" lives on the Inputs tab only
+        btn_intro_next.setVisible(index == 0)
+        btn_next.setVisible(index == 1)
         btn_tab_intro.setStyleSheet(_TAB_ACTIVE if index == 0 else _TAB_INACTIVE)
         btn_tab_inputs.setStyleSheet(_TAB_ACTIVE if index == 1 else _TAB_INACTIVE)
         btn_tab_results.setStyleSheet(_TAB_ACTIVE if index == 2 else _TAB_INACTIVE)
 
-    # Exposed so the controller can advance to Results only on a successful run.
     dialog.sar_set_tab = _set_tab
 
     btn_tab_intro.clicked.connect(lambda: _set_tab(0))
