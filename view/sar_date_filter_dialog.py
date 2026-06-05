@@ -14,9 +14,18 @@ from qgis.PyQt.QtWidgets import (
 )
 import pandas as pd
 
+from .styles import STYLE_BTN_PRIMARY, STYLE_BTN_SECONDARY, STYLE_CHECKBOX
+
 
 def _tr(text):
     return QCoreApplication.translate("AGLgis", text)
+
+
+_DIALOG_STYLE = (
+    "QDialog { background-color: #ffffff; color: #212121; }"
+    "QLabel { background: transparent; border: none; }"
+    + STYLE_CHECKBOX
+)
 
 
 class SARDateFilterDialog(QDialog):
@@ -28,6 +37,7 @@ class SARDateFilterDialog(QDialog):
         self.setGeometry(100, 100, 500, 620)
         self.setMinimumWidth(480)
         self.setMinimumHeight(450)
+        self.setStyleSheet(_DIALOG_STYLE)
 
         self._dates = dates
         self._active_dates = active_dates
@@ -122,9 +132,13 @@ class SARDateFilterDialog(QDialog):
         button_layout.setSpacing(8)
         select_all_btn = QPushButton(_tr("Select All"))
         select_all_btn.setMaximumWidth(120)
+        select_all_btn.setFixedHeight(30)
+        select_all_btn.setStyleSheet(STYLE_BTN_SECONDARY)
         select_all_btn.clicked.connect(self._select_all)
         deselect_all_btn = QPushButton(_tr("Deselect All"))
         deselect_all_btn.setMaximumWidth(120)
+        deselect_all_btn.setFixedHeight(30)
+        deselect_all_btn.setStyleSheet(STYLE_BTN_SECONDARY)
         deselect_all_btn.clicked.connect(self._deselect_all)
         button_layout.addWidget(select_all_btn)
         button_layout.addWidget(deselect_all_btn)
@@ -135,6 +149,14 @@ class SARDateFilterDialog(QDialog):
             QDialogButtonBox.StandardButton.Ok
             | QDialogButtonBox.StandardButton.Cancel
         )
+        ok_btn = button_box.button(QDialogButtonBox.StandardButton.Ok)
+        ok_btn.setStyleSheet(STYLE_BTN_PRIMARY)
+        ok_btn.setFixedHeight(32)
+        ok_btn.setMinimumWidth(96)
+        cancel_btn = button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        cancel_btn.setStyleSheet(STYLE_BTN_SECONDARY)
+        cancel_btn.setFixedHeight(32)
+        cancel_btn.setMinimumWidth(96)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self._on_cancel)
         main_layout.addWidget(button_box)

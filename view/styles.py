@@ -189,6 +189,27 @@ QTextBrowser#demInfo:focus {
 }
 """
 
+STYLE_CHECKBOX = """
+QCheckBox {
+    color: #212121;
+    font-size: 12px;
+    background: transparent;
+    spacing: 8px;
+}
+QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
+}
+QCheckBox::indicator:unchecked {
+    background-color: #ffffff;
+    border: 1.5px solid #9e9e9e;
+    border-radius: 3px;
+}
+QCheckBox::indicator:unchecked:hover {
+    border-color: #1b6b39;
+}
+"""
+
 STYLE_BTN_HELP = """
 QPushButton {
     background-color: transparent;

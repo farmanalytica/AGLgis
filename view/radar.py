@@ -37,7 +37,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from .styles import STYLE_BTN_PRIMARY, STYLE_BTN_SECONDARY
+from .styles import STYLE_BTN_PRIMARY, STYLE_BTN_SECONDARY, STYLE_CHECKBOX
 
 
 def _tr(text):
@@ -748,26 +748,7 @@ def _build_inputs_tab(dialog, parent):
         dialog.sar_chk_terrain,
         dialog.sar_chk_speckle,
     ):
-        chk.setStyleSheet("""
-            QCheckBox {
-                color: #212121;
-                font-size: 12px;
-                background: transparent;
-                spacing: 8px;
-            }
-            QCheckBox::indicator {
-                width: 15px;
-                height: 15px;
-            }
-            QCheckBox::indicator:unchecked {
-                background-color: #ffffff;
-                border: 1.5px solid #9e9e9e;
-                border-radius: 3px;
-            }
-            QCheckBox::indicator:unchecked:hover {
-                border-color: #1b6b39;
-            }
-        """)
+        chk.setStyleSheet(STYLE_CHECKBOX)
         options_row.addWidget(chk)
     options_row.addStretch(1)
     options_lay.addLayout(options_row)
@@ -821,6 +802,9 @@ def _build_results_tab(dialog, parent):
     controls_lay.setSpacing(10)
 
     controls_lay.addWidget(_caption(_tr("TIME SERIES")))
+    dialog.sar_btn_filter_dates = QPushButton(_tr("Filter dates"))
+    dialog.sar_btn_filter_dates.setFixedHeight(30)
+    dialog.sar_btn_filter_dates.setStyleSheet(STYLE_BTN_SECONDARY)
     dialog.sar_btn_open_browser = QPushButton(_tr("Open in Browser"))
     dialog.sar_btn_open_browser.setFixedHeight(30)
     dialog.sar_btn_open_browser.setStyleSheet(STYLE_BTN_SECONDARY)
@@ -831,6 +815,7 @@ def _build_results_tab(dialog, parent):
     dialog.sar_btn_batch_download.setFixedHeight(30)
     dialog.sar_btn_batch_download.setStyleSheet(STYLE_BTN_SECONDARY)
     controls_lay.addWidget(_flow([
+        dialog.sar_btn_filter_dates,
         dialog.sar_btn_open_browser,
         dialog.sar_btn_download_csv,
         dialog.sar_btn_batch_download,
@@ -846,9 +831,6 @@ def _build_results_tab(dialog, parent):
         QComboBox.SizeAdjustPolicy.AdjustToContents
     )
     dialog.sar_result_date_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
-    dialog.sar_btn_filter_dates = QPushButton(_tr("Filter dates"))
-    dialog.sar_btn_filter_dates.setFixedHeight(30)
-    dialog.sar_btn_filter_dates.setStyleSheet(STYLE_BTN_SECONDARY)
 
     dialog.sar_render_combo = QComboBox()
     _prepare_field(dialog.sar_render_combo, 30)
@@ -944,10 +926,7 @@ def _build_results_tab(dialog, parent):
     # so the row wraps onto new lines when the panel is narrow — the section
     # grows taller instead of clipping the buttons.
     controls_lay.addWidget(_flow([
-        _group([
-            _labeled(_tr("Date"), dialog.sar_result_date_combo, 34),
-            dialog.sar_btn_filter_dates,
-        ]),
+        _labeled(_tr("Date"), dialog.sar_result_date_combo, 34),
         _labeled(_tr("Render Mode"), dialog.sar_render_combo, 80),
         ramp_group,
         dialog.sar_btn_preview,
