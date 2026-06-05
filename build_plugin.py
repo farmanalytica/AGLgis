@@ -32,7 +32,16 @@ INCLUDE_FILES = [
     "LICENSE",
 ]
 
-INCLUDE_DIRS = ["view", "services", "controllers", "assets"]
+INCLUDE_DIRS = [
+    "view",
+    "services",
+    "controllers",
+    "managers",
+    "renderers",
+    "tools",
+    "workers",
+    "assets",
+]
 
 SKIP = {"__pycache__", ".git", ".github", "dist", ".mypy_cache", ".pytest_cache"}
 
