@@ -7,8 +7,6 @@ Signal connections will be wired externally by ``aglgis.py`` once the
 service layer is in place.
 """
 
-import os
-
 from qgis.core import QgsMapLayerProxyModel, QgsSettings
 from qgis.gui import QgsMapLayerComboBox
 from qgis.PyQt.QtCore import (
@@ -18,7 +16,6 @@ from qgis.PyQt.QtCore import (
     QPoint,
     QRect,
     QSize,
-    QUrl,
 )
 from qgis.PyQt.QtWebKitWidgets import QWebView
 from qgis.PyQt.QtWidgets import (
@@ -304,27 +301,218 @@ def _section_panel():
     return panel
 
 
-def _build_intro_tab(dialog, parent):
-    """Render assets/intro_sar.html directly from the plugin source."""
+_INTRO_I18N = {
+    "pt": {
+        "title": "🛰️ Módulo SAR - AGLgis",
+        "desc": 'O módulo SAR do AGLgis fornece uma interface gráfica para processar dados Sentinel-1 usando o <a href="https://www.mdpi.com/2072-4292/13/10/1954">Sentinel-1 SAR Backscatter Analysis Ready Data</a> no Google Earth Engine, sem necessidade de programação.',
+        "workflow_h": "📋 Fluxo de Trabalho",
+        "wf": ["<b>Inputs:</b> Selecione a área (AOI), datas e parâmetros de processamento", "<b>Run:</b> Execute o processamento para gerar a série temporal", "<b>Results:</b> Visualize gráficos, filtre datas e exporte os resultados"],
+        "features_h": "✨ Principais Funcionalidades",
+        "features": ["<b>Seleção de Área e Datas:</b> Interface intuitiva para definir AOI e período de análise", "<b>Parâmetros de Processamento:</b> Correção de ruído de borda, nivelamento de terreno, filtragem de speckle", "<b>Múltiplos Índices Espectrais:</b> Escolha entre VV/VH Ratio, RVI ou DpRVI", "<b>Modos de Renderização Flexíveis:</b> RGB com contraste aprimorado ou pseudocolor Viridis", "<b>Série Temporal Interativa:</b> Gráfico Plotly com zoom, pan e hover", "<b>Filtro de Datas:</b> Selecione datas específicas para refinar análise", "<b>Visualização de Imagens:</b> Pré-visualize ou baixe imagens SAR de cada data", "<b>Download em Lote:</b> Baixe múltiplas imagens com progresso e cancelamento", "<b>Exportação CSV:</b> Exporte dados da série temporal com filtro de datas", "<b>Carregamento Automático:</b> Imagens baixadas são carregadas no QGIS automaticamente"],
+        "ts_h": "📊 Série Temporal",
+        "ts_p": "O plugin gera gráficos interativos mostrando a série temporal da razão VV/VH para sua área de interesse. Use o filtro de datas para focar em períodos específicos e exportar os dados para análise externa.",
+        "bands_h": "🖼️ Bandas e Índices Espectrais",
+        "bands_p": "Cada imagem SAR contém 3 bandas: as duas polarizações (VV, VH) mais um índice espectral selecionável.",
+        "bands": ["<b>Band 1 - VV:</b> Polarização vertical-vertical", "<b>Band 2 - VH:</b> Polarização vertical-horizontal", "<b>Band 3 - Índice Espectral:</b> VV/VH Ratio, RVI ou DpRVI"],
+        "bands_note": 'Selecione o índice desejado na aba "Inputs" antes de executar o processamento.',
+        "setup_h": "🔧 Configuração Inicial",
+        "setup_p": 'Para usar este módulo, você precisa de autenticação no Google Earth Engine através de um <b>Google Cloud Project ID</b>. Configure isso na guia "Auth" do plugin.',
+        "cite_h": "📖 Citação",
+        "cite_intro": "Qualquer trabalho publicado que utilize este plugin deve citar:",
+    },
+    "en": {
+        "title": "🛰️ SAR Module - AGLgis",
+        "desc": 'The AGLgis SAR module provides a graphical interface to process Sentinel-1 data using the <a href="https://www.mdpi.com/2072-4292/13/10/1954">Sentinel-1 SAR Backscatter Analysis Ready Data</a> in Google Earth Engine, without requiring any coding.',
+        "workflow_h": "📋 Workflow",
+        "wf": ["<b>Inputs:</b> Select area (AOI), dates, and processing parameters", "<b>Run:</b> Execute processing to generate time series", "<b>Results:</b> View charts, filter dates, and export results"],
+        "features_h": "✨ Main Features",
+        "features": ["<b>Area &amp; Date Selection:</b> Intuitive interface for defining AOI and analysis period", "<b>Processing Parameters:</b> Border noise correction, terrain flattening, speckle filtering", "<b>Multiple Spectral Indices:</b> Choose between VV/VH Ratio, RVI, or DpRVI", "<b>Flexible Render Modes:</b> RGB composites with enhanced contrast or Viridis pseudocolor", "<b>Interactive Time Series:</b> Plotly chart with zoom, pan, and hover", "<b>Date Filter:</b> Select specific dates to refine analysis", "<b>Image Preview:</b> Preview or download SAR images for each date", "<b>Batch Download:</b> Download multiple images with progress and cancel option", "<b>CSV Export:</b> Export time series data with date filtering", "<b>Auto-Load Images:</b> Downloaded images automatically load in QGIS"],
+        "ts_h": "📊 Time Series",
+        "ts_p": "The plugin generates interactive charts showing the VV/VH Ratio time series for your area of interest. Use the date filter to focus on specific periods and export data for external analysis.",
+        "bands_h": "🖼️ Bands &amp; Spectral Indices",
+        "bands_p": "Each SAR image contains 3 bands: the two polarizations (VV, VH) plus a selectable spectral index.",
+        "bands": ["<b>Band 1 - VV:</b> Vertical-vertical polarization", "<b>Band 2 - VH:</b> Vertical-horizontal polarization", "<b>Band 3 - Spectral Index:</b> VV/VH Ratio, RVI, or DpRVI"],
+        "bands_note": 'Select the desired index in the "Inputs" tab before running the processing.',
+        "setup_h": "🔧 Initial Setup",
+        "setup_p": 'To use this module, you need authentication to Google Earth Engine via a <b>Google Cloud Project ID</b>. Configure this in the "Auth" tab of the plugin.',
+        "cite_h": "📖 Citation",
+        "cite_intro": "Any published work using this plugin must cite:",
+    },
+    "fr": {
+        "title": "🛰️ Module SAR - AGLgis",
+        "desc": "Le module SAR d'AGLgis fournit une interface graphique pour traiter les données Sentinel-1 dans Google Earth Engine, sans aucune programmation.",
+        "workflow_h": "📋 Flux de Travail",
+        "wf": ["<b>Inputs :</b> Sélectionnez la zone (AOI), les dates et les paramètres", "<b>Run :</b> Lancez le traitement pour générer la série chronologique", "<b>Results :</b> Affichez les graphiques, filtrez les dates et exportez les résultats"],
+        "features_h": "✨ Principales Fonctionnalités",
+        "features": ["<b>Sélection de Zone et Dates :</b> Interface intuitive pour définir l'AOI", "<b>Paramètres de Traitement :</b> Correction du bruit de bordure, terrain, speckle", "<b>Indices Spectraux Multiples :</b> Ratio VV/VH, RVI ou DpRVI", "<b>Modes de Rendu Flexibles :</b> RGB ou pseudocolor Viridis", "<b>Séries Temporelles Interactives :</b> Graphique Plotly avec zoom et survol", "<b>Filtre de Dates :</b> Sélectionnez des dates spécifiques", "<b>Aperçu d'Images :</b> Prévisualisez ou téléchargez les images SAR", "<b>Téléchargement par Lots :</b> Téléchargez plusieurs images avec progression", "<b>Exportation CSV :</b> Exportez les données avec filtrage par date", "<b>Chargement Automatique :</b> Les images se chargent automatiquement dans QGIS"],
+        "ts_h": "📊 Séries Temporelles",
+        "ts_p": "Le plugin génère des graphiques interactifs montrant la série chronologique du Ratio VV/VH pour votre zone d'intérêt.",
+        "bands_h": "🖼️ Bandes et Indices Spectraux",
+        "bands_p": "Chaque image SAR contient 3 bandes : les deux polarisations (VV, VH) plus un indice spectral sélectionnable.",
+        "bands": ["<b>Band 1 - VV :</b> Polarisation verticale-verticale", "<b>Band 2 - VH :</b> Polarisation verticale-horizontale", "<b>Band 3 - Indice Spectral :</b> Ratio VV/VH, RVI ou DpRVI"],
+        "bands_note": 'Sélectionnez l\'indice souhaité dans l\'onglet "Inputs" avant de lancer le traitement.',
+        "setup_h": "🔧 Configuration Initiale",
+        "setup_p": "Pour utiliser ce module, vous avez besoin d'une authentification Google Earth Engine via un <b>Google Cloud Project ID</b>.",
+        "cite_h": "📖 Citation",
+        "cite_intro": "Tout travail publié utilisant ce plugin doit citer :",
+    },
+    "es": {
+        "title": "🛰️ Módulo SAR - AGLgis",
+        "desc": "El módulo SAR de AGLgis proporciona una interfaz gráfica para procesar datos Sentinel-1 en Google Earth Engine, sin necesidad de programación.",
+        "workflow_h": "📋 Flujo de Trabajo",
+        "wf": ["<b>Inputs:</b> Selecciona el área (AOI), fechas y parámetros", "<b>Run:</b> Ejecuta el procesamiento para generar la serie temporal", "<b>Results:</b> Visualiza gráficos, filtra fechas y exporta los resultados"],
+        "features_h": "✨ Funcionalidades Principales",
+        "features": ["<b>Selección de Área y Fechas:</b> Interfaz intuitiva para definir AOI", "<b>Parámetros de Procesamiento:</b> Corrección de ruido de borde, terreno, speckle", "<b>Múltiples Índices Espectrales:</b> Razón VV/VH, RVI o DpRVI", "<b>Modos de Renderización:</b> RGB o pseudocolor Viridis", "<b>Serie Temporal Interactiva:</b> Gráfico Plotly con zoom y hover", "<b>Filtro de Fechas:</b> Selecciona fechas específicas", "<b>Vista Previa:</b> Previsualiza o descarga imágenes SAR", "<b>Descarga por Lotes:</b> Descarga múltiples imágenes con progreso", "<b>Exportación CSV:</b> Exporta datos con filtro de fechas", "<b>Carga Automática:</b> Las imágenes se cargan automáticamente en QGIS"],
+        "ts_h": "📊 Serie Temporal",
+        "ts_p": "El plugin genera gráficos interactivos que muestran la serie temporal de la Razón VV/VH para tu área de interés.",
+        "bands_h": "🖼️ Bandas e Índices Espectrales",
+        "bands_p": "Cada imagen SAR contiene 3 bandas: las dos polarizaciones (VV, VH) más un índice espectral seleccionable.",
+        "bands": ["<b>Band 1 - VV:</b> Polarización vertical-vertical", "<b>Band 2 - VH:</b> Polarización vertical-horizontal", "<b>Band 3 - Índice Espectral:</b> Razón VV/VH, RVI o DpRVI"],
+        "bands_note": 'Selecciona el índice deseado en la pestaña "Inputs" antes de ejecutar.',
+        "setup_h": "🔧 Configuración Inicial",
+        "setup_p": 'Para usar este módulo necesitas autenticación en Google Earth Engine via <b>Google Cloud Project ID</b>. Configúralo en la pestaña "Auth".',
+        "cite_h": "📖 Citación",
+        "cite_intro": "Cualquier trabajo publicado que utilice este plugin debe citar:",
+    },
+    "it": {
+        "title": "🛰️ Modulo SAR - AGLgis",
+        "desc": "Il modulo SAR di AGLgis fornisce un'interfaccia grafica per elaborare i dati Sentinel-1 in Google Earth Engine, senza necessità di programmazione.",
+        "workflow_h": "📋 Flusso di Lavoro",
+        "wf": ["<b>Inputs:</b> Seleziona l'area (AOI), le date e i parametri", "<b>Run:</b> Esegui l'elaborazione per generare la serie temporale", "<b>Results:</b> Visualizza i grafici, filtra le date ed esporta i risultati"],
+        "features_h": "✨ Funzionalità Principali",
+        "features": ["<b>Selezione di Area e Date:</b> Interfaccia intuitiva per definire AOI", "<b>Parametri di Elaborazione:</b> Correzione rumore, terreno, speckle", "<b>Indici Spettrali Multipli:</b> Rapporto VV/VH, RVI o DpRVI", "<b>Modalità di Rendering:</b> RGB o pseudocolor Viridis", "<b>Serie Temporali Interattive:</b> Grafico Plotly con zoom e hover", "<b>Filtro Date:</b> Seleziona date specifiche", "<b>Anteprima Immagini:</b> Anteprima o download delle immagini SAR", "<b>Download in Batch:</b> Scarica più immagini con avanzamento", "<b>Esportazione CSV:</b> Esporta dati con filtro per data", "<b>Caricamento Automatico:</b> Le immagini si caricano automaticamente in QGIS"],
+        "ts_h": "📊 Serie Temporali",
+        "ts_p": "Il plugin genera grafici interattivi che mostrano la serie temporale del Rapporto VV/VH per la tua area di interesse.",
+        "bands_h": "🖼️ Bande e Indici Spettrali",
+        "bands_p": "Ogni immagine SAR contiene 3 bande: le due polarizzazioni (VV, VH) più un indice spettrale selezionabile.",
+        "bands": ["<b>Band 1 - VV:</b> Polarizzazione verticale-verticale", "<b>Band 2 - VH:</b> Polarizzazione verticale-orizzontale", "<b>Band 3 - Indice Spettrale:</b> Rapporto VV/VH, RVI o DpRVI"],
+        "bands_note": 'Seleziona l\'indice desiderato nella scheda "Inputs" prima di eseguire.',
+        "setup_h": "🔧 Configurazione Iniziale",
+        "setup_p": 'Per usare questo modulo hai bisogno dell\'autenticazione a Google Earth Engine tramite <b>Google Cloud Project ID</b>. Configuralo nella scheda "Auth".',
+        "cite_h": "📖 Citazione",
+        "cite_intro": "Qualsiasi lavoro pubblicato che utilizza questo plugin deve citare:",
+    },
+}
+_INTRO_I18N["zh"] = _INTRO_I18N["en"]
+_INTRO_I18N["hi"] = _INTRO_I18N["en"]
+
+_CITE_REF = (
+    "Mullissa, A.; Vollrath, A.; Odongo-Braun, C.; Slagter, B.; Balling, J.; Gou, Y.; "
+    "Gorelick, N.; Reiche, J. Sentinel-1 SAR Backscatter Analysis Ready Data Preparation "
+    "in Google Earth Engine. Remote Sens. 2021, 13, 1954. "
+    "https://doi.org/10.3390/rs13101954"
+)
+
+
+def _build_intro_tab(_dialog, parent):
+    """Build the Intro tab using native Qt widgets (no WebView)."""
+    locale = QgsSettings().value("locale/userLocale", "en_US") or "en_US"
+    t = _INTRO_I18N.get(locale[:2].lower(), _INTRO_I18N["en"])
+
     outer = QVBoxLayout(parent)
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(0)
 
-    view = QWebView()
-    view.setStyleSheet("background: #ffffff; border: none;")
-    intro_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "assets",
-        "intro_sar.html",
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QFrame.Shape.NoFrame)
+    scroll.setStyleSheet("QScrollArea { background: #ffffff; border: none; }")
+
+    w = QWidget()
+    w.setStyleSheet("background: #ffffff;")
+    lay = QVBoxLayout(w)
+    lay.setContentsMargins(24, 16, 24, 16)
+    lay.setSpacing(4)
+
+    def _lbl(html, style=""):
+        l = QLabel(html)
+        l.setWordWrap(True)
+        l.setOpenExternalLinks(True)
+        l.setTextFormat(Qt.TextFormat.RichText)
+        if style:
+            l.setStyleSheet(style)
+        return l
+
+    def _h1(text):
+        return _lbl(text, "font-size:15px;font-weight:bold;color:#1b6b39;margin-bottom:4px;")
+
+    def _h2(text):
+        return _lbl(text, "font-size:12px;font-weight:bold;color:#2a5d84;"
+                          "padding-bottom:3px;margin-top:12px;margin-bottom:2px;")
+
+    def _para(html):
+        return _lbl(html, "font-size:12px;color:#333;")
+
+    def _divider():
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet("color:#e6f2fa;")
+        return line
+
+    # Title + description
+    lay.addWidget(_h1(t["title"]))
+    lay.addSpacing(2)
+    lay.addWidget(_para(t["desc"]))
+
+    # Workflow
+    lay.addWidget(_h2(t["workflow_h"]))
+    lay.addWidget(_divider())
+    wf_frame = QFrame()
+    wf_frame.setStyleSheet(
+        "QFrame{background:#f0f8ff;border-radius:4px;padding:4px;}"
     )
-    # load() reads the file in place, so relative asset paths resolve from assets/.
-    # Pass QGIS UI locale to the page via fragment so it auto-picks the language.
-    locale = QgsSettings().value("locale/userLocale", "en_US") or "en_US"
-    intro_url = QUrl.fromLocalFile(intro_path)
-    intro_url.setFragment("lang=" + locale[:2].lower())
-    view.load(intro_url)
-    dialog.sar_intro_view = view
-    outer.addWidget(view, 1)
+    wf_lay = QVBoxLayout(wf_frame)
+    wf_lay.setContentsMargins(12, 6, 12, 6)
+    wf_lay.setSpacing(4)
+    for i, text in enumerate(t["wf"], 1):
+        wf_lay.addWidget(_para(f"{i}. {text}"))
+    lay.addWidget(wf_frame)
+
+    # Features
+    lay.addWidget(_h2(t["features_h"]))
+    lay.addWidget(_divider())
+    for text in t["features"]:
+        lay.addWidget(_para(f"✓  {text}"))
+
+    # Time series
+    lay.addWidget(_h2(t["ts_h"]))
+    lay.addWidget(_divider())
+    lay.addWidget(_para(t["ts_p"]))
+
+    # Bands
+    lay.addWidget(_h2(t["bands_h"]))
+    lay.addWidget(_divider())
+    lay.addWidget(_para(t["bands_p"]))
+    for text in t["bands"]:
+        lay.addWidget(_para(f"• {text}"))
+    lay.addWidget(_para(t["bands_note"]))
+
+    # Setup
+    lay.addWidget(_h2(t["setup_h"]))
+    lay.addWidget(_divider())
+    lay.addWidget(_para(t["setup_p"]))
+
+    # Citation
+    lay.addWidget(_h2(t["cite_h"]))
+    lay.addWidget(_divider())
+    lay.addWidget(_para(t["cite_intro"]))
+    cite_frame = QFrame()
+    cite_frame.setStyleSheet(
+        "QFrame{background:#e8f5e9;border-left:4px solid #1b6b39;border-radius:3px;}"
+    )
+    cite_lay = QVBoxLayout(cite_frame)
+    cite_lay.setContentsMargins(12, 8, 12, 8)
+    ref = _lbl(
+        _CITE_REF,
+        "font-family:monospace;font-size:11px;background:#fff;"
+        "padding:6px;border:1px solid #c8e6c9;border-radius:3px;",
+    )
+    cite_lay.addWidget(ref)
+    lay.addWidget(cite_frame)
+
+    lay.addStretch(1)
+    scroll.setWidget(w)
+    outer.addWidget(scroll, 1)
 
 
 def _build_inputs_tab(dialog, parent):
@@ -564,6 +752,7 @@ def _build_results_tab(dialog, parent):
     dialog.sar_result_date_combo = QComboBox()
     _prepare_field(dialog.sar_result_date_combo, 30)
     dialog.sar_result_date_combo.setFixedWidth(136)
+    dialog.sar_result_date_combo.view().setStyleSheet(_POPUP_VIEW_STYLE)
     dialog.sar_btn_filter_dates = QPushButton(_tr("Filter dates"))
     dialog.sar_btn_filter_dates.setFixedHeight(30)
     dialog.sar_btn_filter_dates.setStyleSheet(STYLE_BTN_SECONDARY)
@@ -852,7 +1041,8 @@ def setup_radar_page(dialog, page):
     nav_lay.setSpacing(8)
 
     btn_back = QPushButton(_tr("Back"))
-    btn_back.setFixedSize(80, 30)
+    btn_back.setMinimumWidth(90)
+    btn_back.setFixedHeight(30)
     btn_back.setStyleSheet(STYLE_BTN_SECONDARY)
 
     nav_lay.addWidget(btn_back)
@@ -866,12 +1056,14 @@ def setup_radar_page(dialog, page):
 
     # Forward control on the Intro tab — pure navigation to the Inputs step.
     btn_intro_next = QPushButton(_tr("Next"))
-    btn_intro_next.setFixedSize(80, 30)
+    btn_intro_next.setMinimumWidth(90)
+    btn_intro_next.setFixedHeight(30)
     btn_intro_next.setStyleSheet(STYLE_BTN_PRIMARY)
     nav_lay.addWidget(btn_intro_next)
 
     btn_next = QPushButton(_tr("Run"))
-    btn_next.setFixedSize(80, 30)
+    btn_next.setMinimumWidth(90)
+    btn_next.setFixedHeight(30)
     btn_next.setStyleSheet(STYLE_BTN_PRIMARY)
     nav_lay.addWidget(btn_next)
     outer.addWidget(nav_bar)

@@ -406,7 +406,7 @@ class AGLgisDialog(QDialog):
         else:
             # Restore the label appropriate to the last known sign-in state.
             if getattr(self, "_auth_state", None) == "authenticated":
-                self.btn_authenticate.setText(_tr("Continue  →"))
+                self.btn_authenticate.setText(_tr("Continue"))
             else:
                 self.btn_authenticate.setText(_tr("🔑   Validate ID"))
             self.auth_status_lbl.hide()
@@ -414,15 +414,15 @@ class AGLgisDialog(QDialog):
 
     # Pill styles per state: (text, text colour, background, border colour).
     _AUTH_STATE_STYLES = {
-        "checking": ("◔  Checking sign-in status…", "#757575", "#f0f0f0", "#e0e0e0"),
-        "none": ("●  Not signed in", "#b71c1c", "#fdecea", "#f5c6c2"),
+        "checking": ("Checking sign-in status…", "#757575", "#f0f0f0", "#e0e0e0"),
+        "none": ("Not signed in", "#b71c1c", "#fdecea", "#f5c6c2"),
         "stored": (
-            "●  Credentials found — validate to finish",
+            "Credentials found — validate to finish",
             "#8a5300",
             "#fff4e0",
             "#f0d9a8",
         ),
-        "authenticated": ("●  Signed in & ready", "#1b5e20", "#e8f5e9", "#a5d6a7"),
+        "authenticated": ("Signed in & ready", "#1b5e20", "#e8f5e9", "#a5d6a7"),
     }
 
     def set_auth_state(self, state):
@@ -441,26 +441,24 @@ class AGLgisDialog(QDialog):
         # workflow — no point re-running authentication
         if not getattr(self, "_auth_busy", False):
             if state == "authenticated":
-                self.btn_authenticate.setText(_tr("Continue  →"))
+                self.btn_authenticate.setText(_tr("Continue"))
             elif state != "checking":
                 self.btn_authenticate.setText(_tr("🔑   Validate ID"))
 
-        self.auth_status_badge.setText(_tr(text))
+        self.auth_status_badge.setText(_tr(text).replace("&", "&&"))
         self.auth_status_badge.setStyleSheet(
             """
             QPushButton {
-                background-color: %s;
+                background-color: transparent;
                 color: %s;
-                border: 1px solid %s;
-                border-radius: 11px;
+                border: none;
                 font-size: 11px;
                 font-weight: bold;
                 padding: 0 10px;
                 text-align: center;
             }
-            QPushButton:hover { border-color: %s; }
             """
-            % (bg, fg, border, fg)
+            % (fg,)
         )
 
     def set_auth_status(self, text, url=""):

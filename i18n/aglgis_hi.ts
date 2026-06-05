@@ -167,5 +167,285 @@
         <source>Get in touch for exclusive and personalized commercial solutions.</source>
         <translation>अनन्य और व्यक्तिगत व्यावसायिक समाधानों के लिए संपर्क करें।</translation>
     </message>
+    <message>
+        <source>Continue</source>
+        <translation>आगे वधें</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>रद्द करें</translation>
+    </message>
+    <message>
+        <source>Starting authentication…</source>
+        <translation>प्रमाणीकरण शुरू…</translation>
+    </message>
+    <message>
+        <source>Checking sign-in status…</source>
+        <translation>स्थिति जांच…</translation>
+    </message>
+    <message>
+        <source>Not signed in</source>
+        <translation>साइन इन नहीं</translation>
+    </message>
+    <message>
+        <source>Credentials found — validate to finish</source>
+        <translation>क्रेडेंशियल मिलीं</translation>
+    </message>
+    <message>
+        <source>●  Signed in &amp; ready</source>
+        <translation>साइन इन और तैयार</translation>
+    </message>
+    <message>
+        <source>Reopen the sign-in page</source>
+        <translation>साइन-इन पेज में वापस जाएं</translation>
+    </message>
+    <message>
+        <source>Intro</source>
+        <translation>परिचय</translation>
+    </message>
+    <message>
+        <source>Inputs</source>
+        <translation>इनपुट</translation>
+    </message>
+    <message>
+        <source>Results</source>
+        <translation>परिणाम</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>वापस</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>अगला</translation>
+    </message>
+    <message>
+        <source>Run</source>
+        <translation>चलाएं</translation>
+    </message>
+    <message>
+        <source>Running…</source>
+        <translation>चल रहा है…</translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation>लोड हो रहा है…</translation>
+    </message>
+    <message>
+        <source>Working…</source>
+        <translation>प्रसंस्करण…</translation>
+    </message>
+    <message>
+        <source>START DATE</source>
+        <translation>प्रारंभ तिथि</translation>
+    </message>
+    <message>
+        <source>END DATE</source>
+        <translation>समाप्ति तिथि</translation>
+    </message>
+    <message>
+        <source>POLARIZATION</source>
+        <translation>ध्रुवीकरण</translation>
+    </message>
+    <message>
+        <source>OUTPUT FORMAT</source>
+        <translation>आउटपुट स्वरूप</translation>
+    </message>
+    <message>
+        <source>SPECTRAL INDEX</source>
+        <translation>वर्णक्रमीय सूचकांक</translation>
+    </message>
+    <message>
+        <source>PROCESSING OPTIONS</source>
+        <translation>प्रसंस्करण विकल्प</translation>
+    </message>
+    <message>
+        <source>SINGLE-DATE IMAGE</source>
+        <translation>एकल-तिथि छवि</translation>
+    </message>
+    <message>
+        <source>SYNTHETIC IMAGE (COMPOSITE)</source>
+        <translation>सिंथेटिक छवि (समग्र)</translation>
+    </message>
+    <message>
+        <source>TIME SERIES</source>
+        <translation>समय श्रृंखला</translation>
+    </message>
+    <message>
+        <source>Render Mode</source>
+        <translation>रेंडर मोड</translation>
+    </message>
+    <message>
+        <source>Color Ramp</source>
+        <translation>रंग रैंप</translation>
+    </message>
+    <message>
+        <source>Metric</source>
+        <translation>मेट्रिक</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>तिथि</translation>
+    </message>
+    <message>
+        <source>Border noise correction</source>
+        <translation>सीमा शोर सुधार</translation>
+    </message>
+    <message>
+        <source>Terrain flattening</source>
+        <translation>भूभाग समतलीकरण</translation>
+    </message>
+    <message>
+        <source>Speckle filtering</source>
+        <translation>स्पेकल फ़िल्टरिंग</translation>
+    </message>
+    <message>
+        <source>Draw AOI</source>
+        <translation>AOI बनाएं</translation>
+    </message>
+    <message>
+        <source>Preview</source>
+        <translation>पूर्वावलोकन</translation>
+    </message>
+    <message>
+        <source>Download &amp; Preview</source>
+        <translation>डाउनलोड और पूर्वावलोकन</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation>ब्राउज़र में खोलें</translation>
+    </message>
+    <message>
+        <source>Export CSV</source>
+        <translation>CSV निर्यात करें</translation>
+    </message>
+    <message>
+        <source>Batch Download (All Dates)</source>
+        <translation>बैच डाउनलोड (सभी तिथियां)</translation>
+    </message>
+    <message>
+        <source>Filter dates</source>
+        <translation>तिथियां फ़िल्टर करें</translation>
+    </message>
+    <message>
+        <source>Preview Composite</source>
+        <translation>समग्र पूर्वावलोकन</translation>
+    </message>
+    <message>
+        <source>Band: VV</source>
+        <translation>बैंड: VV</translation>
+    </message>
+    <message>
+        <source>Band: VH</source>
+        <translation>बैंड: VH</translation>
+    </message>
+    <message>
+        <source>Band: VV/VH Ratio</source>
+        <translation>बैंड: VV/VH अनुपात</translation>
+    </message>
+    <message>
+        <source>Band: RVI</source>
+        <translation>बैंड: RVI</translation>
+    </message>
+    <message>
+        <source>Band: DpRVI</source>
+        <translation>बैंड: DpRVI</translation>
+    </message>
+    <message>
+        <source>Amplitude</source>
+        <translation>आयाम</translation>
+    </message>
+    <message>
+        <source>Mean</source>
+        <translation>माध्य</translation>
+    </message>
+    <message>
+        <source>Median</source>
+        <translation>माध्यिका</translation>
+    </message>
+    <message>
+        <source>Min</source>
+        <translation>न्यूनतम</translation>
+    </message>
+    <message>
+        <source>Max</source>
+        <translation>अधिकतम</translation>
+    </message>
+    <message>
+        <source>Standard Deviation</source>
+        <translation>मानक विचलन</translation>
+    </message>
+    <message>
+        <source>Sum</source>
+        <translation>योग</translation>
+    </message>
+    <message>
+        <source>Area Under Curve (AUC)</source>
+        <translation>वक्र के नीचे क्षेत्र (AUC)</translation>
+    </message>
+    <message>
+        <source>RGB: VV, VH, VV/VH Ratio</source>
+        <translation>RGB: VV, VH, VV/VH अनुपात</translation>
+    </message>
+    <message>
+        <source>RGB: VV, RVI, DpRVI</source>
+        <translation>RGB: VV, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>RGB: VV/VH Ratio, RVI, DpRVI</source>
+        <translation>RGB: VV/VH अनुपात, RVI, DpRVI</translation>
+    </message>
+    <message>
+        <source>Composite the selected index over the selected dates.</source>
+        <translation>चुनी हुई तिथियों पर चुने हुए सूचकांक को मिलाएं।</translation>
+    </message>
+    <message>
+        <source>No dates selected for the composite.</source>
+        <translation>समग्र के लिए कोई तिथि नहीं चुनी गई।</translation>
+    </message>
+    <message>
+        <source>No dates selected to download.</source>
+        <translation>डाउनलोड के लिए कोई तिथि नहीं चुनी गई।</translation>
+    </message>
+    <message>
+        <source>Select an AOI layer.</source>
+        <translation>एक AOI लेयर चुनें।</translation>
+    </message>
+    <message>
+        <source>Run SAR processing first.</source>
+        <translation>पहले SAR प्रसंस्करण चलाएं।</translation>
+    </message>
+    <message>
+        <source>Preparing batch download...</source>
+        <translation>बैच डाउनलोड तैयार हो रहा है...</translation>
+    </message>
+    <message>
+        <source>Batch Download Progress</source>
+        <translation>बैच डाउनलोड प्रगति</translation>
+    </message>
+    <message>
+        <source>Batch download cancelled by user.</source>
+        <translation>उपयोगकर्ता द्वारा बैच डाउनलोड रद्द।</translation>
+    </message>
+    <message>
+        <source>Export SAR Time Series as CSV</source>
+        <translation>SAR समय श्रृंखला को CSV के रूप में निर्यात करें</translation>
+    </message>
+    <message>
+        <source>CSV Files (*.csv);;All Files (*)</source>
+        <translation>CSV फ़ाइलें (*.csv);;सभी फ़ाइलें (*)</translation>
+    </message>
+    <message>
+        <source>Drag on the map to draw a box (Shift = square, Esc = cancel)</source>
+        <translation>बॉक्स बनाने के लिए मानचित्र पर खींचें</translation>
+    </message>
+    <message>
+        <source>loaded</source>
+        <translation>लोड किया</translation>
+    </message>
+    <message>
+        <source>downloaded and loaded</source>
+        <translation>डाउनलोड और लोड किया</translation>
+    </message>
 </context>
 </TS>
