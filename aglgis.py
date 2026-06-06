@@ -247,7 +247,7 @@ class AGLgis:
 
         if self.first_start:
             self.first_start = False
-            self.dialog = AGLgisDialog(None)
+            self.dialog = AGLgisDialog(self.interface.mainWindow())
 
         if not self._services_ready:
             if extlibs_manager.is_ready():
